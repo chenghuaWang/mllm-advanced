@@ -1,0 +1,6 @@
+CMakeFormatTask:
+  ignore_path:
+    - "build"
+    - "build-android-arm64-v8a"
+    - "third_party"
+    - "mllm/Backends/OpenCL/Vendors"

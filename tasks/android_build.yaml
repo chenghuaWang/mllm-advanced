@@ -1,0 +1,14 @@
+CMakeConfigTask:
+  cmake_cfg_path: "build-android-arm64-v8a"
+  cmake_build_type: "Release"
+  cmake_toolchain_file: "{ANDROID_NDK_PATH}/cmake/android.toolchain.cmake"
+  cmake_extra_args:
+    - "-DMLLM_CROSS_COMPILE=ON"
+    - "-DMLLM_BUILD_ARM_BACKEND=ON"
+    - "-DANDROID_PLATFORM=android-28"
+    - "-DANDROID_ABI=arm64-v8a"
+    - "-DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\""
+
+CMakeBuildTask:
+  cmake_cfg_path: "build-android-arm64-v8a"
+  
