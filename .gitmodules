@@ -13,3 +13,6 @@
 [submodule "mllm/Backends/OpenCL/Vendors/OpenCL-Headers"]
 	path = mllm/Backends/OpenCL/Vendors/OpenCL-Headers
 	url = https://github.com/KhronosGroup/OpenCL-Headers
+[submodule "mllm/Backends/Arm/Vendors/kleidiai"]
+	path = mllm/Backends/Arm/Vendors/kleidiai
+	url = https://git.gitlab.arm.com/kleidi/kleidiai.git
