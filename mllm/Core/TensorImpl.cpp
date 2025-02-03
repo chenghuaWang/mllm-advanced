@@ -30,7 +30,21 @@ TensorImpl::TensorImpl(const std::vector<size_t>& shape, DataTypes dtype, Device
   custom_32bit_uuid_ = MllmEngineCtx::instance().getUUID();
 }
 
-TensorImpl::~TensorImpl() { MllmEngineCtx::instance().mem()->free(this); }
+TensorImpl::~TensorImpl() {
+  switch (mem_type_) {
+    case kNormal:
+    case kGlobal: MllmEngineCtx::instance().mem()->free(this); break;
+    case kExtraInput:
+    case kExtraOutput:
+    case kParams:
+    case kManual: break;
+    default:
+      MLLM_WARN("When trying to free TensorImpl, found invalid mem_type_. Mllm will still trying "
+                "to free this tensor, but may lead to memory error.");
+      MllmEngineCtx::instance().mem()->free(this);
+      break;
+  };
+}
 
 std::shared_ptr<PTTensorImpl> TensorImpl::toPerTensorImpl() {
   return std::static_pointer_cast<PTTensorImpl>(shared_from_this());
@@ -43,6 +57,8 @@ std::shared_ptr<PCTensorImpl> TensorImpl::toPerChannelImpl() {
 DataTypes TensorImpl::dtype() const { return dtype_; }
 
 DeviceTypes TensorImpl::device() const { return device_type_; }
+
+void TensorImpl::setDtype(DataTypes dtype) { dtype_ = dtype; }
 
 std::string TensorImpl::name() const { return name_; }
 

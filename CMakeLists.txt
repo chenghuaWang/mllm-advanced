@@ -28,3 +28,6 @@ if(MLLM_ENABLE_BENCHMARK)
   add_subdirectory(third_party/benchmark EXCLUDE_FROM_ALL)
   add_subdirectory(benchmarks)
 endif()
+
+add_subdirectory(tools/Quantizer)
+add_subdirectory(tools/TokenizeChecker)

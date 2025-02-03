@@ -9,11 +9,12 @@
  */
 #pragma once
 
+#include <cstdint>
 #include "mllm/Utils/Common.hpp"
 
 namespace mllm {
 
-enum DataTypes {
+enum DataTypes : uint32_t {
   kDataTypes_Start = 0,
 
   // normal

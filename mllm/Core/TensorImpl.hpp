@@ -49,6 +49,8 @@ class TensorImpl : public std::enable_shared_from_this<TensorImpl> {
 
   DeviceTypes device() const;
 
+  void setDtype(DataTypes dtype);
+
   [[nodiscard]] std::string name() const;
 
   [[nodiscard]] TensorMemTypes memType() const;
