@@ -1,0 +1,7 @@
+ArmKernelBenchmarkTask:
+  device_name: "<your device name>"
+
+  benchmark_targets:
+    - "/data/local/tmp/mllm-advanced/bin/MllmArmKernels-ElewiseOps"
+
+  remote_results_path: "/data/local/tmp/mllm-advanced/bin/results"

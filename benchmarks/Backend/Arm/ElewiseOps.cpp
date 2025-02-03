@@ -92,8 +92,8 @@ static void add_f16_4_threads(benchmark::State& state) {
   }
 }
 
-BENCHMARK(add_f32)->Range(64, 2048);
-BENCHMARK(add_f32_4_threads)->Range(64, 2048);
-BENCHMARK(add_f16)->Range(64, 2048);
-BENCHMARK(add_f16_4_threads)->Range(64, 2048);
+BENCHMARK(add_f32)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK(add_f32_4_threads)->RangeMultiplier(2)->Range(128, 2048);
+BENCHMARK(add_f16)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK(add_f16_4_threads)->RangeMultiplier(2)->Range(128, 2048);
 BENCHMARK_MAIN();

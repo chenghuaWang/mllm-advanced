@@ -4,3 +4,4 @@ CMakeFormatTask:
     - "build-android-arm64-v8a"
     - "third_party"
     - "mllm/Backends/OpenCL/Vendors"
+    - "mllm/Backends/Arm/Vendors"

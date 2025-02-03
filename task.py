@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import yaml
 import argparse
 import logging
@@ -189,10 +190,121 @@ class CMakeBuildTask(Task):
             os.system(sub_command)
 
 
+class AdbPushTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def run(self):
+        logging.info("ADB push Task Start...")
+        files = self.config["files"]
+        push_path = self.config["to_path"]
+        for file in files:
+            command = [
+                "adb",
+                "push",
+                file,
+                push_path,
+            ]
+            logging.info(self.make_command_str(command))
+            os.system(self.make_command_str(command))
+
+
+class ArmKernelBenchmarkTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+        self.export_ld_path = "export LD_LIBRARY_PATH=/data/local/tmp/mllm-advanced/bin:$LD_LIBRARY_PATH && "
+
+    def run(self):
+        logging.info("Arm Kernel Benchmark Task Start...")
+        benchmark_targets = self.config["benchmark_targets"]
+        for target in benchmark_targets:
+            file_name = os.path.basename(target)
+
+            subcommand = [
+                self.export_ld_path,
+                target,
+                "--benchmark_out_format=json",
+                f"--benchmark_out={os.path.join(self.config["remote_results_path"], file_name + ".json")}",
+            ]
+            command = [
+                "adb",
+                "shell",
+                f"'{self.make_command_str(subcommand)}'",
+            ]
+            logging.info(self.make_command_str(command))
+            os.system(self.make_command_str(command))
+
+        if not os.path.exists(PROJECT_ROOT_PATH / Path("temp")):
+            os.mkdir(PROJECT_ROOT_PATH / Path("temp"))
+
+        for target in benchmark_targets:
+            file_name = os.path.basename(target)
+
+            command = [
+                "adb",
+                "pull",
+                f"{os.path.join(self.config["remote_results_path"], file_name + ".json")}",
+                (PROJECT_ROOT_PATH / Path("temp")).as_posix(),
+            ]
+            logging.info(self.make_command_str(command))
+            os.system(self.make_command_str(command))
+
+            md_headers = [
+                "Name",
+                "Run Name",
+                "Run Type",
+                "Iterations",
+                "Real Time",
+                "CPU Time",
+                "Time Unit",
+            ]
+            with open(
+                os.path.join(PROJECT_ROOT_PATH / Path("temp"), file_name + ".json"), "r"
+            ) as file:
+                data = json.load(file)
+            rows = []
+            for item in data["benchmarks"]:
+                rows.append(
+                    [
+                        item["name"],
+                        item["run_name"],
+                        item["run_type"],
+                        item["iterations"],
+                        item["real_time"],
+                        item["cpu_time"],
+                        item["time_unit"],
+                    ]
+                )
+            markdown = "| " + " | ".join(md_headers) + " |\n"
+            markdown += "| " + " | ".join(["---"] * len(md_headers)) + " |\n"
+            for row in rows:
+                markdown += "| " + " | ".join(map(str, row)) + " |\n"
+
+            with open(
+                os.path.join(PROJECT_ROOT_PATH / Path("docs"), file_name + ".md"), "w"
+            ) as file:
+                file.write(f"# {file_name} Benchmark Results\n\n")
+                file.writelines(
+                    [
+                        f"device: {self.config['device_name']}\n\n",
+                        f"data: {data['context']['date']}\n\n",
+                        f"executable: {data['context']['executable']}\n\n",
+                        f"num_cpus: {data['context']['num_cpus']}\n\n",
+                        f"mhz_per_cpu: {data['context']['mhz_per_cpu']}\n\n",
+                        f"cpu_scaling_enabled: {data['context']['cpu_scaling_enabled']}\n\n",
+                        f"library_version: {data['context']['library_version']}\n\n",
+                        f"library_build_type: {data['context']['library_build_type']}\n\n",
+                    ]
+                )
+                file.write(markdown)
+
+
 TASKS = {
     "CMakeConfigTask": CMakeConfigTask,
     "CMakeFormatTask": CMakeFormatTask,
     "CMakeBuildTask": CMakeBuildTask,
+    "AdbPushTask": AdbPushTask,
+    "ArmKernelBenchmarkTask": ArmKernelBenchmarkTask,
 }
 
 

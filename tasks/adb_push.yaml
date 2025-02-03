@@ -1,0 +1,9 @@
+AdbPushTask:
+  files:
+    - "build-android-arm64-v8a/mllm/libMllmRT.so"
+    - "build-android-arm64-v8a/mllm/Backends/Arm/libMllmArmBackend.so"
+    - "build-android-arm64-v8a/tools/Quantizer/mllm-quantizer"
+    - "build-android-arm64-v8a/tools/TokenizeChecker/mllm-tokenize-checker"
+    - "build-android-arm64-v8a/benchmarks/Backend/Arm/MllmArmKernels-ElewiseOps"
+
+  to_path: "/data/local/tmp/mllm-advanced/bin/"
