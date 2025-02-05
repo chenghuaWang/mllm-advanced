@@ -13,11 +13,11 @@
 #include "mllm/Engine/BackendBase.hpp"
 
 #ifndef __ARM_NEON
-#error "Mllm's Arm backend only support those devices that have neon support"
+#error Mllm's Arm backend only support those devices that have neon support
 #endif
 
 #if __ARM_ARCH < 8
-#error "Mllm's Arm backend only support those devices that have armv8 or above"
+#error Mllm's Arm backend only support those devices that have armv8 or above
 #endif
 
 namespace mllm::arm {
