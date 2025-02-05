@@ -18,4 +18,10 @@ void ew_add_fp32(const float* __restrict A, const float* __restrict B, float* __
 
 void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
                  float16_t* __restrict C, int32_t len, int threads = 0);
+
+void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+                 int32_t len, int threads = 0);
+
+void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads = 0);
 }  // namespace mllm::arm

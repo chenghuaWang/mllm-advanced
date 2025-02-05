@@ -15,16 +15,20 @@
 #include <vector>
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/Tensor.hpp"
+#include "mllm/Engine/ParameterReader.hpp"
 
 namespace mllm {
 
 enum class OpType : int32_t {
   kOpType_Start = 0,
 
+  kFill,
+
   kAdd,
   kSub,
   kMul,
   kDiv,
+
   kLinear,
 
   kOpType_End,
@@ -92,7 +96,7 @@ class BaseOp {
   explicit BaseOp(OpType op_type);
 
   // TODO
-  virtual void load(void* params){};
+  virtual void load(std::shared_ptr<ParameterLoader>& ploader){};
 
   // TODO
   virtual void trace(void* trace_contex, std::vector<Tensor>& inputs,

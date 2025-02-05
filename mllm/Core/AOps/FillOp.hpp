@@ -1,28 +1,36 @@
 /**
- * @file ElewiseOp.hpp
+ * @file FillOp.hpp
  * @author chenghua Wang (chenghua.wang.edu@gmail.com)
  * @version 0.1
- * @date 2025-02-02
+ * @date 2025-02-04
  *
  * @copyright Copyright (c) 2025
  *
  */
 #pragma once
+
+#include <cstddef>
 #include "mllm/Core/AOps/BaseOp.hpp"
 
 namespace mllm {
 
-struct AddOpCargo : public BaseOpCargo<AddOpCargo> {};
+// type
+// 0 -> zeros
+// 1 -> ones
+// 2 -> specific
+// 3 -> random
+// 4 -> arrange
+struct FillOpCargo : public BaseOpCargo<FillOpCargo> {
+  size_t type = 0;
+  float value = 0.f;
+  float start = 0.f;
+  float end = 0.f;
+  float step = 0.f;
+};
 
-struct SubOpCargo : public BaseOpCargo<SubOpCargo> {};
-
-struct MulOpCargo : public BaseOpCargo<MulOpCargo> {};
-
-struct DivOpCargo : public BaseOpCargo<DivOpCargo> {};
-
-class AddOp : public BaseOp {
+class FillOp : public BaseOp {
  public:
-  AddOp();
+  explicit FillOp(const FillOpCargo& cargo);
 
   void load(std::shared_ptr<ParameterLoader>& ploader) override;
 
@@ -34,12 +42,9 @@ class AddOp : public BaseOp {
   void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+
+ protected:
+  FillOpCargo cargo_;
 };
-
-class SubOp : public BaseOp {};
-
-class MulOp : public BaseOp {};
-
-class DivOp : public BaseOp {};
 
 }  // namespace mllm

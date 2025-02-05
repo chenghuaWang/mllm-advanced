@@ -15,7 +15,9 @@ namespace mllm {
 
 AddOp::AddOp() : BaseOp(OpType::kAdd) {}
 
-void AddOp::load(void* params) { MLLM_WARN("AddOp::load is not implemented"); }
+void AddOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+  MLLM_WARN("AddOp::load is not implemented");
+}
 
 void AddOp::trace(void* trace_contex, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
   MLLM_WARN("AddOp::trace is not implemented");

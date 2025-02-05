@@ -8,6 +8,7 @@
  *
  */
 #include "mllm/Nn/Layer.hpp"
+#include "mllm/Engine/Context.hpp"
 
 namespace mllm::nn {
 
@@ -18,10 +19,13 @@ void LayerImpl::dump(DumpPrinter& printer) {
 }
 
 std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& LayerImpl::refParams() {
-  return params_;
+  return parameter_loader_->params();
 }
 
-Layer::Layer() { impl_ = std::make_shared<LayerImpl>(); }
+void LayerImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
+  parameter_loader_ = ploader;
+  MllmEngineCtx::instance().thisThread()->layer_ops_table[absoluteName()]->load(ploader);
+}
 
 std::shared_ptr<LayerImpl> Layer::impl() const { return impl_; }
 
@@ -29,5 +33,9 @@ void Layer::print() {
   auto p = DumpPrinter();
   impl_->dump(p);
 }
+
+OpType Layer::opType() const { return op_type_; }
+
+BaseOpCargoBase& Layer::refCargo() { return cargo_; }
 
 }  // namespace mllm::nn

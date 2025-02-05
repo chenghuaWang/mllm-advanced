@@ -72,7 +72,10 @@ class TensorImpl : public std::enable_shared_from_this<TensorImpl> {
 
   void _setRawPtr(void* ptr);
 
+  // How many bytes. Not Aligned
   size_t size() const;
+
+  size_t elementSize() const;
 
   [[nodiscard]] std::vector<size_t> shape() const;
 

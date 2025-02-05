@@ -14,16 +14,16 @@
 
 namespace mllm::arm {
 
-class ArmAddOp : public AddOp {
+class ArmAddOp final : public AddOp {
  public:
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
-class ArmSubOp : public AddOp {};
+class ArmSubOp final : public AddOp {};
 
-class ArmMulOp : public AddOp {};
+class ArmMulOp final : public AddOp {};
 
-class ArmDivOp : public AddOp {};
+class ArmDivOp final : public AddOp {};
 
 class ArmAddOpFactory final : public TypedOpFactory<OpType::kAdd, AddOpCargo> {
  public:

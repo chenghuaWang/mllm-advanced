@@ -56,7 +56,7 @@ size_t ArmAllocator::alignSize() const {
 #if __ARM_ARCH < 8
   return 16;
 #else
-  return 32;
+  return 16;
 #endif
 }
 

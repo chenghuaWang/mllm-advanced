@@ -10,23 +10,21 @@
 #pragma once
 
 #include "mllm/Nn/Layer.hpp"
-#include "mllm/Core/AOps/BaseOp.hpp"
 #include "mllm/Core/AOps/LinearOp.hpp"
 
 namespace mllm::nn {
 
 class Linear : public Layer {
  public:
-  Linear() = default;
-  explicit Linear(LinearOpCargo cargo);
+  Linear();
+
+  Linear(int32_t in_channels, int32_t out_channels, bool bias = true, bool transpose = false);
+
+  explicit Linear(const LinearOpCargo& cargo);
 
   [[nodiscard]] Tensor weight() const;
 
-  [[nodiscard]] Tensor bisa() const;
-
- private:
-  OpType op_type_ = OpType::kLinear;
-  LinearOpCargo cargo_;
+  [[nodiscard]] Tensor bias() const;
 };
 
 }  // namespace mllm::nn

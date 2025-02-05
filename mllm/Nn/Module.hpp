@@ -10,7 +10,10 @@
 #pragma once
 
 #include "mllm/Core/Tensor.hpp"
+#include "mllm/Engine/Context.hpp"
+#include "mllm/Engine/ParameterReader.hpp"
 #include "mllm/Nn/HierarchyBase.hpp"
+#include "mllm/Nn/Layer.hpp"
 #include "mllm/Utils/Common.hpp"
 #include "mllm/Utils/DumpPrinter.hpp"
 #include <memory>
@@ -26,6 +29,10 @@ class ModuleImpl : public HierarchyBase {
   void regHierarchy(std::shared_ptr<HierarchyBase> hb);
 
   void dump(DumpPrinter& printer);
+
+  std::vector<std::shared_ptr<HierarchyBase>>& hierarchies();
+
+  void load(std::shared_ptr<ParameterLoader>& ploader);
 
  private:
   std::vector<std::shared_ptr<HierarchyBase>> reg_hierarchies_;
@@ -44,8 +51,13 @@ class Module {
     auto ret = T(std::forward<Args>(args)...);
     impl_->regHierarchy(ret.impl());
     ret.impl()->setAbsoluteName(impl_->absoluteName() + "." + name);
-    // TODO
-    // register layer's op to thisThread() op table.
+    // register to thisThread table.
+    if constexpr (std::is_base_of_v<Layer, typeof(ret)>) {
+      auto& ctx = MllmEngineCtx::instance();
+      ctx.thisThread()->layer_ops_table.reg(
+          ret.impl()->absoluteName(),
+          ctx.getBackend(ret.impl()->device())->createOp(ret.opType(), ret.refCargo()));
+    }
     return ret;
   }
 
@@ -66,6 +78,8 @@ class Module {
   }
 
   void print();
+
+  Module& load(std::shared_ptr<ParameterLoader>& ploader);
 
   virtual std::vector<Tensor> forward(std::vector<Tensor>& inputs) = 0;
 

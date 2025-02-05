@@ -162,14 +162,14 @@ ObjMemBlock* MemManager::_alloc_buddy(DeviceTypes device, size_t omb_size) {
   auto& cur_seg_blocks = buddy_ctx_st_[device]->segment_blocks;
 
   // loop all seg.
-  for (auto& seg : cur_segs) {
-    if (omb_size > (seg.second->cap - seg.second->used)) continue;
-
+  for (auto seg : cur_segs) {
     auto& free_lists = cur_seg_blocks[seg.first];
     auto min_order = seg.second->min_order;
     auto max_order = seg.second->max_order;
 
     size_t required_size = std::max(omb_size, (size_t)(1ULL << min_order));
+    if (required_size > (seg.second->cap - seg.second->used)) continue;
+
     size_t order = _log2_ceil(required_size);
 
     if (order > max_order) {
@@ -191,12 +191,12 @@ ObjMemBlock* MemManager::_alloc_buddy(DeviceTypes device, size_t omb_size) {
       }
 
       // get the empty block
-      auto& block = free_lists[idx].front();
+      auto block = free_lists[idx].front();
       free_lists[idx].pop_front();
 
       // split this empty block if it has larger order
       while (block->buddy_order > order) {
-        size_t new_size = block->size >> 1U;
+        size_t new_size = block->size / 2;
         block->size = new_size;
         block->buddy_order--;
 

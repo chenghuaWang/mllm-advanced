@@ -13,8 +13,8 @@
 
 namespace mllm::arm {
 
-// aligned to 256bit(32B) vector.
-void arm_align_alloc(void** ptr, size_t required_bytes, size_t align = 32);
+// aligned to 128bit(16B) vector.
+void arm_align_alloc(void** ptr, size_t required_bytes, size_t align = 16);
 
 void arm_align_free(void* ptr);
 

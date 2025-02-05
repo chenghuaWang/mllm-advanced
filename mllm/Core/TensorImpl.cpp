@@ -26,7 +26,6 @@ TensorImpl::TensorImpl(const std::vector<size_t>& shape, DataTypes dtype, Device
     _acc *= shape_[i];
   }
 
-  // TODO give it special uuid.
   custom_32bit_uuid_ = MllmEngineCtx::instance().getUUID();
 }
 
@@ -85,11 +84,12 @@ size_t TensorImpl::size() const {
   return acc;
 }
 
-std::vector<size_t> TensorImpl::shape() const {
-  std::vector<size_t> ret;
-  ret.reserve(shape_len_);
-  for (int i = 0; i < shape_len_; i++) { ret.push_back(shape_[i]); }
-  return ret;
+size_t TensorImpl::elementSize() const {
+  size_t acc = 1;
+  for (int i = 0; i < shape_len_; i++) { acc *= shape_[i]; }
+  return acc;
 }
+
+std::vector<size_t> TensorImpl::shape() const { return {shape_, shape_ + shape_len_}; }
 
 }  // namespace mllm

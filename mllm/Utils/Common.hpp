@@ -36,4 +36,8 @@ enum ExitCode : int32_t {
 #define MLLM_RT_ASSERT_EQ(statement1, statement2)
 #endif
 
+#define NYI(...)                                                           \
+  fmt::print(fg(fmt::color::green_yellow) | fmt::emphasis::bold, "[NYI]"); \
+  fmt::print(" {}:{} {}\n", __FILE__, __LINE__, fmt::format(__VA_ARGS__));
+
 }  // namespace mllm

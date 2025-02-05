@@ -12,8 +12,10 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include "mllm/Core/AOps/BaseOp.hpp"
 #include "mllm/Core/TensorImpl.hpp"
 #include "mllm/Engine/Context.hpp"
+#include "mllm/Engine/ParameterReader.hpp"
 #include "mllm/Utils/Common.hpp"
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Nn/HierarchyBase.hpp"
@@ -29,22 +31,27 @@ class LayerImpl : public HierarchyBase {
 
   std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& refParams();
 
+  void load(std::shared_ptr<ParameterLoader>& ploader);
+
  private:
-  std::unordered_map<std::string, std::shared_ptr<TensorImpl>> params_;
+  std::shared_ptr<ParameterLoader> parameter_loader_;
 };
 
 class Layer {
  public:
-  Layer();
+  template<typename T>
+  Layer(OpType op_type, const T& cargo) : op_type_(op_type), cargo_(cargo) {
+    impl_ = std::make_shared<LayerImpl>();
+  }
 
   [[nodiscard]] std::shared_ptr<LayerImpl> impl() const;
 
   template<typename... Args>
   Tensor operator()(Args&&... args) {
     MLLM_RT_ASSERT((std::is_base_of_v<Tensor, Args> && ...));
-    MLLM_RT_ASSERT((!args.name().empty() && ...));
 
     if (MllmEngineCtx::instance().traceMode()) {
+      MLLM_RT_ASSERT((!args.name().empty() && ...));
       // TODO if pre-planing(Trace flag is set in context).
       // 1. reshape all layers first
       // 2. setup all layers.
@@ -52,18 +59,20 @@ class Layer {
       return Tensor(nullptr).setName(impl_->absoluteName() + ".out-0");
     }
 
-    // TODO if fully eager mode.
-    // 1. call reshape for this layer immediately.
-    // 2. execute forward for this layer immediately.
-    // return final tensor
+    // eager mode
+    auto inputs = std::vector<Tensor>{std::forward<decltype(args)>(args)...};
+    return MllmEngineCtx::instance().dispatch(impl_->absoluteName(), inputs)[0];
   }
 
   void print();
 
-  // TODO
-  virtual bool load() { return true; };
+  [[nodiscard]] OpType opType() const;
+
+  BaseOpCargoBase& refCargo();
 
  private:
+  BaseOpCargoBase cargo_;
+  OpType op_type_;
   std::shared_ptr<LayerImpl> impl_;
 };
 

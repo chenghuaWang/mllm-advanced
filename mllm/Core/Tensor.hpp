@@ -44,7 +44,8 @@ class Tensor {
   Tensor& alloc();
 
   // static Tensor arange();
-  // static Tensor ones();
+  static Tensor ones(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
+                     DeviceTypes device = kCPU);
   // static Tensor eyes();
 
   // TODO
@@ -69,6 +70,15 @@ class Tensor {
   [[nodiscard]] DeviceTypes device() const;
 
   [[nodiscard]] std::vector<size_t> shape() const;
+
+  [[nodiscard]] size_t elementSize() const;
+
+  [[nodiscard]] uint32_t uuid() const;
+
+  template<typename T>
+  T* ptr() const {
+    return impl_->ptr<T>();
+  }
 
   template<typename T>
   void print() {
@@ -131,7 +141,7 @@ class Tensor {
         continue;
       }
 
-      size_t i = static_cast<size_t>(idx);
+      auto i = static_cast<size_t>(idx);
       if (is_last_dim) {
         fmt::print("{}", data[offset + i]);
       } else {

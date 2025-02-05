@@ -9,9 +9,11 @@
  */
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/AOps/ElewiseOp.hpp"
+#include "mllm/Core/AOps/FillOp.hpp"
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Engine/Context.hpp"
+#include "mllm/Utils/Log.hpp"
 
 namespace mllm {
 
@@ -22,7 +24,19 @@ Tensor Tensor::empty(const std::vector<size_t>& shape, DataTypes dtype, DeviceTy
   return Tensor(impl);
 }
 
+Tensor Tensor::ones(const std::vector<size_t>& shape, DataTypes dtype, DeviceTypes device) {
+  auto impl = std::make_shared<TensorImpl>(shape, dtype, device);
+  MllmEngineCtx::instance().mem()->alloc(impl);
+  return MllmEngineCtx::instance().dispatch(OpType::kFill, FillOpCargo{.type = 1},
+                                            {Tensor(impl)})[0];
+}
+
 Tensor& Tensor::alloc() {
+  if (impl_->rptr()) {
+    MLLM_WARN("Tensor already allocated. Tensor uuid is <{}> name is <{}>", impl_->uuid(),
+              impl_->name());
+    return *this;
+  }
   MllmEngineCtx::instance().mem()->alloc(impl_);
   return *this;
 }
@@ -66,5 +80,9 @@ DataTypes Tensor::dtype() const { return impl_->dtype(); }
 DeviceTypes Tensor::device() const { return impl_->device(); }
 
 std::vector<size_t> Tensor::shape() const { return impl_->shape(); }
+
+size_t Tensor::elementSize() const { return impl_->elementSize(); }
+
+uint32_t Tensor::uuid() const { return impl_->uuid(); }
 
 }  // namespace mllm

@@ -34,6 +34,18 @@ void ModuleImpl::dump(DumpPrinter& printer) {
   }
 }
 
+std::vector<std::shared_ptr<HierarchyBase>>& ModuleImpl::hierarchies() { return reg_hierarchies_; }
+
+void ModuleImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
+  auto& h = hierarchies();
+  for (auto& hb : h) {
+    switch (hb->type()) {
+      case HierarchyTypes::kModule: std::static_pointer_cast<ModuleImpl>(hb)->load(ploader); break;
+      case HierarchyTypes::kLayer: std::static_pointer_cast<LayerImpl>(hb)->load(ploader); break;
+    }
+  }
+}
+
 Module::Module() { impl_ = std::make_shared<ModuleImpl>(); }
 
 void Module::selfAssginName(const std::string& name) {
@@ -51,6 +63,11 @@ std::shared_ptr<ModuleImpl> Module::impl() { return impl_; }
 void Module::print() {
   DumpPrinter p;
   impl_->dump(p);
+}
+
+Module& Module::load(std::shared_ptr<ParameterLoader>& ploader) {
+  impl_->load(ploader);
+  return *this;
 }
 
 }  // namespace mllm::nn

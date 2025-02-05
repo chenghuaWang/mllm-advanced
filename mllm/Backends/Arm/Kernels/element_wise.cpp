@@ -216,4 +216,14 @@ void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
   for (int i = 0; i < lefts; ++i) { c_ptr[i] = static_cast<float16_t>(a_ptr[i] + b_ptr[i]); }
 }
 
+void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+                 int32_t len, int threads) {
+  // TODO
+}
+
+void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads) {
+  // TODO
+}
+
 }  // namespace mllm::arm

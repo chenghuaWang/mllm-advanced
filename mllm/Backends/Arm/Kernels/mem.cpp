@@ -8,6 +8,7 @@
  *
  */
 #include <cstdlib>
+#include "mllm/Utils/Common.hpp"
 #include "mllm/Backends/Arm/Kernels/mem.hpp"
 
 namespace mllm::arm {
@@ -26,6 +27,7 @@ void arm_align_alloc(void** ptr, size_t required_bytes, size_t align) {
   p2 = (void**)(((size_t)(p1) + offset) & ~(align - 1));
   p2[-1] = p1;
   *ptr = p2;
+  MLLM_RT_ASSERT_EQ(reinterpret_cast<size_t>(*ptr) % align, 0);
 }
 
 void arm_align_free(void* ptr) { free(((void**)ptr)[-1]); }
