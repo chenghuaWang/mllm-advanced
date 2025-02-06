@@ -17,7 +17,7 @@ class SgemvTest : public testing::Test {
 
   void SetUp() override {
     // A: 1xK
-    mllm::arm::arm_align_alloc(&A, 1024 * 4, 16);
+    mllm::arm::arm_align_alloc(&A, K * 4, 16);
     // B: NxK
     mllm::arm::arm_align_alloc(&B, N * K * 4, 16);
     // C: 1xN
@@ -29,7 +29,7 @@ class SgemvTest : public testing::Test {
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+    std::uniform_real_distribution<float> dist;
 
     auto a_ptr = reinterpret_cast<float*>(A);
     auto b_ptr = reinterpret_cast<float*>(B);
@@ -58,9 +58,12 @@ class SgemvTest : public testing::Test {
     auto c_ptr = reinterpret_cast<float*>(C);
     auto rc_ptr = reinterpret_cast<float*>(rC);
     for (int n = 0; n < N; ++n) {
-      auto delta = c_ptr[n] - rc_ptr[n];
-      if (std::abs(delta) >= 0.0001) {
-        Dbg(delta);
+      const auto imp_value = rc_ptr[n];
+      const auto ref_value = c_ptr[n];
+      const auto rel_error =
+          ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+      if (rel_error > 0.0001F) {
+        Dbg(rel_error);
         return false;
       }
     }

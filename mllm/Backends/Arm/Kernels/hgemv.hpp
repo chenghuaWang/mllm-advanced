@@ -29,6 +29,10 @@ void hgemv_1K_NK_V1(const float16_t* __restrict A, const float16_t* __restrict B
                     const float16_t* __restrict bias, float16_t* __restrict C, int K, int N);
 
 // High Presion FP16 GEMV
+//
+// !!! The precision of V2 is one order of magnitude higher than that of V1.
+// !!! But V1 is 1.3 times faster than V2.
+//
 // Optimized for:
 // 1. Armv8.2-a with FP16 support
 // 2. Cacheline size 64 bytes
