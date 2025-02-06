@@ -3,5 +3,6 @@ ArmKernelBenchmarkTask:
 
   benchmark_targets:
     - "/data/local/tmp/mllm-advanced/bin/MllmArmKernels-ElewiseOps"
+    - "/data/local/tmp/mllm-advanced/bin/MllmArmKernels-GemvOps"
 
   remote_results_path: "/data/local/tmp/mllm-advanced/bin/results"
