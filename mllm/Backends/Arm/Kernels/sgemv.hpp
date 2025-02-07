@@ -17,7 +17,8 @@
 namespace mllm::arm {
 
 void sgemv_1K_NK_V1(const float* __restrict A, const float* __restrict B,
-                    const float* __restrict bias, float* __restrict C, int K, int N);
+                    const float* __restrict bias, float* __restrict C, int K, int N,
+                    int threads = 0);
 
 }
 

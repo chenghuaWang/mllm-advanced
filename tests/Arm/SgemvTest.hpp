@@ -50,8 +50,8 @@ class SgemvTest : public testing::Test {
     }
   }
 
-  void Calculate() {
-    mllm::arm::sgemv_1K_NK_V1((float*)A, (float*)B, (float*)BIAS, (float*)C, K, N);
+  void Calculate(int threads = 0) {
+    mllm::arm::sgemv_1K_NK_V1((float*)A, (float*)B, (float*)BIAS, (float*)C, K, N, threads);
   }
 
   bool Compare() {

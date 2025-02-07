@@ -74,8 +74,9 @@ class HgemvTest : public testing::Test {
     }
   }
 
-  void Calculate() {
-    mllm::arm::hgemv_1K_NK_V1((float16_t*)A, (float16_t*)B, (float16_t*)BIAS, (float16_t*)C, K, N);
+  void Calculate(int threads = 0) {
+    mllm::arm::hgemv_1K_NK_V1((float16_t*)A, (float16_t*)B, (float16_t*)BIAS, (float16_t*)C, K, N,
+                              threads);
   }
 
   bool Compare() {
@@ -180,9 +181,9 @@ class HgemvHighPrecisionTest : public testing::Test {
     }
   }
 
-  void Calculate() {
+  void Calculate(int threads = 0) {
     mllm::arm::hgemv_1K_NK_V2_HP((float16_t*)A, (float16_t*)B, (float16_t*)BIAS, (float16_t*)C, K,
-                                 N);
+                                 N, threads);
   }
 
   bool Compare() {

@@ -26,7 +26,8 @@ namespace mllm::arm {
 //
 // This Half Precision GEMV is for nn::Linear in decoding stage of LLM.
 void hgemv_1K_NK_V1(const float16_t* __restrict A, const float16_t* __restrict B,
-                    const float16_t* __restrict bias, float16_t* __restrict C, int K, int N);
+                    const float16_t* __restrict bias, float16_t* __restrict C, int K, int N,
+                    int threads = 0);
 
 // High Presion FP16 GEMV
 //
@@ -40,7 +41,8 @@ void hgemv_1K_NK_V1(const float16_t* __restrict A, const float16_t* __restrict B
 //
 // This Half Precision GEMV is for nn::Linear in decoding stage of LLM.
 void hgemv_1K_NK_V2_HP(const float16_t* __restrict A, const float16_t* __restrict B,
-                       const float16_t* __restrict bias, float16_t* __restrict C, int K, int N);
+                       const float16_t* __restrict bias, float16_t* __restrict C, int K, int N,
+                       int threads = 0);
 }  // namespace mllm::arm
 
 #endif
