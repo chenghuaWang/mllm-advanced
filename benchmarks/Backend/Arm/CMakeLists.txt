@@ -5,3 +5,7 @@ target_link_libraries(MllmArmKernels-ElewiseOps PRIVATE benchmark::benchmark
 add_executable(MllmArmKernels-GemvOps GemvOps.cpp)
 target_link_libraries(MllmArmKernels-GemvOps PRIVATE benchmark::benchmark
                                                      MllmRT MllmArmBackend)
+
+add_executable(MllmArmKernels-ComplexOps ComplexOps.cpp)
+target_link_libraries(MllmArmKernels-ComplexOps PRIVATE benchmark::benchmark
+                                                    MllmRT MllmArmBackend)

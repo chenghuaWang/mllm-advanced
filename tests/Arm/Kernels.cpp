@@ -1,5 +1,6 @@
 #include "HgemvTest.hpp"
 #include "SgemvTest.hpp"
+#include "SoftmaxTest.hpp"
 #include <gtest/gtest.h>
 
 TEST_F(HgemvTest, Hgemv) {
@@ -18,6 +19,11 @@ TEST_F(SgemvTest, Sgemv) {
   CalculateRef();
   Calculate();
   EXPECT_EQ(Compare(), true);
+}
+
+TEST_F(SoftmaxTest, SoftmaxFp32) {
+  CalculateRef();
+  EXPECT_EQ(CalculateFp32AndCompare(), true);
 }
 
 int main(int argc, char** argv) {

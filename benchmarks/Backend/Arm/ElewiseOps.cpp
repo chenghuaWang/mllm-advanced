@@ -10,9 +10,9 @@ static void add_f32(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     void *A, *B, *C;
-    arm_align_alloc(&A, size, 32);
-    arm_align_alloc(&B, size, 32);
-    arm_align_alloc(&C, size, 32);
+    arm_align_alloc(&A, size, 16);
+    arm_align_alloc(&B, size, 16);
+    arm_align_alloc(&C, size, 16);
     auto a_ptr = (float*)A;
     auto b_ptr = (float*)B;
     auto c_ptr = (float*)C;
@@ -32,9 +32,9 @@ static void add_f16(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     void *A, *B, *C;
-    arm_align_alloc(&A, size, 32);
-    arm_align_alloc(&B, size, 32);
-    arm_align_alloc(&C, size, 32);
+    arm_align_alloc(&A, size, 16);
+    arm_align_alloc(&B, size, 16);
+    arm_align_alloc(&C, size, 16);
     auto a_ptr = (float16_t*)A;
     auto b_ptr = (float16_t*)B;
     auto c_ptr = (float16_t*)C;
@@ -54,9 +54,9 @@ static void add_f32_4_threads(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     void *A, *B, *C;
-    arm_align_alloc(&A, size, 32);
-    arm_align_alloc(&B, size, 32);
-    arm_align_alloc(&C, size, 32);
+    arm_align_alloc(&A, size, 16);
+    arm_align_alloc(&B, size, 16);
+    arm_align_alloc(&C, size, 16);
     auto a_ptr = (float*)A;
     auto b_ptr = (float*)B;
     auto c_ptr = (float*)C;
@@ -76,9 +76,9 @@ static void add_f16_4_threads(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     void *A, *B, *C;
-    arm_align_alloc(&A, size, 32);
-    arm_align_alloc(&B, size, 32);
-    arm_align_alloc(&C, size, 32);
+    arm_align_alloc(&A, size, 16);
+    arm_align_alloc(&B, size, 16);
+    arm_align_alloc(&C, size, 16);
     auto a_ptr = (float16_t*)A;
     auto b_ptr = (float16_t*)B;
     auto c_ptr = (float16_t*)C;

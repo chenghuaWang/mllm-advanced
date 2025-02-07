@@ -1,0 +1,152 @@
+/**
+ * @file softmax.cpp
+ * @author chenghua Wang (chenghua.wang.edu@gmail.com)
+ * @version 0.1
+ * @date 2025-02-07
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include "mllm/Backends/Arm/Kernels/softmax.hpp"
+#include "mllm/Backends/Arm/Kernels/math.hpp"
+
+namespace mllm::arm {
+
+void softmax_V1(const float* __restrict X, float* __restrict Y, int len, int stride) {
+  // memory is not continue.
+  if (stride != 1 || len <= 16) {
+    float max_value = std::numeric_limits<float>::lowest();
+    // Pass 1: find the max value in X
+    for (int i = 0; i < len; ++i) { max_value = std::max(max_value, X[i * stride]); }
+
+    // Pass 2: minus max_value and calculate exp
+    float sum = 0.f;
+    for (int i = 0; i < len; ++i) {
+      auto tmp = std::expf(X[i * stride] - max_value);
+      Y[i * stride] = tmp;
+      sum += tmp;
+    }
+
+    sum = 1.f / sum;
+
+    // Pass 3: divide sum
+    for (int i = 0; i < len; ++i) { Y[i * stride] *= sum; }
+
+    return;
+  }
+
+  // use vectorized version when stride is 1 and len is large.
+  // Pass 1: find the max value in X
+  float32x4_t max_vec_0 = vld1q_f32(X);
+  float32x4_t max_vec_1 = vld1q_f32(X + 4);
+  float32x4_t max_vec_2 = vld1q_f32(X + 8);
+  float32x4_t max_vec_3 = vld1q_f32(X + 12);
+  int i;
+  for (i = 16; i <= len - 16; i += 16) {
+    float32x4_t tmp_0 = vld1q_f32(X + i);
+    max_vec_0 = vmaxq_f32(max_vec_0, tmp_0);
+
+    float32x4_t tmp_1 = vld1q_f32(X + i + 4);
+    max_vec_1 = vmaxq_f32(max_vec_1, tmp_1);
+
+    float32x4_t tmp_2 = vld1q_f32(X + i + 8);
+    max_vec_2 = vmaxq_f32(max_vec_2, tmp_2);
+
+    float32x4_t tmp_3 = vld1q_f32(X + i + 12);
+    max_vec_3 = vmaxq_f32(max_vec_3, tmp_3);
+  }
+  max_vec_0 = vmaxq_f32(max_vec_0, max_vec_1);
+  max_vec_2 = vmaxq_f32(max_vec_2, max_vec_3);
+  max_vec_0 = vmaxq_f32(max_vec_0, max_vec_2);
+
+  for (; i <= len - 4; i += 4) {
+    float32x4_t tmp_0 = vld1q_f32(X + i);
+    max_vec_0 = vmaxq_f32(max_vec_0, tmp_0);
+  }
+  float max_value = vmaxvq_f32(max_vec_0);
+  for (; i < len; ++i) { max_value = std::max(max_value, X[i]); }
+
+  // Pass 2: minus max_value and calculate exp and sumup
+  float32x4_t sum_vec_0 = vdupq_n_f32(0.f);
+  float32x4_t sum_vec_1 = vdupq_n_f32(0.f);
+  float32x4_t sum_vec_2 = vdupq_n_f32(0.f);
+  float32x4_t sum_vec_3 = vdupq_n_f32(0.f);
+
+  max_vec_0 = vdupq_n_f32(max_value);
+  max_vec_1 = vdupq_n_f32(max_value);
+  max_vec_2 = vdupq_n_f32(max_value);
+  max_vec_3 = vdupq_n_f32(max_value);
+
+  for (i = 0; i <= len - 16; i += 16) {
+    float32x4_t tmp_0 = vld1q_f32(X + i);
+    float32x4_t exp_tmp_0 = vexpq_fast_f32(vsubq_f32(tmp_0, max_vec_0));
+    sum_vec_0 = vaddq_f32(sum_vec_0, exp_tmp_0);
+    vst1q_f32(Y + i, exp_tmp_0);
+
+    float32x4_t tmp_1 = vld1q_f32(X + i + 4);
+    float32x4_t exp_tmp_1 = vexpq_fast_f32(vsubq_f32(tmp_1, max_vec_1));
+    sum_vec_1 = vaddq_f32(sum_vec_1, exp_tmp_1);
+    vst1q_f32(Y + i + 4, exp_tmp_1);
+
+    float32x4_t tmp_2 = vld1q_f32(X + i + 8);
+    float32x4_t exp_tmp_2 = vexpq_fast_f32(vsubq_f32(tmp_2, max_vec_2));
+    sum_vec_2 = vaddq_f32(sum_vec_2, exp_tmp_2);
+    vst1q_f32(Y + i + 8, exp_tmp_2);
+
+    float32x4_t tmp_3 = vld1q_f32(X + i + 12);
+    float32x4_t exp_tmp_3 = vexpq_fast_f32(vsubq_f32(tmp_3, max_vec_3));
+    sum_vec_3 = vaddq_f32(sum_vec_3, exp_tmp_3);
+    vst1q_f32(Y + i + 12, exp_tmp_3);
+  }
+  sum_vec_0 = vaddq_f32(sum_vec_0, sum_vec_1);
+  sum_vec_2 = vaddq_f32(sum_vec_2, sum_vec_3);
+  sum_vec_0 = vaddq_f32(sum_vec_0, sum_vec_2);
+  for (; i <= len - 4; i += 4) {
+    float32x4_t tmp_0 = vld1q_f32(X + i);
+    float32x4_t exp_tmp_0 = vexpq_fast_f32(vsubq_f32(tmp_0, max_vec_0));
+    sum_vec_0 = vaddq_f32(sum_vec_0, exp_tmp_0);
+    vst1q_f32(Y + i, exp_tmp_0);
+  }
+  float sum_value = vaddvq_f32(sum_vec_0);
+  for (; i < len; ++i) {
+    float tmp = std::expf(X[i] - max_value);
+    Y[i] = tmp;
+    sum_value += tmp;
+  }
+  sum_value = 1.f / sum_value;
+
+  // Pass 3: divide sum
+  sum_vec_0 = vdupq_n_f32(sum_value);
+  sum_vec_1 = vdupq_n_f32(sum_value);
+  sum_vec_2 = vdupq_n_f32(sum_value);
+  sum_vec_3 = vdupq_n_f32(sum_value);
+
+  for (i = 0; i <= len - 16; i += 16) {
+    float32x4_t tmp_0 = vld1q_f32(Y + i);
+    float32x4_t ans_0 = vmulq_f32(tmp_0, sum_vec_0);
+    vst1q_f32(Y + i, ans_0);
+
+    float32x4_t tmp_1 = vld1q_f32(Y + i + 4);
+    float32x4_t ans_1 = vmulq_f32(tmp_1, sum_vec_1);
+    vst1q_f32(Y + i + 4, ans_1);
+
+    float32x4_t tmp_2 = vld1q_f32(Y + i + 8);
+    float32x4_t ans_2 = vmulq_f32(tmp_2, sum_vec_2);
+    vst1q_f32(Y + i + 8, ans_2);
+
+    float32x4_t tmp_3 = vld1q_f32(Y + i + 12);
+    float32x4_t ans_3 = vmulq_f32(tmp_3, sum_vec_3);
+    vst1q_f32(Y + i + 12, ans_3);
+  }
+  for (; i <= len - 4; i += 4) {
+    float32x4_t tmp_0 = vld1q_f32(Y + i);
+    float32x4_t ans_0 = vmulq_f32(tmp_0, sum_vec_0);
+    vst1q_f32(Y + i, ans_0);
+  }
+  for (; i < len; ++i) { Y[i] *= sum_value; }
+}
+
+}  // namespace mllm::arm

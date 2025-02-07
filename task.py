@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import json
 import yaml
 import argparse
@@ -233,6 +234,8 @@ class ArmKernelBenchmarkTask(Task):
             ]
             logging.info(self.make_command_str(command))
             os.system(self.make_command_str(command))
+            logging.info("Waiting 16 seconds for device to calm down...")
+            time.sleep(16)
 
         if not os.path.exists(PROJECT_ROOT_PATH / Path("temp")):
             os.mkdir(PROJECT_ROOT_PATH / Path("temp"))
