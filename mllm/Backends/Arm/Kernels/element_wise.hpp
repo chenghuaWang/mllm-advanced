@@ -9,6 +9,9 @@
  */
 #pragma once
 
+#if !defined(__aarch64__)
+#error Arm compiler is required.
+#else
 #include <arm_neon.h>
 #include <cstdint>
 
@@ -16,12 +19,18 @@ namespace mllm::arm {
 void ew_add_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
                  int32_t len, int threads = 0);
 
-void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
-                 float16_t* __restrict C, int32_t len, int threads = 0);
-
 void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
                  int32_t len, int threads = 0);
 
+#if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
+#error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
+#else
+void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads = 0);
+
 void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
                  float16_t* __restrict C, int32_t len, int threads = 0);
+#endif  // fp16
 }  // namespace mllm::arm
+
+#endif

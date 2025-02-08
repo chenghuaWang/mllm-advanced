@@ -44,6 +44,11 @@ TEST_F(SoftmaxTest, SoftmaxFp32) {
   EXPECT_EQ(CalculateFp32AndCompare(), true);
 }
 
+TEST_F(SoftmaxTest, SoftmaxFp16) {
+  CalculateRef();
+  EXPECT_EQ(CalculateFp16AndCompare(), true);
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

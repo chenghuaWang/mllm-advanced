@@ -88,8 +88,62 @@ static void softmax_v1_f32_kxk_4_threads(benchmark::State& state) {
   arm_align_free(Y);
 }
 
+static void softmax_v1_f16(benchmark::State& state) {
+  size_t size = state.range(0);
+  void *X, *Y;
+  arm_align_alloc(&X, size * 2, 16);
+  arm_align_alloc(&Y, size * 2, 16);
+
+  std::fill((float16_t*)X, (float16_t*)X + size, 66.f);
+
+  for (auto _ : state) { hsoftmax_V1((float16_t*)X, (float16_t*)Y, size, 1); }
+
+  arm_align_free(X);
+  arm_align_free(Y);
+}
+
+static void softmax_v1_f16_kxk(benchmark::State& state) {
+  size_t size = state.range(0);
+  void *X, *Y;
+  arm_align_alloc(&X, size * size * 2, 16);
+  arm_align_alloc(&Y, size * size * 2, 16);
+
+  std::fill((float16_t*)X, (float16_t*)X + size * size, 66.f);
+
+  for (auto _ : state) {
+    for (int i = 0; i < size; ++i) {
+      hsoftmax_V1((float16_t*)X + i * size, (float16_t*)Y + i * size, size, 1);
+    }
+  }
+
+  arm_align_free(X);
+  arm_align_free(Y);
+}
+
+static void softmax_v1_f16_kxk_4_threads(benchmark::State& state) {
+  size_t size = state.range(0);
+  void *X, *Y;
+  arm_align_alloc(&X, size * size * 2, 16);
+  arm_align_alloc(&Y, size * size * 2, 16);
+
+  std::fill((float16_t*)X, (float16_t*)X + size * size, 66.f);
+
+  for (auto _ : state) {
+#pragma omp parallel for num_threads(4) schedule(auto)
+    for (int i = 0; i < size; ++i) {
+      hsoftmax_V1((float16_t*)X + i * size, (float16_t*)Y + i * size, size, 1);
+    }
+  }
+
+  arm_align_free(X);
+  arm_align_free(Y);
+}
+
 BENCHMARK(softmax_baseline)->RangeMultiplier(2)->Range(64, 2048);
 BENCHMARK(softmax_v1_f32)->RangeMultiplier(2)->Range(64, 2048);
 BENCHMARK(softmax_v1_f32_kxk)->RangeMultiplier(2)->Range(64, 2048);
 BENCHMARK(softmax_v1_f32_kxk_4_threads)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK(softmax_v1_f16)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK(softmax_v1_f16_kxk)->RangeMultiplier(2)->Range(64, 2048);
+BENCHMARK(softmax_v1_f16_kxk_4_threads)->RangeMultiplier(2)->Range(64, 2048);
 BENCHMARK_MAIN();

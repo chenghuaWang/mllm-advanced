@@ -25,6 +25,8 @@ void softmax_V1(const float* __restrict X, float* __restrict Y, int len, int str
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else
 
+void hsoftmax_V1(const float16_t* __restrict X, float16_t* __restrict Y, int len, int stride);
+
 #endif  // fp16
 
 }  // namespace mllm::arm

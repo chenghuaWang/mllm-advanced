@@ -23,9 +23,15 @@ namespace mllm::arm {
 
 namespace {
 
-void hgemm_mk_kn_mn(const float16_t* __restrict lhs, const float16_t* __restrict rhs,
-                    float16_t* __restrict dst, const size_t M, const size_t K, const size_t N,
-                    const float16_t* __restrict bias) {
+void hgemm_mk_nk_mn_V1(const float16_t* __restrict lhs, const float16_t* __restrict rhs,
+                       float16_t* __restrict dst, size_t M, size_t K, size_t N,
+                       const float16_t* __restrict bias, int threads) {
+  // TODO
+}
+
+void hgemm_mk_kn_mn_V1(const float16_t* __restrict lhs, const float16_t* __restrict rhs,
+                       float16_t* __restrict dst, size_t M, size_t K, size_t N,
+                       const float16_t* __restrict bias) {
   /// Micro-kernel interface
   constexpr kai_matmul_clamp_f16_f16_f16p_ukernel ukernel{
       kai_get_m_step_matmul_clamp_f16_f16_f16p16x1biasf16_6x16x8_neon_mla,

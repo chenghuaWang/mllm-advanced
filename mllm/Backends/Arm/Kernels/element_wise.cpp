@@ -8,7 +8,9 @@
  *
  */
 #include "mllm/Backends/Arm/Kernels/element_wise.hpp"
-#include <omp.h>
+#if !defined(__aarch64__)
+#error Arm compiler is required.
+#else
 #include <arm_neon.h>
 
 namespace mllm::arm {
@@ -92,6 +94,14 @@ void ew_add_fp32(const float* __restrict A, const float* __restrict B, float* __
   for (int i = 0; i < lefts; ++i) { c_ptr[i] = a_ptr[i] + b_ptr[i]; }
 }
 
+void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+                 int32_t len, int threads) {
+  // TODO
+}
+
+#if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
+#error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
+#else
 void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
                  float16_t* __restrict C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;
@@ -170,14 +180,11 @@ void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
   for (int i = 0; i < lefts; ++i) { c_ptr[i] = static_cast<float16_t>(a_ptr[i] + b_ptr[i]); }
 }
 
-void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
-                 int32_t len, int threads) {
-  // TODO
-}
-
 void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
                  float16_t* __restrict C, int32_t len, int threads) {
   // TODO
 }
+#endif  // fp16
 
 }  // namespace mllm::arm
+#endif

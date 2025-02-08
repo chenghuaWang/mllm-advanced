@@ -7,5 +7,5 @@ CMakeConfigTask:
     - "-DMLLM_BUILD_ARM_BACKEND=ON"
     - "-DANDROID_PLATFORM=android-28"
     - "-DANDROID_ABI=arm64-v8a"
-    - "-DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\""
+    - "-DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16;-ffast-math\""
     

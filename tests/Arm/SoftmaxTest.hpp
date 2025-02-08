@@ -89,6 +89,40 @@ class SoftmaxTest : public testing::Test {
     return flag;
   }
 
+  bool CalculateFp16AndCompare() {
+    void *X, *Y;
+    mllm::arm::arm_align_alloc(&X, L * 2, 16);
+    mllm::arm::arm_align_alloc(&Y, L * 2, 16);
+
+    auto x_ptr = reinterpret_cast<float16_t*>(X);
+    auto rx_ptr = reinterpret_cast<float*>(rXfp32);
+    auto y_ptr = reinterpret_cast<float16_t*>(Y);
+    auto ry_ptr = reinterpret_cast<float*>(rYfp32);
+
+    for (int i = 0; i < L; ++i) x_ptr[i] = static_cast<float16_t>(rx_ptr[i]);
+
+    mllm::arm::hsoftmax_V1(x_ptr, y_ptr, L, 1);
+
+    bool flag = true;
+
+    for (int i = 0; i < L; ++i) {
+      const auto imp_value = ry_ptr[i];
+      const auto ref_value = y_ptr[i];
+      const auto rel_error =
+          ref_value != 0 ? std::fabs((imp_value - ref_value) / ref_value) : std::fabs(imp_value);
+      if (rel_error > 0.6F) {
+        Dbg(rel_error, i, imp_value, ref_value);
+        flag = false;
+        break;
+      }
+    }
+
+    mllm::arm::arm_align_free(X);
+    mllm::arm::arm_align_free(Y);
+
+    return flag;
+  }
+
   void TearDown() override {
     mllm::arm::arm_align_free(rXfp32);
     mllm::arm::arm_align_free(rYfp32);

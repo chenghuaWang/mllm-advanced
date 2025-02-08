@@ -102,6 +102,16 @@ static inline float32x4_t vexpq_fast_f32(float32x4_t x) {
   return y;
 }
 
+static inline float32x4_t vsigmoid_f32(float32x4_t x) {
+  float32x4_t ones = vdupq_n_f32(1.f);
+  x = vnegq_f32(x);
+  x = vexpq_fast_f32(x);
+  x = vaddq_f32(x, ones);
+  float32x4_t out = vrecpeq_f32(x);
+  out = vmulq_f32(vrecpsq_f32(x, out), out);
+  return vmulq_f32(vrecpsq_f32(x, out), out);
+}
+
 #if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else
@@ -136,7 +146,7 @@ static inline float16x8_t vexpq_fast_f16(float16x8_t x) {
   result_hi = vexpq_fast_f32(result_hi);
   result_lo = vexpq_fast_f32(result_lo);
 
-  return vcombine_f16(vcvt_f16_f32(result_hi), vcvt_f16_f32(result_lo));
+  return vcombine_f16(vcvt_f16_f32(result_lo), vcvt_f16_f32(result_hi));
 }
 
 #endif
