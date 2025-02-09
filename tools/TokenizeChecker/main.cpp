@@ -10,14 +10,12 @@
 
 #include <iostream>
 #include <string>
-#include "mllm/Models/qwen2/tokenizer_qwen2.hpp"
-#include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
+#include "mllm/Models/qwen2/tokenization_qwen2.hpp"
 
 int main() {
-  mllm::preprocessor::initLocal();
+  mllm::models::Qwen2Tokenizer tokenizer(
+      "/media/wch/D/mllm-all/mllm-models/DeepSeek-R1-Distill-Qwen-1.5B/tokenizer.json");
   std::string res;
   std::getline(std::cin, res);
-  std::vector<std::wstring> splited;
-  mllm::models::qwen2Regex(res, splited);
-  for (auto& s : splited) { std::wcout << s << std::endl; }
+  tokenizer._tokenize(res);
 }

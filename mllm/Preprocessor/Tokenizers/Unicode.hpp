@@ -28,6 +28,8 @@ inline bool isLetter(wchar_t c) { return std::iswalpha(c); }
 
 inline bool isDigit(wchar_t c) { return std::iswdigit(c); }
 
+std::string wideString2Utf8String(const std::wstring& wstr);
+
 std::wstring utf8string2WideString(const std::string& str);
 
 // same with gpt2.bytes_to_unicode

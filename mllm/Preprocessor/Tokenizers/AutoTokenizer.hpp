@@ -22,4 +22,10 @@
 #include <nlohmann/json_fwd.hpp>
 using json = nlohmann::json;
 
-namespace mllm::preprocessor {}
+namespace mllm::preprocessor {
+
+class AutoTokenizer {
+  virtual void _tokenize(const std::string& str) = 0;
+};
+
+}  // namespace mllm::preprocessor

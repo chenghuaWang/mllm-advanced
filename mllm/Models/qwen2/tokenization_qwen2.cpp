@@ -7,10 +7,11 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "mllm/Models/qwen2/tokenizer_qwen2.hpp"
+#include "mllm/Models/qwen2/tokenization_qwen2.hpp"
+#include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
+#include "mllm/Utils/Dbg.hpp"
 #include <string>
 #include <vector>
-#include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
 
 namespace mllm::models {
 
@@ -77,7 +78,6 @@ bool qwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos, std::wstri
     // Require at least one non-letter/digit/whitespace
     if (pos < str.size() && !std::iswspace(str[pos]) && !preprocessor::isLetter(str[pos])
         && !preprocessor::isDigit(str[pos])) {
-      start = pos;  // Reset start after optional space
       do {
         ++pos;
       } while (pos < str.size() && !std::iswspace(str[pos]) && !preprocessor::isLetter(str[pos])
@@ -149,4 +149,29 @@ bool qwen2Regex(const std::string& str, std::vector<std::wstring>& splited) {
   return true;
 }
 
+Qwen2Tokenizer::Qwen2Tokenizer(const std::string& file_path) {
+  preprocessor::initLocal();
+  preprocessor::makeBytes2UnicodeMap(bytes_2_unicode_dict_);
+  bpe_.initFromSentencePieceJson(file_path);
+}
+
+void Qwen2Tokenizer::_tokenize(const std::string& str) {
+  std::vector<std::wstring> ret;
+  std::vector<std::wstring> splited;
+  mllm::models::qwen2Regex(str, splited);
+  for (const auto& s : splited) {
+    auto utf_8_str = preprocessor::wideString2Utf8String(s);
+    std::wstring mapped_str;
+    for (unsigned char c : utf_8_str) { mapped_str.push_back(bytes_2_unicode_dict_[c]); }
+
+    auto bpe_ts = bpe_._bpe(mapped_str);
+
+    for (const auto& bpe_t : bpe_ts) { ret.push_back(bpe_t); }
+  }
+
+  // TODO remove this line
+  for (auto& s : ret) { Dbg(bpe_._lookup_vocab(s)); }
+
+  // TODO
+}
 }  // namespace mllm::models

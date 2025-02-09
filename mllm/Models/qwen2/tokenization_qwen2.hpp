@@ -8,8 +8,10 @@
  *
  */
 #pragma once
-#include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
+#include "mllm/Preprocessor/Tokenizers/AutoTokenizer.hpp"
+#include "mllm/Preprocessor/Tokenizers/BPE.hpp"
 #include <vector>
+#include <unordered_map>
 
 namespace mllm::models {
 
@@ -20,5 +22,16 @@ namespace mllm::models {
 bool qwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos, std::wstring& matched);
 
 bool qwen2Regex(const std::string& str, std::vector<std::wstring>& splited);
+
+class Qwen2Tokenizer final : public mllm::preprocessor::AutoTokenizer {
+ public:
+  explicit Qwen2Tokenizer(const std::string& file_path);
+
+  void _tokenize(const std::string& str) override;
+
+ private:
+  preprocessor::BPE bpe_;
+  std::unordered_map<std::wint_t, wchar_t> bytes_2_unicode_dict_;
+};
 
 }  // namespace mllm::models

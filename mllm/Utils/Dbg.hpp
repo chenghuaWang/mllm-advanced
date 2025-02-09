@@ -36,7 +36,7 @@ namespace mllm {
     _59, _60, _61, _62, _63, _64, N, ...)                                                          \
   N
 
-std::vector<std::string> _mllm_dbg_split_args_name(const char* args_name) {
+static inline std::vector<std::string> _mllm_dbg_split_args_name(const char* args_name) {
   std::vector<std::string> names;
   std::string input(args_name);
   size_t start = 0;
@@ -68,13 +68,13 @@ std::vector<std::string> _mllm_dbg_split_args_name(const char* args_name) {
 }
 
 template<typename Tuple, size_t... Is>
-void _mllm_dbg_print_args_impl(const std::vector<std::string>& names, const Tuple& args_tuple,
-                               std::index_sequence<Is...>) {
+static inline void _mllm_dbg_print_args_impl(const std::vector<std::string>& names,
+                                             const Tuple& args_tuple, std::index_sequence<Is...>) {
   ((fmt::print("{}{}:{}", (Is == 0 ? "" : ", "), names[Is], std::get<Is>(args_tuple))), ...);
 }
 
 template<typename... Args>
-void _mllm_dbg_print_args(const char* args_name, Args... args) {
+static inline void _mllm_dbg_print_args(const char* args_name, Args... args) {
   auto names = _mllm_dbg_split_args_name(args_name);
   auto args_tuple = std::make_tuple(args...);
   _mllm_dbg_print_args_impl(names, args_tuple, std::index_sequence_for<Args...>{});
