@@ -18,10 +18,6 @@ namespace mllm::arm {
 
 void silu_V1(const float* __restrict X, float* __restrict Y, int len) {
   int i;
-  float32x4_t vec_one_0 = vdupq_n_f32(1.0f);
-  float32x4_t vec_one_1 = vdupq_n_f32(1.0f);
-  float32x4_t vec_one_2 = vdupq_n_f32(1.0f);
-  float32x4_t vec_one_3 = vdupq_n_f32(1.0f);
   for (i = 0; i <= len - 16; i += 16) {
     float32x4_t x_line_0 = vld1q_f32(X + i);
     float32x4_t ans_line_0 = vmulq_f32(x_line_0, vsigmoid_f32(x_line_0));

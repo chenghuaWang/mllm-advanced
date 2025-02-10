@@ -61,6 +61,18 @@ Tensor Tensor::operator+(const Tensor& rhs) {
   return MllmEngineCtx::instance().dispatch(OpType::kAdd, AddOpCargo{}, {*this, rhs})[0];
 }
 
+Tensor Tensor::operator-(const Tensor& rhs) {
+  return MllmEngineCtx::instance().dispatch(OpType::kSub, SubOpCargo{}, {*this, rhs})[0];
+}
+
+Tensor Tensor::operator*(const Tensor& rhs) {
+  return MllmEngineCtx::instance().dispatch(OpType::kMul, MulOpCargo{}, {*this, rhs})[0];
+}
+
+Tensor Tensor::operator/(const Tensor& rhs) {
+  return MllmEngineCtx::instance().dispatch(OpType::kDiv, DivOpCargo{}, {*this, rhs})[0];
+}
+
 std::string Tensor::name() const { return impl_->name(); }
 
 TensorMemTypes Tensor::memType() const { return impl_->memType(); }

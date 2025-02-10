@@ -13,28 +13,9 @@
 
 namespace mllm {
 
-AddOp::AddOp() : BaseOp(OpType::kAdd) {}
-
-void AddOp::load(std::shared_ptr<ParameterLoader>& ploader) {
-  MLLM_WARN("AddOp::load is not implemented");
-}
-
-void AddOp::trace(void* trace_contex, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  MLLM_WARN("AddOp::trace is not implemented");
-}
-
-void AddOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  MLLM_WARN("AddOp::forward is not implemented");
-}
-
-void AddOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  // TODO I have not impl the broad cast yet.
-  Tensor output_0 = Tensor::empty(inputs[0].shape(), inputs[0].dtype(), inputs[0].device());
-  outputs.emplace_back(output_0);
-}
-
-void AddOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  for (auto& t : outputs) t.alloc();
-}
+__MLLM_ELEWISE_OP_IMPL(AddOp);
+__MLLM_ELEWISE_OP_IMPL(SubOp);
+__MLLM_ELEWISE_OP_IMPL(MulOp);
+__MLLM_ELEWISE_OP_IMPL(DivOp);
 
 }  // namespace mllm

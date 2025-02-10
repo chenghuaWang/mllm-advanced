@@ -53,6 +53,12 @@ class Tensor {
 
   Tensor operator+(const Tensor& rhs);
 
+  Tensor operator-(const Tensor& rhs);
+
+  Tensor operator*(const Tensor& rhs);
+
+  Tensor operator/(const Tensor& rhs);
+
   Tensor& to(DeviceTypes device);
 
   Tensor& to(DataTypes dtype);

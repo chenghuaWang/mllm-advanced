@@ -35,4 +35,46 @@ void ArmAddOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   }
 }
 
+void ArmSubOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+  auto& a_tensor = inputs[0];
+  auto& b_tensor = inputs[1];
+  auto& c_tensor = outputs[0];
+
+  if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
+    if (a_tensor.shape() == b_tensor.shape()) {
+      ew_sub_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
+                  static_cast<int>(a_tensor.elementSize()));
+      return;
+    }
+  }
+}
+
+void ArmMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+  auto& a_tensor = inputs[0];
+  auto& b_tensor = inputs[1];
+  auto& c_tensor = outputs[0];
+
+  if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
+    if (a_tensor.shape() == b_tensor.shape()) {
+      ew_mul_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
+                  static_cast<int>(a_tensor.elementSize()));
+      return;
+    }
+  }
+}
+
+void ArmDivOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+  auto& a_tensor = inputs[0];
+  auto& b_tensor = inputs[1];
+  auto& c_tensor = outputs[0];
+
+  if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
+    if (a_tensor.shape() == b_tensor.shape()) {
+      ew_div_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
+                  static_cast<int>(a_tensor.elementSize()));
+      return;
+    }
+  }
+}
+
 }  // namespace mllm::arm

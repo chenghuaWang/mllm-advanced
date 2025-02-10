@@ -10,6 +10,39 @@
 #pragma once
 #include "mllm/Core/AOps/BaseOp.hpp"
 
+#define __MLLM_ELEWISE_OP_DEFINE(name)                                                      \
+  class name : public BaseOp {                                                              \
+   public:                                                                                  \
+    name();                                                                                 \
+    void load(std::shared_ptr<ParameterLoader>& ploader) override;                          \
+    void trace(void* trace_contex, std::vector<Tensor>& inputs,                             \
+               std::vector<Tensor>& outputs) override;                                      \
+    void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override; \
+    void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override; \
+    void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;   \
+  };
+
+// TODO I have not impl the broad cast yet.
+#define __MLLM_ELEWISE_OP_IMPL(name)                                                           \
+  name::name() : BaseOp(OpType::kAdd) {}                                                       \
+  void name::load(std::shared_ptr<ParameterLoader>& ploader) {                                 \
+    MLLM_WARN(#name "::load is not implemented");                                              \
+  }                                                                                            \
+  void name::trace(void* trace_contex, std::vector<Tensor>& inputs,                            \
+                   std::vector<Tensor>& outputs) {                                             \
+    MLLM_WARN(#name "::trace is not implemented");                                             \
+  }                                                                                            \
+  void name::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {        \
+    MLLM_WARN(#name "::forward is not implemented");                                           \
+  }                                                                                            \
+  void name::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {        \
+    Tensor output_0 = Tensor::empty(inputs[0].shape(), inputs[0].dtype(), inputs[0].device()); \
+    outputs.emplace_back(output_0);                                                            \
+  }                                                                                            \
+  void name::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {          \
+    for (auto& t : outputs) t.alloc();                                                         \
+  }
+
 namespace mllm {
 
 struct AddOpCargo : public BaseOpCargo<AddOpCargo> {};
@@ -20,26 +53,9 @@ struct MulOpCargo : public BaseOpCargo<MulOpCargo> {};
 
 struct DivOpCargo : public BaseOpCargo<DivOpCargo> {};
 
-class AddOp : public BaseOp {
- public:
-  AddOp();
-
-  void load(std::shared_ptr<ParameterLoader>& ploader) override;
-
-  void trace(void* trace_contex, std::vector<Tensor>& inputs,
-             std::vector<Tensor>& outputs) override;
-
-  void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
-
-  void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
-
-  void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
-};
-
-class SubOp : public BaseOp {};
-
-class MulOp : public BaseOp {};
-
-class DivOp : public BaseOp {};
+__MLLM_ELEWISE_OP_DEFINE(AddOp);
+__MLLM_ELEWISE_OP_DEFINE(SubOp);
+__MLLM_ELEWISE_OP_DEFINE(MulOp);
+__MLLM_ELEWISE_OP_DEFINE(DivOp);
 
 }  // namespace mllm

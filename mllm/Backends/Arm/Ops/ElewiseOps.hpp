@@ -19,11 +19,20 @@ class ArmAddOp final : public AddOp {
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
-class ArmSubOp final : public AddOp {};
+class ArmSubOp final : public SubOp {
+ public:
+  void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+};
 
-class ArmMulOp final : public AddOp {};
+class ArmMulOp final : public MulOp {
+ public:
+  void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+};
 
-class ArmDivOp final : public AddOp {};
+class ArmDivOp final : public DivOp {
+ public:
+  void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+};
 
 class ArmAddOpFactory final : public TypedOpFactory<OpType::kAdd, AddOpCargo> {
  public:
@@ -35,7 +44,7 @@ class ArmAddOpFactory final : public TypedOpFactory<OpType::kAdd, AddOpCargo> {
 class ArmSubOpFactory : public TypedOpFactory<OpType::kSub, SubOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const SubOpCargo& cargo) override {
-    // TODO
+    return std::make_shared<ArmSubOp>();
     return nullptr;
   }
 };
@@ -43,7 +52,7 @@ class ArmSubOpFactory : public TypedOpFactory<OpType::kSub, SubOpCargo> {
 class ArmMulOpFactory : public TypedOpFactory<OpType::kMul, MulOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const MulOpCargo& cargo) override {
-    // TODO
+    return std::make_shared<ArmMulOp>();
     return nullptr;
   }
 };
@@ -51,7 +60,7 @@ class ArmMulOpFactory : public TypedOpFactory<OpType::kMul, MulOpCargo> {
 class ArmDivOpFactory : public TypedOpFactory<OpType::kDiv, DivOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const DivOpCargo& cargo) override {
-    // TODO
+    return std::make_shared<ArmDivOp>();
     return nullptr;
   }
 };
