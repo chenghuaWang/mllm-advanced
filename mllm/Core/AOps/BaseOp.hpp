@@ -95,7 +95,6 @@ class BaseOp {
  public:
   explicit BaseOp(OpType op_type);
 
-  // TODO
   virtual void load(std::shared_ptr<ParameterLoader>& ploader){};
 
   // TODO

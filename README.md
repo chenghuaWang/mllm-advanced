@@ -1,4 +1,4 @@
-[MLLM-advanced](https://github.com/chenghuaWang/mllm-advanced) is an extension of the [MLLM](https://github.com/UbiquitousLearning/mllm) project and offers more features and functionalities.
+[MLLM-advanced](https://github.com/chenghuaWang/mllm-advanced) is an extension of the [MLLM](https://github.com/UbiquitousLearning/mllm) project and offers more features and functionalities. 
 
 ---
 
@@ -7,6 +7,10 @@
 # Install
 
 ## For User
+
+### Build from source
+
+### Install from PyPI
 
 ## For Developer
 
