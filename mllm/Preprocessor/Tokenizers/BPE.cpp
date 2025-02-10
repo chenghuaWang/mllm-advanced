@@ -40,6 +40,15 @@ bool BPE::initFromSentencePieceJson(const std::string& file_path) {
     });
   }
 
+  for (const auto& add_token : json_data["added_tokens"].items()) {
+    auto id = add_token.value()["id"];
+    auto content = add_token.value()["content"];
+    vocab_.insert({
+        utf8string2WideString(content),
+        id,
+    });
+  }
+
   long cnt = 0;
   for (auto& merge_item : json_data["model"]["merges"]) {
     auto wide_merge_item = utf8string2WideString(merge_item);

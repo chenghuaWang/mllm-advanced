@@ -9,6 +9,7 @@
  */
 #pragma once
 
+#include <type_traits>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -83,7 +84,11 @@ class Argument : public ArgumentBase, public ArgArgument<Argument<T>> {
         MLLM_ERROR_EXIT(kError, "Invalid boolean value");
       }
     } else {
-      iss >> value_;
+      if constexpr (std::is_same<T, std::string>()) {
+        value_ = iss.str();
+      } else {
+        iss >> value_;
+      }
       if (iss.fail()) { MLLM_ERROR_EXIT(kError, "Invalid value type"); }
     }
     is_set_ = true;

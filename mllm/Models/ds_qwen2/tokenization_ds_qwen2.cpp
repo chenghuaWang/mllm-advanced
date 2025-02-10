@@ -7,15 +7,17 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "mllm/Models/qwen2/tokenization_qwen2.hpp"
+#include "mllm/Models/ds_qwen2/tokenization_ds_qwen2.hpp"
+#include "mllm/Core/Tensor.hpp"
 #include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
-#include "mllm/Utils/Dbg.hpp"
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace mllm::models {
 
-bool qwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos, std::wstring& matched) {
+bool deepSeekQwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos,
+                                        std::wstring& matched) {
   if (pos >= str.size()) return false;
 
   // 1. Match contractions: "'s|'t|'re|'ve|'m|'ll|'d"
@@ -135,12 +137,12 @@ bool qwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos, std::wstri
   return false;
 }
 
-bool qwen2Regex(const std::string& str, std::vector<std::wstring>& splited) {
+bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& splited) {
   auto w_string = preprocessor::utf8string2WideString(str);
   size_t pos = 0;
   while (pos < w_string.size()) {
     std::wstring matched;
-    if (qwen2TokenizerMatchPattern(w_string, pos, matched)) {
+    if (deepSeekQwen2TokenizerMatchPattern(w_string, pos, matched)) {
       splited.push_back(matched);
     } else {
       ++pos;
@@ -149,16 +151,25 @@ bool qwen2Regex(const std::string& str, std::vector<std::wstring>& splited) {
   return true;
 }
 
-Qwen2Tokenizer::Qwen2Tokenizer(const std::string& file_path) {
+DeepSeekQwen2Tokenizer::DeepSeekQwen2Tokenizer(const std::string& file_path) {
   preprocessor::initLocal();
   preprocessor::makeBytes2UnicodeMap(bytes_2_unicode_dict_);
   bpe_.initFromSentencePieceJson(file_path);
+  special_tokens_trie_.add(L"<｜end▁of▁sentence｜>");
+  special_tokens_trie_.add(L"<｜begin▁of▁sentence｜>");
+  special_tokens_trie_.add(L"<|quad_start|>");
+  special_tokens_trie_.add(L"<|quad_end|>");
+  special_tokens_trie_.add(L"<|vision_start|>");
+  special_tokens_trie_.add(L"<|vision_end|>");
+  special_tokens_trie_.add(L"<|vision_pad|>");
+  special_tokens_trie_.add(L"<|image_pad|>");
+  special_tokens_trie_.add(L"<|video_pad|>");
 }
 
-void Qwen2Tokenizer::_tokenize(const std::string& str) {
+std::vector<std::wstring> DeepSeekQwen2Tokenizer::_tokenize(const std::string& str) {
   std::vector<std::wstring> ret;
   std::vector<std::wstring> splited;
-  mllm::models::qwen2Regex(str, splited);
+  mllm::models::deepSeekQwen2Regex(str, splited);
   for (const auto& s : splited) {
     auto utf_8_str = preprocessor::wideString2Utf8String(s);
     std::wstring mapped_str;
@@ -169,9 +180,37 @@ void Qwen2Tokenizer::_tokenize(const std::string& str) {
     for (const auto& bpe_t : bpe_ts) { ret.push_back(bpe_t); }
   }
 
-  // TODO remove this line
-  for (auto& s : ret) { Dbg(bpe_._lookup_vocab(s)); }
-
-  // TODO
+  return ret;
 }
+
+std::vector<std::wstring> DeepSeekQwen2Tokenizer::tokenize(const std::string& str) {
+  auto tokens = special_tokens_trie_.split(preprocessor::utf8string2WideString(str));
+  std::vector<std::wstring> all_tokens;
+  for (const auto& token : tokens) {
+    if (special_tokens_trie_.isSpecialToken(token)) {
+      all_tokens.emplace_back(token);
+      continue;
+    }
+    auto tmp_tokens = _tokenize(preprocessor::wideString2Utf8String(token));
+    all_tokens.insert(all_tokens.end(), tmp_tokens.begin(), tmp_tokens.end());
+  }
+  return all_tokens;
+}
+
+Tensor DeepSeekQwen2Tokenizer::convert2Ids(const std::vector<std::wstring>& strs) {
+  std::vector<long> ids;
+  ids.reserve(strs.size() + 1);
+  ids.emplace_back(bpe_._lookup_vocab(L"<｜begin▁of▁sentence｜>"));
+  for (const auto& str : strs) { ids.emplace_back(bpe_._lookup_vocab(str)); }
+  Tensor ret = Tensor::empty({ids.size()}, kInt64, kCPU)
+                   .setMemType(kExtraInput)
+                   .setName("qwen2-tokenizer-i0")
+                   .alloc();
+
+  auto ptr = ret.ptr<int64_t>();
+  for (size_t i = 0; i < ids.size(); ++i) { ptr[i] = ids[i]; }
+
+  return ret;
+}
+
 }  // namespace mllm::models

@@ -44,8 +44,4 @@ class BPE {
   std::unordered_map<std::pair<std::wstring, std::wstring>, long, BPEPairHash> bpe_ranks_;
 };
 
-class ByteLevelBPE {};
-
-class Unigram {};
-
 }  // namespace mllm::preprocessor

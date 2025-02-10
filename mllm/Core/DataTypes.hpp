@@ -22,6 +22,7 @@ enum DataTypes : uint32_t {
   kInt8,
   kInt16,
   kInt32,
+  kInt64,
   kFp4,
   kFp8,
   kFp16,
@@ -57,6 +58,7 @@ inline const char* dataTypes2Str(DataTypes type) {
     case DataTypes::kInt8: return "kInt8";
     case DataTypes::kInt16: return "kInt16";
     case DataTypes::kInt32: return "kInt32";
+    case DataTypes::kInt64: return "kInt64";
     case DataTypes::kFp4: return "kFp4";
     case DataTypes::kFp8: return "kFp8";
     case DataTypes::kFp16: return "kFp16";
@@ -85,6 +87,7 @@ inline float dataTypeSize(DataTypes type) {
     case DataTypes::kInt8: return 1.f;
     case DataTypes::kInt16: return 2.f;
     case DataTypes::kInt32: return 4.f;
+    case DataTypes::kInt64: return 8.f;
     case DataTypes::kFp4: return 1.f / 2;
     case DataTypes::kFp8: return 1.f;
     case DataTypes::kFp16: return 2.f;

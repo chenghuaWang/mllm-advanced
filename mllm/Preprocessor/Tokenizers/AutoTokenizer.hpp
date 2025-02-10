@@ -22,10 +22,54 @@
 #include <nlohmann/json_fwd.hpp>
 using json = nlohmann::json;
 
+#include "mllm/Core/Tensor.hpp"
+
+#include <vector>
+#include <string>
+#include <memory>
+#include <unordered_set>
+#include <unordered_map>
+
 namespace mllm::preprocessor {
 
+// split text to tokens.
+// > Trie.addSpecial("<|im_start|>")
+// > Trie.split("<|im_start|>Hello wrold!")
+//
+// will give: ["<|im_start|>","Hello wrold!"]
+class Trie {
+  struct TrieNode {
+    std::unordered_map<wchar_t, std::unique_ptr<TrieNode>> children;
+    bool is_end = false;
+  };
+
+ public:
+  void add(const std::wstring& word);
+
+  void update(const std::vector<std::wstring>& words);
+
+  // I use FSA to implement the split function.
+  std::vector<std::wstring> split(const std::wstring& text);
+
+  bool isSpecialToken(const std::wstring& token);
+
+ private:
+  std::unique_ptr<TrieNode> root_ = std::make_unique<TrieNode>();
+  std::unordered_set<std::wstring> special_tokens_;
+};
+
 class AutoTokenizer {
-  virtual void _tokenize(const std::string& str) = 0;
+ public:
+  void addSpecialToken(const std::wstring& special_token);
+
+  virtual std::vector<std::wstring> _tokenize(const std::string& str) = 0;
+
+  virtual std::vector<std::wstring> tokenize(const std::string& str) = 0;
+
+  virtual Tensor convert2Ids(const std::vector<std::wstring>& strs) = 0;
+
+ protected:
+  Trie special_tokens_trie_;
 };
 
 }  // namespace mllm::preprocessor

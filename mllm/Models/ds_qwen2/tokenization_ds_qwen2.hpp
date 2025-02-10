@@ -19,15 +19,20 @@ namespace mllm::models {
 //
 // (?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}|
 // ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+
-bool qwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos, std::wstring& matched);
+bool deepSeekQwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos,
+                                        std::wstring& matched);
 
-bool qwen2Regex(const std::string& str, std::vector<std::wstring>& splited);
+bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& splited);
 
-class Qwen2Tokenizer final : public mllm::preprocessor::AutoTokenizer {
+class DeepSeekQwen2Tokenizer final : public mllm::preprocessor::AutoTokenizer {
  public:
-  explicit Qwen2Tokenizer(const std::string& file_path);
+  explicit DeepSeekQwen2Tokenizer(const std::string& file_path);
 
-  void _tokenize(const std::string& str) override;
+  std::vector<std::wstring> _tokenize(const std::string& str) override;
+
+  std::vector<std::wstring> tokenize(const std::string& str) override;
+
+  Tensor convert2Ids(const std::vector<std::wstring>& strs) override;
 
  private:
   preprocessor::BPE bpe_;
