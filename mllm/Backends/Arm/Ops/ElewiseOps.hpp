@@ -45,7 +45,6 @@ class ArmSubOpFactory : public TypedOpFactory<OpType::kSub, SubOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const SubOpCargo& cargo) override {
     return std::make_shared<ArmSubOp>();
-    return nullptr;
   }
 };
 
@@ -53,7 +52,6 @@ class ArmMulOpFactory : public TypedOpFactory<OpType::kMul, MulOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const MulOpCargo& cargo) override {
     return std::make_shared<ArmMulOp>();
-    return nullptr;
   }
 };
 
@@ -61,7 +59,6 @@ class ArmDivOpFactory : public TypedOpFactory<OpType::kDiv, DivOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const DivOpCargo& cargo) override {
     return std::make_shared<ArmDivOp>();
-    return nullptr;
   }
 };
 

@@ -13,9 +13,19 @@
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Engine/Context.hpp"
-#include "mllm/Utils/Log.hpp"
+#include "mllm/Utils/Common.hpp"
 
 namespace mllm {
+
+SliceIndicesPair::SliceIndicesPair(int32_t v) : start_(v), end_(v + 1), step_(1) {
+  if (v == kAll) {
+    start_ = kAll;
+    end_ = kAll;
+  }
+}
+
+SliceIndicesPair::SliceIndicesPair(int32_t start, int32_t end, int32_t step)
+    : start_(start), end_(end), step_(step) {}
 
 Tensor::Tensor(const std::shared_ptr<TensorImpl>& impl) : impl_(impl) {}
 
@@ -73,6 +83,15 @@ Tensor Tensor::operator/(const Tensor& rhs) {
   return MllmEngineCtx::instance().dispatch(OpType::kDiv, DivOpCargo{}, {*this, rhs})[0];
 }
 
+Tensor Tensor::transpose(int dim0, int dim1) {
+  auto shape_size = impl_->shape().size();
+  MLLM_RT_ASSERT(dim0 < shape_size);
+  MLLM_RT_ASSERT(dim1 < shape_size);
+
+  // TODO dispatch thranspose op.
+  // optimize for BSHD -> BHSD
+}
+
 std::string Tensor::name() const { return impl_->name(); }
 
 TensorMemTypes Tensor::memType() const { return impl_->memType(); }
@@ -93,8 +112,146 @@ DeviceTypes Tensor::device() const { return impl_->device(); }
 
 std::vector<size_t> Tensor::shape() const { return impl_->shape(); }
 
-size_t Tensor::elementSize() const { return impl_->elementSize(); }
+size_t Tensor::numel() const { return impl_->numel(); }
 
 uint32_t Tensor::uuid() const { return impl_->uuid(); }
+
+Tensor Tensor::contiguousRefFrom(const std::vector<size_t>& offsets) {
+  if (!isContiguous()) {
+    MLLM_ERROR_EXIT(kError, "contiguousRefFrom required the refed tensor is contiguous");
+  }
+
+  auto shape = impl_->shape();
+  MLLM_RT_ASSERT_EQ(shape.size(), offsets.size());
+
+  // check if legal
+  bool legal = true;
+  int none_zero_pos = -1;
+  bool find_none_zero = false;
+  for (int i = 0; i < shape.size(); ++i) {
+    // index cannot oob
+    if (offsets[i] >= shape[i]) {
+      legal = false;
+      break;
+    }
+
+    if (offsets[i] != 0) {
+      if (find_none_zero) {
+        legal = false;
+        break;
+      } else {
+        none_zero_pos = i;
+        find_none_zero = true;
+      }
+    }
+  }
+
+  MLLM_RT_ASSERT_EQ(legal, true);
+
+  for (int i = 0; i < none_zero_pos; ++i) {
+    if (shape[i] != 1) {
+      legal = false;
+      break;
+    }
+  }
+
+  MLLM_RT_ASSERT_EQ(legal, true);
+
+  auto new_shape = impl_->shape();
+  for (int i = 0; i < new_shape.size(); ++i) { new_shape[i] = shape[i] - offsets[i]; }
+
+  // Note that: This reference function is marked explicitly contiguous. Which means that there is
+  // no need to take consider of ret_impl's stride. The default TensorImpl constructor will caculate
+  // stride for it.
+  auto ref_impl = std::make_shared<TensorImpl>(new_shape, impl_->dtype(), impl_->device());
+  auto ptr_offsets = impl_->stride()[none_zero_pos] * offsets[none_zero_pos];
+  ref_impl->_setRawPtr((char*)(impl_->rptr())
+                       + (size_t)((float)ptr_offsets * dataTypeSize(impl_->dtype())));
+
+  // Note that: Even this tensor is a ref of old tensor. This tensor should have different name and
+  // UUID from old tensor.
+  ref_impl->setName(impl_->name() + "_ref_" + std::to_string(ref_impl->uuid()));
+
+  // FIXME: if per-channel quantize and the offsets is set at the channel dim. Error will occured.
+  ref_impl->setQuantizePayload(impl_->quantizePayload());
+
+  Tensor ref_tensor(ref_impl);
+
+  // Set memtype to refrence. Which means that this tensor will not be freed automatically.
+  ref_tensor.setMemType(kReference);
+
+  return ref_tensor;
+}
+
+Tensor Tensor::refFrom(const SliceIndices& slice_indices) {
+  if (!impl_->isContiguous()) {
+    MLLM_ERROR_EXIT(kError, "refFrom only support on contiguous tensor.");
+  }
+
+  MLLM_RT_ASSERT_EQ(slice_indices.size(), impl_->shape().size());
+
+  auto old_shape = impl_->shape();
+  auto old_stride = impl_->stride();
+
+  std::vector<size_t> new_shape(old_shape.size());
+  std::vector<size_t> new_offsets(old_shape.size());
+
+  for (int i = 0; i < slice_indices.size(); ++i) {
+    auto& indice = slice_indices[i];
+
+    auto s = indice.start_;
+    auto e = indice.end_;
+    auto st = indice.step_;
+
+    if (s == kAll && e == kAll) {
+      new_shape[i] = old_shape[i];
+      new_offsets[i] = 0;
+      continue;
+    }
+
+    if (s != kAll && e == kAll) {
+      new_shape[i] = old_shape[i] - s;
+      new_offsets[i] = s;
+      continue;
+    }
+
+    if (s != kAll && e != kAll) {
+      new_shape[i] = e - s;
+      new_offsets[i] = s;
+      continue;
+    }
+
+    if (s == kAll && e != kAll) {
+      new_shape[i] = e;
+      new_offsets[i] = 0;
+    }
+  }
+
+  // warp to ref tensor
+  auto ref_impl = std::make_shared<TensorImpl>(new_shape, old_stride, new_offsets, impl_->dtype(),
+                                               impl_->device());
+  ref_impl->_setRawPtr(impl_->rptr());
+  ref_impl->setName(impl_->name() + "_sliceref_" + std::to_string(ref_impl->uuid()));
+
+  // FIXME. if per-channel quantize and the offsets is set at the channel dim. Error will occured.
+  ref_impl->setQuantizePayload(impl_->quantizePayload());
+
+  // Set memtype to refrence. Which means that this tensor will not be freed automatically.
+  ref_impl->setMemType(kReference);
+
+  return Tensor(ref_impl);
+}
+
+bool Tensor::isContiguous() const { return impl_->isContiguous(); }
+
+Tensor Tensor::contiguous() {
+  if (isContiguous()) { return *this; }
+
+  // TODO
+}
+
+char* Tensor::offsettedRawPtr(const std::vector<size_t>& offsets) {
+  return impl_->offsettedRawPtr(offsets);
+}
 
 }  // namespace mllm

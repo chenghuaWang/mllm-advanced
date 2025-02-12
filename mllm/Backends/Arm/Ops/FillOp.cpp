@@ -30,9 +30,9 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
   switch (cargo_.type) {
     case 0: {
       switch (dtype) {
-        case kFp32: std::memset(t.ptr<float>(), 0, t.elementSize() * sizeof(float)); break;
+        case kFp32: std::memset(t.ptr<float>(), 0, t.numel() * sizeof(float)); break;
         case kFp16:
-          std::fill(t.ptr<float16_t>(), t.ptr<float16_t>() + t.elementSize(),
+          std::fill(t.ptr<float16_t>(), t.ptr<float16_t>() + t.numel(),
                     static_cast<float16_t>(0.f));
           break;
         default: NYI("ArmFillOp type=0, dtype={}.", dataTypes2Str(dtype));
@@ -41,9 +41,9 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
     }
     case 1: {
       switch (dtype) {
-        case kFp32: std::fill(t.ptr<float>(), t.ptr<float>() + t.elementSize(), 1.f); break;
+        case kFp32: std::fill(t.ptr<float>(), t.ptr<float>() + t.numel(), 1.f); break;
         case kFp16:
-          std::fill(t.ptr<float16_t>(), t.ptr<float16_t>() + t.elementSize(),
+          std::fill(t.ptr<float16_t>(), t.ptr<float16_t>() + t.numel(),
                     static_cast<float16_t>(1.f));
           break;
         default: NYI("ArmFillOp type=0, dtype={}.", dataTypes2Str(dtype));

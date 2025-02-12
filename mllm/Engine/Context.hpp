@@ -54,6 +54,8 @@ class MllmEngineCtx {
   std::vector<Tensor> dispatch(OpType op_type, const BaseOpCargoBase& base_cargo,
                                const std::vector<Tensor>& inputs);
 
+  void shutdown();
+
  private:
   // backend
   SymbolTable<DeviceTypes, std::shared_ptr<BackendBase>> backends_table_;

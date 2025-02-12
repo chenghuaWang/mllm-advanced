@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include "mllm/Core/AOps/BaseOp.hpp"
 #include "mllm/Core/TensorImpl.hpp"
@@ -48,7 +49,7 @@ class Layer {
 
   template<typename... Args>
   Tensor operator()(Args&&... args) {
-    MLLM_RT_ASSERT((std::is_base_of_v<Tensor, Args> && ...));
+    // MLLM_RT_ASSERT((std::is_same_v<Tensor, Args> && ...));
 
     if (MllmEngineCtx::instance().traceMode()) {
       MLLM_RT_ASSERT((!args.name().empty() && ...));

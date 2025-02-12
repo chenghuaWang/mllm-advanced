@@ -29,7 +29,13 @@ enum class OpType : int32_t {
   kMul,
   kDiv,
 
+  kMatMul,
+
   kLinear,
+  kRoPE,
+  kSoftmax,
+
+  kKVCache,
 
   kOpType_End,
 };

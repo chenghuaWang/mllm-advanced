@@ -22,17 +22,26 @@ namespace mllm {
 
 enum SliceIndexPlaceHolder : int32_t {
   kSliceIndexPlaceHolder_Start = 0x7FFFFFF0,
-  kAll,
-  kAuto,
+  kAll,  // 0x7FFFFFF1
   kSliceIndexPlaceHolder_End,
 };
 
-class SliceIndex {
-  // TODO
+struct SliceIndicesPair {
+  SliceIndicesPair() = default;
+  SliceIndicesPair(int32_t v);
+  SliceIndicesPair(int32_t start, int32_t end, int32_t step = 1);
+
+  int32_t start_ = kAll;
+  int32_t end_ = kAll;
+  int32_t step_ = 1;
 };
+
+using SliceIndices = std::vector<SliceIndicesPair>;
 
 class Tensor {
  public:
+  Tensor() = default;
+
   explicit Tensor(const std::shared_ptr<TensorImpl>& impl);
 
   // TODO
@@ -49,7 +58,7 @@ class Tensor {
   // static Tensor eyes();
 
   // TODO
-  // Tensor& operator[](const SliceIndex& slice_index);
+  // Tensor operator[](const SliceIndices& slice_index);
 
   Tensor operator+(const Tensor& rhs);
 
@@ -58,6 +67,8 @@ class Tensor {
   Tensor operator*(const Tensor& rhs);
 
   Tensor operator/(const Tensor& rhs);
+
+  Tensor transpose(int dim0, int dim1);
 
   Tensor& to(DeviceTypes device);
 
@@ -77,14 +88,47 @@ class Tensor {
 
   [[nodiscard]] std::vector<size_t> shape() const;
 
-  [[nodiscard]] size_t elementSize() const;
+  [[nodiscard]] size_t numel() const;
 
   [[nodiscard]] uint32_t uuid() const;
+
+  // For Tensor Refernece we just support contiguous reference.
+  // NOTE: It is quite same with shallow copy !!! After the original Tensor is freed, the ref Tensor
+  // is invalid !!!
+  //
+  // E.g.:
+  // Tensor t = Tensor::ones({1024, 1024, 1024, 1024});
+  // Tensor sub_t = t.contiguousRefFrom({10, 0, 0, 0}); // memory is continuous
+  // Tensor sub_t = t.contiguousRefFrom({0, 10, 0, 5}); // memory is not continuous
+  //
+  // Goode Cases:
+  // 1. Tensor t = Tensor::ones({1024, 1024, 1024, 1024}).contiguousRefFrom({10, 0, 0, 0});
+  // 2. Tensor t = Tensor::ones({1, 1024, 1024, 1024}).contiguousRefFrom({0, 10, 0, 0});
+  // 3. Tensor t = Tensor::ones({1, 1, 1024, 1024}).contiguousRefFrom({0, 0, 10, 0});
+  // 4. Tensor t = Tensor::ones({1, 1, 1, 1024}).contiguousRefFrom({0, 0, 0, 10});
+  //
+  // Bad Cases & Not Supports:
+  // 1. Tensor t = Tensor::ones({1024, 1024, 1024, 1024}).contiguousRefFrom({0, 0, 10, 0});
+  // 2. Tensor t = Tensor::ones({1024, 1024, 1024, 1024}).contiguousRefFrom({0, 0, 0, 10});
+  Tensor contiguousRefFrom(const std::vector<size_t>& offsets);
+
+  Tensor refFrom(const SliceIndices& slice_indices);
+
+  [[nodiscard]] bool isContiguous() const;
+
+  Tensor contiguous();
 
   template<typename T>
   T* ptr() const {
     return impl_->ptr<T>();
   }
+
+  template<typename T>
+  T* offsettedPtr(const std::vector<size_t>& offsets) {
+    return impl_->offsettedPtr<T>(offsets);
+  }
+
+  char* offsettedRawPtr(const std::vector<size_t>& offsets);
 
   template<typename T>
   void print() {
@@ -101,60 +145,57 @@ class Tensor {
  private:
   template<typename T>
   void printData() {
-    T* data = impl_->ptr<T>();
     const auto& tensor_shape = shape();
     if (tensor_shape.empty()) {
       fmt::println("[]");
       return;
     }
-    printRecursive<T>(data, tensor_shape, 0, 0, "");
+    printRecursive<T>(tensor_shape, 0, {}, "");
   }
 
   template<typename T>
-  void printRecursive(T* data, const std::vector<size_t>& shape, size_t dim, size_t offset,
+  void printRecursive(const std::vector<size_t>& shape, size_t dim, std::vector<size_t> indices,
                       const std::string& indent) {
     size_t dim_size = shape[dim];
     bool is_last_dim = (dim == shape.size() - 1);
     const size_t threshold = 32;
     bool truncated = dim_size > threshold;
 
-    std::vector<long long> indices;
+    std::vector<long long> display_indices;
     if (truncated) {
-      for (size_t i = 0; i < 6; ++i) indices.push_back(i);
-      indices.push_back(-1);
-      for (size_t i = dim_size - 6; i < dim_size; ++i) indices.push_back(i);
+      for (size_t i = 0; i < 6; ++i) display_indices.push_back(i);
+      display_indices.push_back(-1);
+      for (size_t i = dim_size - 6; i < dim_size; ++i) display_indices.push_back(i);
     } else {
-      for (size_t i = 0; i < dim_size; ++i) indices.push_back(i);
+      for (size_t i = 0; i < dim_size; ++i) display_indices.push_back(i);
     }
 
     fmt::print("[");
     std::string new_indent = indent + "  ";
+    bool first = true;
 
-    bool first_element = true;
-    for (auto idx : indices) {
-      if (!first_element) {
-        if (is_last_dim) {
+    for (auto idx : display_indices) {
+      if (!first) {
+        if (is_last_dim)
           fmt::print(", ");
-        } else {
+        else
           fmt::print("\n{}", new_indent);
-        }
-      } else {
-        first_element = false;
       }
+      first = false;
 
       if (idx == -1) {
         fmt::print("...");
         continue;
       }
 
-      auto i = static_cast<size_t>(idx);
+      auto current_indices = indices;
+      current_indices.push_back(static_cast<size_t>(idx));
+
       if (is_last_dim) {
-        fmt::print("{}", data[offset + i]);
+        T* ptr = impl_->offsettedPtr<T>(current_indices);
+        fmt::print("{}", *ptr);
       } else {
-        size_t stride = 1;
-        for (size_t d = dim + 1; d < shape.size(); ++d) stride *= shape[d];
-        size_t new_offset = offset + i * stride;
-        printRecursive<T>(data, shape, dim + 1, new_offset, new_indent);
+        printRecursive<T>(shape, dim + 1, current_indices, new_indent);
       }
     }
 

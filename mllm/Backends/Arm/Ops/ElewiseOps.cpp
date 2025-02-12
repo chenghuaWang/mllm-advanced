@@ -21,7 +21,7 @@ void ArmAddOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   if (a_tensor.dtype() == kFp16 && b_tensor.dtype() == kFp16 && c_tensor.dtype() == kFp16) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_add_fp16(a_tensor.ptr<float16_t>(), b_tensor.ptr<float16_t>(), c_tensor.ptr<float16_t>(),
-                  static_cast<int>(a_tensor.elementSize()));
+                  static_cast<int>(a_tensor.numel()));
       return;
     }
   }
@@ -29,7 +29,7 @@ void ArmAddOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_add_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
-                  static_cast<int>(a_tensor.elementSize()));
+                  static_cast<int>(a_tensor.numel()));
       return;
     }
   }
@@ -43,7 +43,7 @@ void ArmSubOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_sub_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
-                  static_cast<int>(a_tensor.elementSize()));
+                  static_cast<int>(a_tensor.numel()));
       return;
     }
   }
@@ -57,7 +57,7 @@ void ArmMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_mul_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
-                  static_cast<int>(a_tensor.elementSize()));
+                  static_cast<int>(a_tensor.numel()));
       return;
     }
   }
@@ -71,7 +71,7 @@ void ArmDivOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_div_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
-                  static_cast<int>(a_tensor.elementSize()));
+                  static_cast<int>(a_tensor.numel()));
       return;
     }
   }

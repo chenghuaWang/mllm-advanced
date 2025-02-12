@@ -6,44 +6,25 @@
 #include "mllm/Backends/X86/X86Backend.hpp"
 #endif
 
-#include "mllm/Nn/Layers/Linear.hpp"
 #include "mllm/Nn/Module.hpp"
 #include "mllm/Engine/Context.hpp"
+#include "mllm/Nn/Layers/KVCache.hpp"
+
 #include <gtest/gtest.h>
 
 using namespace mllm;
 
-class InnerModule : public nn::Module {
- public:
-  std::vector<Tensor> forward(std::vector<Tensor>& inputs) override {}
-};
-
 class ExampleModule : public nn::Module {
-  nn::Linear linear_0;
-  nn::Linear linear_1;
-  InnerModule inner_module;
-
  public:
+  nn::KVCache x_cache_;
+
   ExampleModule() {
     selfAssginName("module");
-    inner_module = reg<InnerModule>("inner_module");
-    linear_0 = reg<nn::Linear>(
-        "linear_0", LinearOpCargo{.in_channels = 1024, .out_channels = 2048, .bias = true}
-                        .setInputsDtype(LinearOpCargo::InputsPos::kWeight, kFp16)
-                        .setInputsDtype(LinearOpCargo::InputsPos::kInput, kFp16)
-                        .setOutputsDtype(LinearOpCargo::OutputsPos::kOutput, kFp16));
-    linear_1 = reg<nn::Linear>("linear_1",
-                               LinearOpCargo{.in_channels = 2048, .out_channels = 128, .bias = true}
-                                   .setInputsDtype(LinearOpCargo::InputsPos::kWeight, kFp16)
-                                   .setInputsDtype(LinearOpCargo::InputsPos::kInput, kFp16)
-                                   .setOutputsDtype(LinearOpCargo::OutputsPos::kOutput, kFp16));
+    x_cache_ = reg<nn::KVCache>("x_cache", 1, 8, 2, kFp32, 1024, 2);
   }
 
   std::vector<Tensor> forward(std::vector<Tensor>& inputs) override {
-    auto x = inputs[0];
-    x = linear_0(x);
-    x = linear_1(x);
-    return {x};
+    return {x_cache_(inputs[0])};
   }
 };
 
@@ -58,6 +39,22 @@ TEST(MllmNN, NestedModuleCreate) {
   ctx.mem()->initBuddyCtx(kCPU);
   ctx.mem()->initOC(kCPU);
 
-  auto e = ExampleModule();
-  e.print();
+  {
+    auto e = ExampleModule();
+    e.print();
+
+    // [B, H, S, D]
+    auto x = Tensor::ones({1, 1, 1, 8});
+    x.print<float>();
+    auto y = e(x)[0];
+    y.print<float>();
+    auto two = x + x;
+    y = e(two)[0];
+    y.print<float>();
+    auto eight = two * two * two;
+    y = e(eight)[0];
+    y.print<float>();
+  }
+
+  ctx.shutdown();
 }

@@ -25,9 +25,7 @@
 // TODO I have not impl the broad cast yet.
 #define __MLLM_ELEWISE_OP_IMPL(name)                                                           \
   name::name() : BaseOp(OpType::kAdd) {}                                                       \
-  void name::load(std::shared_ptr<ParameterLoader>& ploader) {                                 \
-    MLLM_WARN(#name "::load is not implemented");                                              \
-  }                                                                                            \
+  void name::load(std::shared_ptr<ParameterLoader>& ploader) {}                                \
   void name::trace(void* trace_contex, std::vector<Tensor>& inputs,                            \
                    std::vector<Tensor>& outputs) {                                             \
     MLLM_WARN(#name "::trace is not implemented");                                             \

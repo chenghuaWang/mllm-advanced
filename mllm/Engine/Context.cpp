@@ -74,4 +74,10 @@ std::vector<Tensor> MllmEngineCtx::dispatch(OpType op_type, const BaseOpCargoBas
   return outputs;
 }
 
+void MllmEngineCtx::shutdown() {
+  thread_map_.clear();
+  main_thread_.reset();
+  main_thread_mem_->report();
+}
+
 }  // namespace mllm
