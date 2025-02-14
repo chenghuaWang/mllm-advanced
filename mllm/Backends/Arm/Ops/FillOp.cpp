@@ -13,12 +13,27 @@
 #include "mllm/Utils/Log.hpp"
 #include <arm_neon.h>
 
-namespace mllm {
+namespace mllm::arm {
+
+namespace {
+void __iteration_copy_tensor(Tensor& dst, Tensor& src, size_t ele_size,
+                             std::vector<size_t>& indices, std::vector<size_t>& shape,
+                             size_t dim = 0) {
+  if (dim == indices.size()) {
+    std::memcpy(dst.offsettedRawPtr(indices), src.offsettedRawPtr(indices), ele_size);
+    return;
+  }
+
+  for (size_t i = 0; i < shape[dim]; ++i) {
+    indices[dim] = i;
+    __iteration_copy_tensor(dst, src, ele_size, indices, shape, dim + 1);
+  }
+}
+}  // namespace
 
 ArmFillOp::ArmFillOp(const FillOpCargo& cargo) : FillOp(cargo) {}
 
 void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  MLLM_RT_ASSERT_EQ(inputs[0].uuid(), outputs[0].uuid());
   auto& t = inputs[0];
   auto dtype = t.dtype();
   // type
@@ -27,8 +42,10 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
   // 2 -> specific
   // 3 -> random
   // 4 -> arrange
+  // 5 -> make tensor contiguous
   switch (cargo_.type) {
     case 0: {
+      MLLM_RT_ASSERT_EQ(inputs[0].uuid(), outputs[0].uuid());
       switch (dtype) {
         case kFp32: std::memset(t.ptr<float>(), 0, t.numel() * sizeof(float)); break;
         case kFp16:
@@ -40,6 +57,7 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       break;
     }
     case 1: {
+      MLLM_RT_ASSERT_EQ(inputs[0].uuid(), outputs[0].uuid());
       switch (dtype) {
         case kFp32: std::fill(t.ptr<float>(), t.ptr<float>() + t.numel(), 1.f); break;
         case kFp16:
@@ -50,9 +68,17 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       }
       break;
     }
-    case 2:
-    case 3:
-    case 4:
+    case 2: MLLM_RT_ASSERT_EQ(inputs[0].uuid(), outputs[0].uuid()); break;
+    case 3: MLLM_RT_ASSERT_EQ(inputs[0].uuid(), outputs[0].uuid()); break;
+    case 4: MLLM_RT_ASSERT_EQ(inputs[0].uuid(), outputs[0].uuid()); break;
+    case 5: {
+      auto t = inputs[0];
+      auto o = outputs[0];
+      auto shape = t.shape();
+      auto indicies = std::vector<size_t>(shape.size(), 0);
+      __iteration_copy_tensor(o, t, dataTypeSize(t.dtype()), indicies, shape, 0);
+      break;
+    }
     default:
       MLLM_WARN("ArmFillOp found cargo.type={}, which is not supported yet. The ArmFillOp will do "
                 "nothing on input tensor.",
@@ -61,4 +87,4 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
   }
 }
 
-}  // namespace mllm
+}  // namespace mllm::arm

@@ -12,13 +12,16 @@
 #include "mllm/Backends/Arm/Ops/ElewiseOps.hpp"
 #include "mllm/Backends/Arm/Ops/FillOp.hpp"
 #include "mllm/Backends/Arm/Ops/KVCacheOp.hpp"
+#include "mllm/Backends/Arm/Ops/RMSNormOp.hpp"
+#include "mllm/Backends/Arm/Ops/RoPEOp.hpp"
+#include "mllm/Backends/Arm/Ops/TransposeOp.hpp"
 
 namespace mllm::arm {
 
 ArmBackend::ArmBackend() : BackendBase(kCPU) {
   allocator_ = std::make_shared<ArmAllocator>();
   regOpFactory<ArmAddOpFactory, ArmSubOpFactory, ArmMulOpFactory, ArmDivOpFactory, ArmFillOpFactory,
-               ArmKVCacheOpFactory>();
+               ArmKVCacheOpFactory, ArmRMSNormOpFactory, ArmTransposeOpFactory, ArmRoPEOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

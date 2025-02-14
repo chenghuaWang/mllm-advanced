@@ -15,8 +15,10 @@
 #include <thread>
 #include <memory>
 #include <mutex>
+#include <unordered_set>
 #include <vector>
 #include "mllm/Core/DeviceTypes.hpp"
+#include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/TensorImpl.hpp"
 #include "mllm/Engine/Allocator.hpp"
 #include "mllm/Engine/SymbolTable.hpp"
@@ -52,7 +54,7 @@ struct MemManagerCargo {
   size_t really_large_tensor_threshold = 128 * 1024 * 1024;  // 128MB
 
   // cache related
-  std::vector<size_t> cache_size_list{};
+  std::unordered_set<size_t> cache_size_set;
 
   // clean up periodically
   size_t clean_up_period = 5000;  // ms
@@ -74,13 +76,21 @@ class MemManager {
 
   void regAllocator(DeviceTypes device, const std::shared_ptr<Allocator>& allocator);
 
-  void updateCacheSizeList(DeviceTypes device, const std::vector<size_t>& cache_size_list);
+  void updateCacheSizeList(DeviceTypes device, const std::unordered_set<size_t>& cache_size_set);
 
   void report() const;
 
   void initBuddyCtx(DeviceTypes device);
 
   void initOC(DeviceTypes device);
+
+  void regGlobalTensor(Tensor v);
+
+  Tensor getGlobalTensor(const std::string& name);
+
+  bool hasGlobalTensor(const std::string& name);
+
+  void clearGlobalTensor();
 
  private:
   ObjMemBlock* _alloc_buddy(DeviceTypes device, size_t omb_size);
@@ -118,6 +128,7 @@ class MemManager {
   // symbol table.
   SymbolTable<uint32_t, ObjMemBlock*> st_;
   SymbolTable<std::string, ObjMemBlock*> named_tensor_st_;
+  SymbolTable<std::string, Tensor> global_tensor_st_;
 
   // make manager thread safe.
   std::mutex mutex_;

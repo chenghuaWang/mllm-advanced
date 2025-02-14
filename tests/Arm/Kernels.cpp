@@ -1,6 +1,7 @@
 #include "HgemvTest.hpp"
 #include "SgemvTest.hpp"
 #include "SoftmaxTest.hpp"
+#include "TransposeTest.hpp"
 #include <gtest/gtest.h>
 
 TEST_F(HgemvTest, Hgemv) {
@@ -47,6 +48,12 @@ TEST_F(SoftmaxTest, SoftmaxFp32) {
 TEST_F(SoftmaxTest, SoftmaxFp16) {
   CalculateRef();
   EXPECT_EQ(CalculateFp16AndCompare(), true);
+}
+
+TEST_F(TransposeTest, BSHD2BHSD) {
+  CalculateRef();
+  Calculate(4);
+  EXPECT_EQ(Compare(), true);
 }
 
 int main(int argc, char** argv) {

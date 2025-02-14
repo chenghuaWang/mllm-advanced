@@ -1,37 +1,28 @@
 /**
- * @file FillOp.hpp
+ * @file RMSNorm.hpp
  * @author chenghua Wang (chenghua.wang.edu@gmail.com)
  * @version 0.1
- * @date 2025-02-04
+ * @date 2025-02-14
  *
  * @copyright Copyright (c) 2025
  *
  */
 #pragma once
 
-#include <cstddef>
 #include "mllm/Core/AOps/BaseOp.hpp"
 
 namespace mllm {
 
-// type
-// 0 -> zeros
-// 1 -> ones
-// 2 -> specific
-// 3 -> random
-// 4 -> arrange
-// 5 -> make input tensor contiguous
-struct FillOpCargo : public BaseOpCargo<FillOpCargo> {
-  size_t type = 0;
-  float value = 0.f;
-  float start = 0.f;
-  float end = 0.f;
-  float step = 0.f;
+struct RMSNormOpCargo : public BaseOpCargo<RMSNormOpCargo> {
+  float epsilon;
+
+  // for Gemma
+  bool add_unit_offset = false;
 };
 
-class FillOp : public BaseOp {
+class RMSNormOp : public BaseOp {
  public:
-  explicit FillOp(const FillOpCargo& cargo);
+  explicit RMSNormOp(const RMSNormOpCargo& cargo);
 
   void load(std::shared_ptr<ParameterLoader>& ploader) override;
 
@@ -45,7 +36,8 @@ class FillOp : public BaseOp {
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
  protected:
-  FillOpCargo cargo_;
+  Tensor weight_;
+  RMSNormOpCargo cargo_;
 };
 
 }  // namespace mllm

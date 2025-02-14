@@ -137,13 +137,13 @@ bool deepSeekQwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos,
   return false;
 }
 
-bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& splited) {
+bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& splitted) {
   auto w_string = preprocessor::utf8string2WideString(str);
   size_t pos = 0;
   while (pos < w_string.size()) {
     std::wstring matched;
     if (deepSeekQwen2TokenizerMatchPattern(w_string, pos, matched)) {
-      splited.push_back(matched);
+      splitted.push_back(matched);
     } else {
       ++pos;
     }
@@ -168,9 +168,9 @@ DeepSeekQwen2Tokenizer::DeepSeekQwen2Tokenizer(const std::string& file_path) {
 
 std::vector<std::wstring> DeepSeekQwen2Tokenizer::_tokenize(const std::string& str) {
   std::vector<std::wstring> ret;
-  std::vector<std::wstring> splited;
-  mllm::models::deepSeekQwen2Regex(str, splited);
-  for (const auto& s : splited) {
+  std::vector<std::wstring> splitted;
+  mllm::models::deepSeekQwen2Regex(str, splitted);
+  for (const auto& s : splitted) {
     auto utf_8_str = preprocessor::wideString2Utf8String(s);
     std::wstring mapped_str;
     for (unsigned char c : utf_8_str) { mapped_str.push_back(bytes_2_unicode_dict_[c]); }

@@ -42,7 +42,7 @@ class Module {
  public:
   Module();
 
-  void selfAssginName(const std::string& name);
+  void selfAssignName(const std::string& name);
 
   std::shared_ptr<ModuleImpl> impl();
 
@@ -54,9 +54,9 @@ class Module {
     // register to thisThread table.
     if constexpr (std::is_base_of_v<Layer, typeof(ret)>) {
       auto& ctx = MllmEngineCtx::instance();
-      ctx.thisThread()->layer_ops_table.reg(
-          ret.impl()->absoluteName(),
-          ctx.getBackend(ret.impl()->device())->createOp(ret.opType(), ret.refCargo()));
+      auto _op = ctx.getBackend(ret.impl()->device())->createOp(ret.opType(), ret.refCargo());
+      _op->setName(ret.impl()->absoluteName());
+      ctx.thisThread()->layer_ops_table.reg(ret.impl()->absoluteName(), _op);
     }
     return ret;
   }

@@ -19,7 +19,7 @@ class ExampleModule : public nn::Module {
   nn::KVCache x_cache_;
 
   ExampleModule() {
-    selfAssginName("module");
+    selfAssignName("module");
     x_cache_ = reg<nn::KVCache>("x_cache", 1, 8, 2, kFp32, 1024, 2);
   }
 
@@ -53,6 +53,8 @@ TEST(MllmNN, NestedModuleCreate) {
     y.print<float>();
     auto eight = two * two * two;
     y = e(eight)[0];
+    y.print<float>();
+    y = y.contiguous();
     y.print<float>();
   }
 

@@ -17,7 +17,7 @@ void FillOp::load(std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing.
 }
 
-void FillOp::trace(void* trace_contex, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+void FillOp::trace(void* trace_context, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
   MLLM_WARN("FillOp::trace is not implemented");
 }
 
@@ -26,12 +26,30 @@ void FillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& out
 }
 
 void FillOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  // replace, using inputs' memory space
-  outputs.emplace_back(inputs[0]);
+  switch (cargo_.type) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+      // replace, using inputs' memory space
+      outputs.emplace_back(inputs[0]);
+      break;
+    case 5:
+      outputs.emplace_back(Tensor::empty(inputs[0].shape(), inputs[0].dtype(), inputs[0].device()));
+      break;
+  }
 }
 
 void FillOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  // do nothing.
+  switch (cargo_.type) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4: break;
+    case 5: outputs[0].alloc(); break;
+  }
 }
 
 }  // namespace mllm

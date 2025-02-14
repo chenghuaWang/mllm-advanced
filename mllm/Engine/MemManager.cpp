@@ -84,10 +84,10 @@ void MemManager::regAllocator(DeviceTypes device, const std::shared_ptr<Allocato
 }
 
 void MemManager::updateCacheSizeList(DeviceTypes device,
-                                     const std::vector<size_t>& cache_size_list) {
+                                     const std::unordered_set<size_t>& cache_size_set) {
   auto& object_cache = free_object_cache_st_[device];
 
-  for (auto size : cache_size_list) {
+  for (auto size : cache_size_set) {
     if (!_is_in_oc(size)) {
       auto& free_list = object_cache[size];
       for (auto it : free_list) { _free_buddy(device, it); }
@@ -95,7 +95,7 @@ void MemManager::updateCacheSizeList(DeviceTypes device,
     }
   }
 
-  cargo_.cache_size_list = cache_size_list;
+  cargo_.cache_size_set = cache_size_set;
 }
 
 void MemManager::report() const {
@@ -155,6 +155,14 @@ void MemManager::initBuddyCtx(DeviceTypes device) {
 }
 
 void MemManager::initOC(DeviceTypes device) { free_object_cache_st_.reg(device, {}); }
+
+void MemManager::regGlobalTensor(Tensor v) { global_tensor_st_.reg(v.name(), v); }
+
+Tensor MemManager::getGlobalTensor(const std::string& name) { return global_tensor_st_[name]; }
+
+bool MemManager::hasGlobalTensor(const std::string& name) { return global_tensor_st_.has(name); }
+
+void MemManager::clearGlobalTensor() { global_tensor_st_._raw_data().clear(); }
 
 ObjMemBlock* MemManager::_alloc_buddy(DeviceTypes device, size_t omb_size) {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -276,13 +284,13 @@ bool MemManager::_expand_buddy_segment(DeviceTypes device) {
   auto& cur_segs = buddy_ctx->segments;
   auto& cur_seg_blocks = buddy_ctx->segment_blocks;
 
-  size_t previes_seg_cap = 0;
+  size_t previous_seg_cap = 0;
   for (auto& seg : cur_segs) {
-    previes_seg_cap = std::max(previes_seg_cap, (size_t)(1ULL << seg.second->max_order));
+    previous_seg_cap = std::max(previous_seg_cap, (size_t)(1ULL << seg.second->max_order));
   }
 
   size_t min_order = cargo_.buddy_min_order;
-  size_t new_cap = std::min(previes_seg_cap * 2, (size_t)(1ULL << 29ULL));  // max is 512MB
+  size_t new_cap = std::min(previous_seg_cap * 2, (size_t)(1ULL << 29ULL));  // max is 512MB
   size_t max_order = _log2_ceil(new_cap);
 
   void* _p = nullptr;
@@ -336,8 +344,7 @@ void MemManager::_free_oc(DeviceTypes device, ObjMemBlock* omb) {
 
 bool MemManager::_is_in_oc(size_t omb_size) {
   std::lock_guard<std::mutex> lock(mutex_);
-  return std::find(cargo_.cache_size_list.begin(), cargo_.cache_size_list.end(), omb_size)
-         != cargo_.cache_size_list.end();
+  return cargo_.cache_size_set.count(omb_size);
 }
 
 void MemManager::_alloc_really_large(const std::shared_ptr<TensorImpl>& t) {

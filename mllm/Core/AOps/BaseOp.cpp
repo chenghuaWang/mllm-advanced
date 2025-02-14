@@ -13,4 +13,8 @@ namespace mllm {
 
 BaseOp::BaseOp(OpType op_type) : op_type_(op_type) {}
 
+std::string BaseOp::name() const { return name_; }
+
+void BaseOp::setName(const std::string& name) { name_ = name; }
+
 }  // namespace mllm

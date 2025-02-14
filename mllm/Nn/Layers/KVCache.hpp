@@ -25,9 +25,5 @@ class KVCache : public Layer {
           size_t re_alloc_multiplier = 2);
 
   explicit KVCache(const KVCacheOpCargo& cargo);
-
-  [[nodiscard]] Tensor weight() const;
-
-  [[nodiscard]] Tensor bias() const;
 };
 }  // namespace mllm::nn

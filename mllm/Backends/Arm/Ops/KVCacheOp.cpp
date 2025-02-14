@@ -30,7 +30,7 @@ void ArmKVCacheOp::load(std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing.
 }
 
-void ArmKVCacheOp::trace(void* trace_contex, std::vector<Tensor>& inputs,
+void ArmKVCacheOp::trace(void* trace_context, std::vector<Tensor>& inputs,
                          std::vector<Tensor>& outputs) {}
 
 void ArmKVCacheOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

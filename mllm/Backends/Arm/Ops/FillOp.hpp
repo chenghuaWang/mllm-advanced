@@ -11,7 +11,7 @@
 #include "mllm/Core/AOps/BaseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
 
-namespace mllm {
+namespace mllm::arm {
 
 class ArmFillOp final : public FillOp {
  public:
@@ -27,4 +27,4 @@ class ArmFillOpFactory final : public TypedOpFactory<OpType::kFill, FillOpCargo>
   }
 };
 
-}  // namespace mllm
+}  // namespace mllm::arm

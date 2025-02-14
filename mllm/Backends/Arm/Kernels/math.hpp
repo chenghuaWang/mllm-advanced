@@ -112,6 +112,23 @@ static inline float32x4_t vsigmoid_f32(float32x4_t x) {
   return vmulq_f32(vrecpsq_f32(x, out), out);
 }
 
+// perform (x * x).sum() / x.size()
+static inline float vsquare_mean_fp32(const float* __restrict X, int dim) {
+  float32x4_t sum = vdupq_n_f32(0.0f);
+  float32x4_t square;
+
+  int i;
+  for (i = 0; i <= dim - 4; i += 4) {
+    float32x4_t vec = vld1q_f32(&X[i]);
+    square = vmulq_f32(vec, vec);
+    sum = vaddq_f32(sum, square);
+  }
+
+  float acc = vaddvq_f32(sum);
+  for (; i < dim; ++i) { acc += X[i] * X[i]; }
+  return acc / (float)dim;
+}
+
 #if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else

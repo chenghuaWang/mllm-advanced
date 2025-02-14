@@ -44,21 +44,20 @@ class Tensor {
 
   explicit Tensor(const std::shared_ptr<TensorImpl>& impl);
 
-  // TODO
-  // static Tensor randoms();
-  // static Tensor zeros();
   static Tensor empty(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
                       DeviceTypes device = kCPU);
 
   Tensor& alloc();
 
-  // static Tensor arange();
+  static Tensor zeros(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
+                      DeviceTypes device = kCPU);
+
   static Tensor ones(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
                      DeviceTypes device = kCPU);
-  // static Tensor eyes();
 
-  // TODO
-  // Tensor operator[](const SliceIndices& slice_index);
+  // Make a slice of the tensor. Using deep copy.
+  // deep copy
+  Tensor operator[](const SliceIndices& slice_index);
 
   Tensor operator+(const Tensor& rhs);
 
@@ -92,7 +91,7 @@ class Tensor {
 
   [[nodiscard]] uint32_t uuid() const;
 
-  // For Tensor Refernece we just support contiguous reference.
+  // For Tensor Reference we just support contiguous reference.
   // NOTE: It is quite same with shallow copy !!! After the original Tensor is freed, the ref Tensor
   // is invalid !!!
   //

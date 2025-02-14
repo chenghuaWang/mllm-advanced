@@ -2,7 +2,7 @@
 
 device: xiaomi 12s
 
-data: 2025-02-08T14:48:32+08:00
+data: 2025-02-14T15:11:28+08:00
 
 executable: /data/local/tmp/mllm-advanced/bin/MllmArmKernels-ComplexOps
 
@@ -18,45 +18,46 @@ library_build_type: release
 
 | Name | Run Name | Run Type | Iterations | Real Time | CPU Time | Time Unit |
 | --- | --- | --- | --- | --- | --- | --- |
-| softmax_baseline/64 | softmax_baseline/64 | iteration | 2600354 | 269.82978817532575 | 269.1615306992817 | ns |
-| softmax_baseline/128 | softmax_baseline/128 | iteration | 1300598 | 538.9950907283471 | 537.7378605841313 | ns |
-| softmax_baseline/256 | softmax_baseline/256 | iteration | 656567 | 1069.1452966694017 | 1066.7030645768064 | ns |
-| softmax_baseline/512 | softmax_baseline/512 | iteration | 331112 | 2123.549143496579 | 2118.783016018749 | ns |
-| softmax_baseline/1024 | softmax_baseline/1024 | iteration | 164668 | 4260.0632424004325 | 4250.313576408289 | ns |
-| softmax_baseline/2048 | softmax_baseline/2048 | iteration | 82403 | 8514.333385991631 | 8494.947708214508 | ns |
-| softmax_v1_f32/64 | softmax_v1_f32/64 | iteration | 8554429 | 82.02644805414764 | 81.82449933245107 | ns |
-| softmax_v1_f32/128 | softmax_v1_f32/128 | iteration | 4365984 | 160.7177905348828 | 160.3316013068303 | ns |
-| softmax_v1_f32/256 | softmax_v1_f32/256 | iteration | 2231520 | 314.4363666896462 | 313.6928062486559 | ns |
-| softmax_v1_f32/512 | softmax_v1_f32/512 | iteration | 1146780 | 612.0746786635845 | 610.6153874326375 | ns |
-| softmax_v1_f32/1024 | softmax_v1_f32/1024 | iteration | 582639 | 1204.1823393271738 | 1201.3176821325046 | ns |
-| softmax_v1_f32/2048 | softmax_v1_f32/2048 | iteration | 293788 | 2388.1766988411496 | 2382.678809209364 | ns |
-| softmax_v1_f32_kxk/64 | softmax_v1_f32_kxk/64 | iteration | 133203 | 5264.920287109638 | 5252.402596037625 | ns |
-| softmax_v1_f32_kxk/128 | softmax_v1_f32_kxk/128 | iteration | 34060 | 20591.280387660638 | 20549.85543159128 | ns |
-| softmax_v1_f32_kxk/256 | softmax_v1_f32_kxk/256 | iteration | 8649 | 81195.42351718215 | 81004.84310324892 | ns |
-| softmax_v1_f32_kxk/512 | softmax_v1_f32_kxk/512 | iteration | 2090 | 331460.152153632 | 330651.06698564603 | ns |
-| softmax_v1_f32_kxk/1024 | softmax_v1_f32_kxk/1024 | iteration | 529 | 1326926.0982892145 | 1320513.1776937584 | ns |
-| softmax_v1_f32_kxk/2048 | softmax_v1_f32_kxk/2048 | iteration | 118 | 5572659.33901486 | 5539271.322033896 | ns |
-| softmax_v1_f32_kxk_4_threads/64 | softmax_v1_f32_kxk_4_threads/64 | iteration | 102727 | 6804.6182601285445 | 6784.62653440673 | ns |
-| softmax_v1_f32_kxk_4_threads/128 | softmax_v1_f32_kxk_4_threads/128 | iteration | 48255 | 14580.097482157089 | 14538.944461713785 | ns |
-| softmax_v1_f32_kxk_4_threads/256 | softmax_v1_f32_kxk_4_threads/256 | iteration | 16817 | 41880.49729400406 | 41751.368496164694 | ns |
-| softmax_v1_f32_kxk_4_threads/512 | softmax_v1_f32_kxk_4_threads/512 | iteration | 4619 | 153059.36306638495 | 152594.12080536882 | ns |
-| softmax_v1_f32_kxk_4_threads/1024 | softmax_v1_f32_kxk_4_threads/1024 | iteration | 1164 | 593214.847939669 | 590451.664089347 | ns |
-| softmax_v1_f32_kxk_4_threads/2048 | softmax_v1_f32_kxk_4_threads/2048 | iteration | 277 | 2557565.0577573776 | 2539043.3393501816 | ns |
-| softmax_v1_f16/64 | softmax_v1_f16/64 | iteration | 6766983 | 98.23885725812862 | 97.98189074806322 | ns |
-| softmax_v1_f16/128 | softmax_v1_f16/128 | iteration | 3730486 | 188.04570637587207 | 187.62715501411833 | ns |
-| softmax_v1_f16/256 | softmax_v1_f16/256 | iteration | 1877455 | 373.78780903140836 | 372.8948139902157 | ns |
-| softmax_v1_f16/512 | softmax_v1_f16/512 | iteration | 953266 | 736.0181670079282 | 734.2590210917008 | ns |
-| softmax_v1_f16/1024 | softmax_v1_f16/1024 | iteration | 483018 | 1459.1488433327809 | 1455.310120947869 | ns |
-| softmax_v1_f16/2048 | softmax_v1_f16/2048 | iteration | 243298 | 2884.270265281409 | 2877.099519930284 | ns |
-| softmax_v1_f16_kxk/64 | softmax_v1_f16_kxk/64 | iteration | 112233 | 6253.314345991737 | 6237.917314871765 | ns |
-| softmax_v1_f16_kxk/128 | softmax_v1_f16_kxk/128 | iteration | 29112 | 24098.11136294868 | 24043.856382247963 | ns |
-| softmax_v1_f16_kxk/256 | softmax_v1_f16_kxk/256 | iteration | 7335 | 95614.36318933021 | 95413.01022494915 | ns |
-| softmax_v1_f16_kxk/512 | softmax_v1_f16_kxk/512 | iteration | 1855 | 378301.74609396176 | 377284.20161725144 | ns |
-| softmax_v1_f16_kxk/1024 | softmax_v1_f16_kxk/1024 | iteration | 464 | 1507492.5905255128 | 1502115.2392241398 | ns |
-| softmax_v1_f16_kxk/2048 | softmax_v1_f16_kxk/2048 | iteration | 110 | 6189199.327358934 | 6158168.118181836 | ns |
-| softmax_v1_f16_kxk_4_threads/64 | softmax_v1_f16_kxk_4_threads/64 | iteration | 98244 | 7148.256717907271 | 7124.596453727513 | ns |
-| softmax_v1_f16_kxk_4_threads/128 | softmax_v1_f16_kxk_4_threads/128 | iteration | 45438 | 15492.700911085421 | 15445.53169153574 | ns |
-| softmax_v1_f16_kxk_4_threads/256 | softmax_v1_f16_kxk_4_threads/256 | iteration | 14830 | 47360.74470661817 | 47213.93108563708 | ns |
-| softmax_v1_f16_kxk_4_threads/512 | softmax_v1_f16_kxk_4_threads/512 | iteration | 4152 | 169429.15317836517 | 168970.02649325528 | ns |
-| softmax_v1_f16_kxk_4_threads/1024 | softmax_v1_f16_kxk_4_threads/1024 | iteration | 1062 | 653900.0706274059 | 651757.2542372909 | ns |
-| softmax_v1_f16_kxk_4_threads/2048 | softmax_v1_f16_kxk_4_threads/2048 | iteration | 266 | 2647116.812010807 | 2633459.199248119 | ns |
+| softmax_baseline/64 | softmax_baseline/64 | iteration | 3621781 | 194.89267655656627 | 193.52294106131765 | ns |
+| softmax_baseline/128 | softmax_baseline/128 | iteration | 1842096 | 382.73815046061026 | 380.250933718981 | ns |
+| softmax_baseline/256 | softmax_baseline/256 | iteration | 947935 | 742.2527314856493 | 737.4231017949543 | ns |
+| softmax_baseline/512 | softmax_baseline/512 | iteration | 480422 | 1455.1408282727016 | 1445.442217467143 | ns |
+| softmax_baseline/1024 | softmax_baseline/1024 | iteration | 244053 | 2883.2161539412764 | 2865.086710673502 | ns |
+| softmax_baseline/2048 | softmax_baseline/2048 | iteration | 122559 | 5743.709829366755 | 5708.305477361928 | ns |
+| softmax_v1_f32/64 | softmax_v1_f32/64 | iteration | 9306383 | 75.62159670393338 | 75.15925714641229 | ns |
+| softmax_v1_f32/128 | softmax_v1_f32/128 | iteration | 4724021 | 148.92306299765855 | 147.9579169948653 | ns |
+| softmax_v1_f32/256 | softmax_v1_f32/256 | iteration | 2455048 | 286.7166230635306 | 284.8400727806541 | ns |
+| softmax_v1_f32/512 | softmax_v1_f32/512 | iteration | 1264684 | 556.7675814794621 | 553.2257306963636 | ns |
+| softmax_v1_f32/1024 | softmax_v1_f32/1024 | iteration | 644339 | 1093.9260513598997 | 1086.738623612726 | ns |
+| softmax_v1_f32/2048 | softmax_v1_f32/2048 | iteration | 324795 | 2169.9446943063544 | 2155.641604704505 | ns |
+| softmax_v1_f32_kxk/64 | softmax_v1_f32_kxk/64 | iteration | 145130 | 4856.055053964569 | 4825.759353682908 | ns |
+| softmax_v1_f32_kxk/128 | softmax_v1_f32_kxk/128 | iteration | 36942 | 19093.746900374234 | 18965.344648367718 | ns |
+| softmax_v1_f32_kxk/256 | softmax_v1_f32_kxk/256 | iteration | 9442 | 74344.3688834522 | 73838.77568311802 | ns |
+| softmax_v1_f32_kxk/512 | softmax_v1_f32_kxk/512 | iteration | 2279 | 306284.94295302226 | 303620.44361562113 | ns |
+| softmax_v1_f32_kxk/1024 | softmax_v1_f32_kxk/1024 | iteration | 590 | 1229834.3034255933 | 1217987.6406779664 | ns |
+| softmax_v1_f32_kxk/2048 | softmax_v1_f32_kxk/2048 | iteration | 126 | 5221979.992162984 | 5162931.079365066 | ns |
+| softmax_v1_f32_kxk_4_threads/64 | softmax_v1_f32_kxk_4_threads/64 | iteration | 106019 | 6665.278846238522 | 6637.113809788802 | ns |
+| softmax_v1_f32_kxk_4_threads/128 | softmax_v1_f32_kxk_4_threads/128 | iteration | 49865 | 13890.47197397015 | 13836.583856412313 | ns |
+| softmax_v1_f32_kxk_4_threads/256 | softmax_v1_f32_kxk_4_threads/256 | iteration | 17774 | 39934.72144752469 | 39773.885844492004 | ns |
+| softmax_v1_f32_kxk_4_threads/512 | softmax_v1_f32_kxk_4_threads/512 | iteration | 5035 | 139672.11797667894 | 139064.22661370342 | ns |
+| softmax_v1_f32_kxk_4_threads/1024 | softmax_v1_f32_kxk_4_threads/1024 | iteration | 1287 | 537898.9409528696 | 533576.7668997676 | ns |
+| softmax_v1_f32_kxk_4_threads/2048 | softmax_v1_f32_kxk_4_threads/2048 | iteration | 291 | 2430350.6220302056 | 2410528.542955325 | ns |
+| softmax_v1_f16/64 | softmax_v1_f16/64 | iteration | 7433834 | 89.89576684114009 | 89.36416027046079 | ns |
+| softmax_v1_f16/128 | softmax_v1_f16/128 | iteration | 4103590 | 172.07175351165432 | 170.90583976469324 | ns |
+| softmax_v1_f16/256 | softmax_v1_f16/256 | iteration | 2053899 | 342.2805537106506 | 340.15423591909695 | ns |
+| softmax_v1_f16/512 | softmax_v1_f16/512 | iteration | 1038857 | 673.5195700723946 | 669.0205033031477 | ns |
+| softmax_v1_f16/1024 | softmax_v1_f16/1024 | iteration | 531186 | 1328.9411769496921 | 1320.317679682823 | ns |
+| softmax_v1_f16/2048 | softmax_v1_f16/2048 | iteration | 265967 | 2636.4235638293385 | 2620.309023299885 | ns |
+| softmax_v1_f16_kxk/64 | softmax_v1_f16_kxk/64 | iteration | 123157 | 5715.274763265637 | 5677.143353605538 | ns |
+| softmax_v1_f16_kxk/128 | softmax_v1_f16_kxk/128 | iteration | 31936 | 22035.428263003625 | 21896.341714679358 | ns |
+| softmax_v1_f16_kxk/256 | softmax_v1_f16_kxk/256 | iteration | 8036 | 87602.2093080892 | 87036.34992533585 | ns |
+| softmax_v1_f16_kxk/512 | softmax_v1_f16_kxk/512 | iteration | 2036 | 346464.984283498 | 343790.72789783863 | ns |
+| softmax_v1_f16_kxk/1024 | softmax_v1_f16_kxk/1024 | iteration | 508 | 1385918.1220420476 | 1374008.2499999958 | ns |
+| softmax_v1_f16_kxk/2048 | softmax_v1_f16_kxk/2048 | iteration | 120 | 5864319.874914751 | 5800024.716666652 | ns |
+| softmax_v1_f16_kxk_4_threads/64 | softmax_v1_f16_kxk_4_threads/64 | iteration | 94312 | 7075.489248402665 | 7044.215624734935 | ns |
+| softmax_v1_f16_kxk_4_threads/128 | softmax_v1_f16_kxk_4_threads/128 | iteration | 47613 | 14771.888055475312 | 14715.530695398389 | ns |
+| softmax_v1_f16_kxk_4_threads/256 | softmax_v1_f16_kxk_4_threads/256 | iteration | 15602 | 44299.1883736401 | 44120.34963466233 | ns |
+| softmax_v1_f16_kxk_4_threads/512 | softmax_v1_f16_kxk_4_threads/512 | iteration | 4455 | 157997.97732721677 | 157462.80875420844 | ns |
+| softmax_v1_f16_kxk_4_threads/1024 | softmax_v1_f16_kxk_4_threads/1024 | iteration | 1142 | 612337.6383449011 | 609405.4299474617 | ns |
+| softmax_v1_f16_kxk_4_threads/2048 | softmax_v1_f16_kxk_4_threads/2048 | iteration | 284 | 2462021.345014415 | 2445546.8873239425 | ns |
+| transpose_fp32_bshd2bhsd | transpose_fp32_bshd2bhsd | iteration | 219 | 3088719.557043692 | 3061966.566210065 | ns |

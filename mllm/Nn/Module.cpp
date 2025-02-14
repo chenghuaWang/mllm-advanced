@@ -48,9 +48,9 @@ void ModuleImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
 
 Module::Module() { impl_ = std::make_shared<ModuleImpl>(); }
 
-void Module::selfAssginName(const std::string& name) {
+void Module::selfAssignName(const std::string& name) {
   if (!impl_->name().empty() && !impl_->absoluteName().empty()) {
-    MLLM_WARN("When doing Module::selfAssginName. Found Module name/absolute_name is not empty. "
+    MLLM_WARN("When doing Module::selfAssignName. Found Module name/absolute_name is not empty. "
               "This Module may not a top level module! Mllm will still reset the "
               "name/absolute_name of this module.")
   }

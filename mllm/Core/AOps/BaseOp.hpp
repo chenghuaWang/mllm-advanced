@@ -34,6 +34,8 @@ enum class OpType : int32_t {
   kLinear,
   kRoPE,
   kSoftmax,
+  kTranspose,
+  kRMSNorm,
 
   kKVCache,
 
@@ -60,12 +62,17 @@ class BaseOpCargo {
     return *static_cast<DerivedT*>(this);
   }
 
+  int thread() const { return threads_; }
+
+  void setThreads(int threads) { threads_ = threads; }
+
  private:
+  int threads_ = 0;
   std::vector<DataTypes> inputs_dtypes_;
   std::vector<DataTypes> outputs_dtypes_;
 };
 
-// tpye erase wrapper
+// type erase wrapper
 class BaseOpCargoBase {
  public:
   // do not mark this explicit
@@ -101,11 +108,11 @@ class BaseOp {
  public:
   explicit BaseOp(OpType op_type);
 
-  virtual void load(std::shared_ptr<ParameterLoader>& ploader){};
+  virtual void load(std::shared_ptr<ParameterLoader>& ploader) {};
 
   // TODO
   virtual void trace(void* trace_contex, std::vector<Tensor>& inputs,
-                     std::vector<Tensor>& outputs){};
+                     std::vector<Tensor>& outputs) {};
 
   virtual void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
 
@@ -113,7 +120,12 @@ class BaseOp {
 
   virtual void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
 
+  std::string name() const;
+
+  void setName(const std::string& name);
+
  private:
+  std::string name_;
   OpType op_type_;
 };
 

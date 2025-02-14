@@ -22,7 +22,7 @@ namespace mllm::models {
 bool deepSeekQwen2TokenizerMatchPattern(const std::wstring& str, size_t& pos,
                                         std::wstring& matched);
 
-bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& splited);
+bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& splitted);
 
 class DeepSeekQwen2Tokenizer final : public mllm::preprocessor::AutoTokenizer {
  public:

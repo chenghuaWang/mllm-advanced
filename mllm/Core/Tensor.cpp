@@ -10,6 +10,7 @@
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/AOps/ElewiseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
+#include "mllm/Core/AOps/TransposeOp.hpp"
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Engine/Context.hpp"
@@ -32,6 +33,13 @@ Tensor::Tensor(const std::shared_ptr<TensorImpl>& impl) : impl_(impl) {}
 Tensor Tensor::empty(const std::vector<size_t>& shape, DataTypes dtype, DeviceTypes device) {
   auto impl = std::make_shared<TensorImpl>(shape, dtype, device);
   return Tensor(impl);
+}
+
+Tensor Tensor::zeros(const std::vector<size_t>& shape, DataTypes dtype, DeviceTypes device) {
+  auto impl = std::make_shared<TensorImpl>(shape, dtype, device);
+  MllmEngineCtx::instance().mem()->alloc(impl);
+  return MllmEngineCtx::instance().dispatch(OpType::kFill, FillOpCargo{.type = 0},
+                                            {Tensor(impl)})[0];
 }
 
 Tensor Tensor::ones(const std::vector<size_t>& shape, DataTypes dtype, DeviceTypes device) {
@@ -67,6 +75,10 @@ Tensor& Tensor::to(DataTypes dtype) {
   return *this;
 }
 
+Tensor Tensor::operator[](const SliceIndices& slice_index) {
+  return refFrom(slice_index).contiguous();
+}
+
 Tensor Tensor::operator+(const Tensor& rhs) {
   return MllmEngineCtx::instance().dispatch(OpType::kAdd, AddOpCargo{}, {*this, rhs})[0];
 }
@@ -88,8 +100,10 @@ Tensor Tensor::transpose(int dim0, int dim1) {
   MLLM_RT_ASSERT(dim0 < shape_size);
   MLLM_RT_ASSERT(dim1 < shape_size);
 
-  // TODO dispatch thranspose op.
-  // optimize for BSHD -> BHSD
+  return MllmEngineCtx::instance().dispatch(
+      OpType::kTranspose,
+      TransposeOpCargo{.transpose_dim_x = (size_t)dim0, .transpose_dim_y = (size_t)dim1},
+      {*this})[0];
 }
 
 std::string Tensor::name() const { return impl_->name(); }
@@ -161,8 +175,8 @@ Tensor Tensor::contiguousRefFrom(const std::vector<size_t>& offsets) {
   for (int i = 0; i < new_shape.size(); ++i) { new_shape[i] = shape[i] - offsets[i]; }
 
   // Note that: This reference function is marked explicitly contiguous. Which means that there is
-  // no need to take consider of ret_impl's stride. The default TensorImpl constructor will caculate
-  // stride for it.
+  // no need to take consider of ret_impl's stride. The default TensorImpl constructor will
+  // calculate stride for it.
   auto ref_impl = std::make_shared<TensorImpl>(new_shape, impl_->dtype(), impl_->device());
   auto ptr_offsets = impl_->stride()[none_zero_pos] * offsets[none_zero_pos];
   ref_impl->_setRawPtr((char*)(impl_->rptr())
@@ -172,12 +186,12 @@ Tensor Tensor::contiguousRefFrom(const std::vector<size_t>& offsets) {
   // UUID from old tensor.
   ref_impl->setName(impl_->name() + "_ref_" + std::to_string(ref_impl->uuid()));
 
-  // FIXME: if per-channel quantize and the offsets is set at the channel dim. Error will occured.
+  // FIXME: if per-channel quantize and the offsets is set at the channel dim. Error will occurred.
   ref_impl->setQuantizePayload(impl_->quantizePayload());
 
   Tensor ref_tensor(ref_impl);
 
-  // Set memtype to refrence. Which means that this tensor will not be freed automatically.
+  // Set memtype to reference. Which means that this tensor will not be freed automatically.
   ref_tensor.setMemType(kReference);
 
   return ref_tensor;
@@ -197,11 +211,11 @@ Tensor Tensor::refFrom(const SliceIndices& slice_indices) {
   std::vector<size_t> new_offsets(old_shape.size());
 
   for (int i = 0; i < slice_indices.size(); ++i) {
-    auto& indice = slice_indices[i];
+    auto& indices = slice_indices[i];
 
-    auto s = indice.start_;
-    auto e = indice.end_;
-    auto st = indice.step_;
+    auto s = indices.start_;
+    auto e = indices.end_;
+    auto st = indices.step_;
 
     if (s == kAll && e == kAll) {
       new_shape[i] = old_shape[i];
@@ -227,16 +241,16 @@ Tensor Tensor::refFrom(const SliceIndices& slice_indices) {
     }
   }
 
-  // warp to ref tensor
+  // wrap to ref tensor
   auto ref_impl = std::make_shared<TensorImpl>(new_shape, old_stride, new_offsets, impl_->dtype(),
                                                impl_->device());
   ref_impl->_setRawPtr(impl_->rptr());
   ref_impl->setName(impl_->name() + "_sliceref_" + std::to_string(ref_impl->uuid()));
 
-  // FIXME. if per-channel quantize and the offsets is set at the channel dim. Error will occured.
+  // FIXME. if per-channel quantize and the offsets is set at the channel dim. Error will occurred.
   ref_impl->setQuantizePayload(impl_->quantizePayload());
 
-  // Set memtype to refrence. Which means that this tensor will not be freed automatically.
+  // Set memtype to reference. Which means that this tensor will not be freed automatically.
   ref_impl->setMemType(kReference);
 
   return Tensor(ref_impl);
@@ -246,8 +260,7 @@ bool Tensor::isContiguous() const { return impl_->isContiguous(); }
 
 Tensor Tensor::contiguous() {
   if (isContiguous()) { return *this; }
-
-  // TODO
+  return MllmEngineCtx::instance().dispatch(OpType::kFill, FillOpCargo{.type = 5}, {*this})[0];
 }
 
 char* Tensor::offsettedRawPtr(const std::vector<size_t>& offsets) {
