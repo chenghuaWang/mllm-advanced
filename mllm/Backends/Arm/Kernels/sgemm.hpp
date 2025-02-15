@@ -20,6 +20,10 @@ void sgemm_mk_nk_mn_V1(const float* __restrict lhs, const float* __restrict rhs,
                        float* __restrict dst, int M, int K, int N, const float* __restrict bias,
                        int threads = 0);
 
-}
+void sgemm_mk_kn_mn_V1(const float* __restrict lhs, const float* __restrict rhs,
+                       float* __restrict dst, int M, int K, int N, const float* __restrict bias,
+                       int threads = 0);
+
+}  // namespace mllm::arm
 
 #endif

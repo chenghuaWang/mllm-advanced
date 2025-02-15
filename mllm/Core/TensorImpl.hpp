@@ -131,6 +131,8 @@ class TensorImpl : public std::enable_shared_from_this<TensorImpl> {
 
   [[nodiscard]] std::vector<size_t> stride() const;
 
+  void setShape(const std::vector<int32_t>& shape);
+
   bool isContiguous() const;
 
  private:

@@ -38,7 +38,7 @@ void ArmRoPEOp::load(std::shared_ptr<ParameterLoader>& ploader) {
       cos_ =
           Tensor::empty({(size_t)cargo_.max_position_embeddings, (size_t)cargo_.dims}, kFp32, kCPU)
               .setMemType(kGlobal)
-              .setName("__global_rope_sin")
+              .setName("__global_rope_cos")
               .alloc();
       ctx.mem()->regGlobalTensor(cos_);
       precompute_normal_hf_sin_cos(cargo_.max_position_embeddings, cargo_.dims, cargo_.theta,
@@ -50,7 +50,29 @@ void ArmRoPEOp::load(std::shared_ptr<ParameterLoader>& ploader) {
 }
 
 void ArmRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  // TODO
+  // Only support [B, H, S, D] layout
+  auto X = inputs[0];
+  auto Y = outputs[0];
+
+  MLLM_RT_ASSERT_EQ(X.shape().size(), 4);
+
+  switch (cargo_.type) {
+    case RoPETypes::kLlama2: {
+      auto shape = X.shape();
+      auto B = shape[0];
+      auto H = shape[1];
+      auto S = shape[2];
+      auto D = shape[3];
+      for (size_t b = 0; b < B; ++b) {
+        for (size_t h = 0; h < H; ++h) {
+          normal_hf_rope(X.offsettedPtr<float>({b, h, 0, 0}), Y.offsettedPtr<float>({b, h, 0, 0}),
+                         sin_.ptr<float>(), cos_.ptr<float>(), cur_seq_cnt_, S, D);
+        }
+      }
+      break;
+    }
+    default: NYI("ArmRoPEOp find a unsupported rope type."); break;
+  }
 }
 
 }  // namespace mllm::arm

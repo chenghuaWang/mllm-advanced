@@ -263,6 +263,31 @@ Tensor Tensor::contiguous() {
   return MllmEngineCtx::instance().dispatch(OpType::kFill, FillOpCargo{.type = 5}, {*this})[0];
 }
 
+Tensor Tensor::reshape(const std::vector<int>& shape) {
+  // TODO
+}
+
+Tensor& Tensor::view(const std::vector<int>& indicies) {
+  if (!isContiguous()) {
+    MLLM_ERROR_EXIT(kError, "Can not view on non-contiguous tensor. Pls use reshape instead.");
+  }
+
+  std::vector<int32_t> new_shape(indicies.size());
+
+  int acc = 1;
+  for (auto idx : indicies) {
+    new_shape.emplace_back(idx);
+    acc *= idx;
+  }
+
+  MLLM_RT_ASSERT_EQ(acc, impl_->numel());
+
+  // reset shape and stride
+  impl_->setShape(new_shape);
+
+  return *this;
+}
+
 char* Tensor::offsettedRawPtr(const std::vector<size_t>& offsets) {
   return impl_->offsettedRawPtr(offsets);
 }

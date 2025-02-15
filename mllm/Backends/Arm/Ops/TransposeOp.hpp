@@ -23,7 +23,7 @@ class ArmTransposeOp final : public TransposeOp {
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
-class ArmTransposeOpFactory : public TypedOpFactory<OpType::kKVCache, TransposeOpCargo> {
+class ArmTransposeOpFactory : public TypedOpFactory<OpType::kTranspose, TransposeOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const TransposeOpCargo& cargo) override {
     return std::make_shared<ArmTransposeOp>(cargo);

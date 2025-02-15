@@ -7,3 +7,15 @@
  * @copyright Copyright (c) 2025
  *
  */
+#pragma once
+
+#include <string>
+
+struct QWenConfig {
+  std::string gate_proj_name;
+  std::string up_proj_name;
+  std::string down_proj_name;
+
+  int hidden_size = 1536;
+  int intermediate_size = 8960;
+};

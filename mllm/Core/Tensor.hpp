@@ -117,6 +117,11 @@ class Tensor {
 
   Tensor contiguous();
 
+  Tensor reshape(const std::vector<int>& shape);
+
+  // FIXME: This function is in an early age.
+  Tensor& view(const std::vector<int>& indicies);
+
   template<typename T>
   T* ptr() const {
     return impl_->ptr<T>();

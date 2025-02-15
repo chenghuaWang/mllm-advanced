@@ -2,6 +2,7 @@
 #include "SgemvTest.hpp"
 #include "SoftmaxTest.hpp"
 #include "TransposeTest.hpp"
+#include "SgemmTest.hpp"
 #include <gtest/gtest.h>
 
 TEST_F(HgemvTest, Hgemv) {
@@ -51,6 +52,30 @@ TEST_F(SoftmaxTest, SoftmaxFp16) {
 }
 
 TEST_F(TransposeTest, BSHD2BHSD) {
+  CalculateRef();
+  Calculate(4);
+  EXPECT_EQ(Compare(), true);
+}
+
+TEST_F(Sgemm_MK_NK_MN_V1_Test, Sgemm_MK_NK_MN_V1) {
+  CalculateRef();
+  Calculate(0);
+  EXPECT_EQ(Compare(), true);
+}
+
+TEST_F(Sgemm_MK_NK_MN_V1_Test, Sgemm_MK_NK_MN_V1_4threads) {
+  CalculateRef();
+  Calculate(4);
+  EXPECT_EQ(Compare(), true);
+}
+
+TEST_F(Sgemm_MK_KN_MN_V1_Test, Sgemm_MK_KN_MN_V1) {
+  CalculateRef();
+  Calculate(0);
+  EXPECT_EQ(Compare(), true);
+}
+
+TEST_F(Sgemm_MK_KN_MN_V1_Test, Sgemm_MK_KN_MN_V1_4threads) {
   CalculateRef();
   Calculate(4);
   EXPECT_EQ(Compare(), true);

@@ -19,7 +19,7 @@ class ArmRMSNormOp final : public RMSNormOp {
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
-class ArmRMSNormOpFactory : public TypedOpFactory<OpType::kKVCache, RMSNormOpCargo> {
+class ArmRMSNormOpFactory : public TypedOpFactory<OpType::kRMSNorm, RMSNormOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const RMSNormOpCargo& cargo) override {
     return std::make_shared<ArmRMSNormOp>(cargo);

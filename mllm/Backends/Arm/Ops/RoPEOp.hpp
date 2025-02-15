@@ -24,7 +24,7 @@ class ArmRoPEOp final : public RoPEOp {
   Tensor sin_, cos_;
 };
 
-class ArmRoPEOpFactory : public TypedOpFactory<OpType::kKVCache, RoPEOpCargo> {
+class ArmRoPEOpFactory : public TypedOpFactory<OpType::kRoPE, RoPEOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const RoPEOpCargo& cargo) override {
     return std::make_shared<ArmRoPEOp>(cargo);

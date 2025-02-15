@@ -36,7 +36,7 @@ enum class OpType : int32_t {
   kSoftmax,
   kTranspose,
   kRMSNorm,
-
+  kSiLU,
   kKVCache,
 
   kOpType_End,

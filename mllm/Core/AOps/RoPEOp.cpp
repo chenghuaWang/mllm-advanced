@@ -28,6 +28,9 @@ void RoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& out
 void RoPEOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
   Tensor output_0 = Tensor::empty(inputs[0].shape(), inputs[0].dtype(), inputs[0].device());
   outputs.emplace_back(output_0);
+
+  // inputs is [B, H, S, D]
+  cur_seq_cnt_ += inputs[0].shape()[2];
 }
 
 void RoPEOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

@@ -121,6 +121,18 @@ std::vector<size_t> TensorImpl::shape() const { return {shape_, shape_ + shape_l
 
 std::vector<size_t> TensorImpl::stride() const { return {stride_, stride_ + shape_len_}; }
 
+void TensorImpl::setShape(const std::vector<int32_t>& shape) {
+  for (int i = 0; i < shape_len_; ++i) { shape_[i] = shape[i]; }
+  shape_len_ = (int32_t)shape.size();
+
+  int _acc = 1;
+  stride_[shape_len_ - 1] = 1;
+  for (int i = shape_len_ - 1; i > 0; i--) {
+    stride_[i - 1] = _acc * shape_[i];
+    _acc *= shape_[i];
+  }
+}
+
 bool TensorImpl::isContiguous() const {
   if (shape_len_ == 0) return true;
 

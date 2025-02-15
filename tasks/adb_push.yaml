@@ -6,6 +6,7 @@ AdbPushTask:
     - "build-android-arm64-v8a/tools/TokenizeChecker/mllm-tokenize-checker"
     - "build-android-arm64-v8a/benchmarks/Backend/Arm/MllmArmKernels-ElewiseOps"
     - "build-android-arm64-v8a/benchmarks/Backend/Arm/MllmArmKernels-GemvOps"
+    - "build-android-arm64-v8a/benchmarks/Backend/Arm/MllmArmKernels-GemmOps"
     - "build-android-arm64-v8a/benchmarks/Backend/Arm/MllmArmKernels-ComplexOps"
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-ModuleCreateTest"
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-OpCallTest"
