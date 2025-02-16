@@ -14,6 +14,7 @@
 #include "mllm/Backends/Arm/Ops/KVCacheOp.hpp"
 #include "mllm/Backends/Arm/Ops/RMSNormOp.hpp"
 #include "mllm/Backends/Arm/Ops/RoPEOp.hpp"
+#include "mllm/Backends/Arm/Ops/SoftmaxOp.hpp"
 #include "mllm/Backends/Arm/Ops/TransposeOp.hpp"
 
 namespace mllm::arm {
@@ -21,7 +22,8 @@ namespace mllm::arm {
 ArmBackend::ArmBackend() : BackendBase(kCPU) {
   allocator_ = std::make_shared<ArmAllocator>();
   regOpFactory<ArmAddOpFactory, ArmSubOpFactory, ArmMulOpFactory, ArmDivOpFactory, ArmFillOpFactory,
-               ArmKVCacheOpFactory, ArmRMSNormOpFactory, ArmTransposeOpFactory, ArmRoPEOpFactory>();
+               ArmKVCacheOpFactory, ArmRMSNormOpFactory, ArmTransposeOpFactory, ArmRoPEOpFactory,
+               ArmSoftmaxOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

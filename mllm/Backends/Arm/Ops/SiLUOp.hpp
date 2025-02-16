@@ -19,7 +19,7 @@ class ArmSiLUOp final : public SiLUOp {
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
-class ArmSiLUOpFactory : public TypedOpFactory<OpType::kTranspose, SiLUOpCargo> {
+class ArmSiLUOpFactory : public TypedOpFactory<OpType::kSiLU, SiLUOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const SiLUOpCargo& cargo) override {
     return std::make_shared<ArmSiLUOp>(cargo);

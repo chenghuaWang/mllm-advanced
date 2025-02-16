@@ -121,22 +121,9 @@ class Sgemm_MK_KN_MN_V1_Test : public testing::Test {
     auto b_ptr = reinterpret_cast<float*>(B);
     auto bias_ptr = reinterpret_cast<float*>(BIAS);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist;
-
-    for (int i = 0; i < M * K; ++i) {
-      auto tmp = dist(gen);
-      a_ptr[i] = tmp;
-    }
-    for (int i = 0; i < N * K; ++i) {
-      auto tmp = dist(gen);
-      b_ptr[i] = tmp;
-    }
-    for (int i = 0; i < N; ++i) {
-      auto tmp = dist(gen);
-      bias_ptr[i] = tmp;
-    }
+    for (int i = 0; i < M * K; ++i) { a_ptr[i] = 0.1; }
+    for (int i = 0; i < N * K; ++i) { b_ptr[i] = 0.1; }
+    for (int i = 0; i < N; ++i) { bias_ptr[i] = 10.f; }
   }
 
   void CalculateRef() {

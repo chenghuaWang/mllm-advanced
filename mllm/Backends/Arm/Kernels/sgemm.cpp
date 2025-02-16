@@ -15,6 +15,11 @@
 #include <algorithm>
 #include <arm_neon.h>
 
+// Include micro-kernel variants
+#include "kai_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla.h"
+#include "kai_matmul_clamp_f32_f32_f32p_interface.h"
+#include "kai_rhs_pack_kxn_f32p8x1biasf32_f32_f32_neon.h"
+
 namespace mllm::arm {
 
 static inline void _sgemm_mk_nk_mn_tile_s4_k16_V1(const float* __restrict A,
@@ -131,27 +136,76 @@ void sgemm_mk_nk_mn_V1(const float* __restrict lhs, const float* __restrict rhs,
   }
 }
 
-static inline void _sgemm_mk_kn_mn_tile_s4_k16_V1(const float* __restrict A,
-                                                  const float* __restrict B,
-                                                  const float* __restrict BIAS, float* __restrict C,
-                                                  int ACTUAL_TILE_M, int ACTUAL_TILE_N, int M,
-                                                  int K, int N) {}
-
 void sgemm_mk_kn_mn_V1(const float* __restrict lhs, const float* __restrict rhs,
                        float* __restrict dst, int M, int K, int N, const float* __restrict bias,
                        int threads) {
-  constexpr int TILE_M = 4;
-  constexpr int TILE_N = 4;
+  constexpr kai_matmul_clamp_f32_f32_f32p_ukernel ukernel{
+      kai_get_m_step_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_n_step_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_nr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_kr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_sr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_lhs_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_rhs_packed_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_dst_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_get_dst_size_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      kai_run_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla};
+
+  const size_t nr = ukernel.get_nr();
+  const size_t kr = ukernel.get_kr();
+  const size_t sr = ukernel.get_sr();
+
+  const size_t rhs_packed_size =
+      kai_get_rhs_packed_size_rhs_pack_kxn_f32p8x1biasf32_f32_f32_neon(N, K);
+  const size_t rhs_packed_cols = nr + K * nr;
+  const size_t rhs_packed_rows = rhs_packed_size / (rhs_packed_cols * sizeof(float));
+
+  auto rhs_packed = new float[rhs_packed_size];
+
+  const size_t lhs_stride = K * sizeof(float);
+  const size_t rhs_stride = N * sizeof(float);
+  const size_t dst_stride_row = N * sizeof(float);
+  const size_t dst_stride_col = sizeof(float);
+
+  // pack once
+  kai_run_rhs_pack_kxn_f32p8x1biasf32_f32_f32_neon(1, N, K, nr, kr, sr,  // Packing arguments
+                                                   rhs_stride,           // RHS stride
+                                                   rhs,                  // RHS
+                                                   bias,                 // Bias
+                                                   nullptr,              // Scale
+                                                   rhs_packed,           // RHS packed
+                                                   0, nullptr);
+
+  const size_t m_step = ukernel.get_m_step();  // Scheduling along M
+  const size_t n_step = ukernel.get_n_step();  // Scheduling along N
 
 #pragma omp parallel for collapse(2) num_threads(threads) schedule(auto) if (threads > 0)
-  for (int m = 0; m < M; m += TILE_M) {
-    int tile_m = std::min(TILE_M, M - m);
-    for (int n = 0; n < N; n += TILE_N) {
-      int tile_n = std::min(TILE_N, N - n);
-      _sgemm_mk_kn_mn_tile_s4_k16_V1(lhs + m * K, rhs + n * K, bias ? (bias + n) : nullptr,
-                                     dst + m * N + n, tile_m, tile_n, M, K, N);
+  for (size_t i_m_step = 0; i_m_step < M; i_m_step += m_step) {
+    for (size_t i_n_step = 0; i_n_step < N; i_n_step += n_step) {
+      // Support functions return offset in bytes
+      const uint8_t* lhs_ptr =
+          (const uint8_t*)lhs + (ukernel.get_lhs_packed_offset(i_m_step, K * sizeof(float)));
+      const uint8_t* rhs_ptr =
+          (const uint8_t*)rhs_packed + (ukernel.get_rhs_packed_offset(i_n_step, K));
+      uint8_t* dst_ptr =
+          (uint8_t*)dst + (ukernel.get_dst_offset(i_m_step, i_n_step, N * sizeof(float)));
+
+      const size_t actual_m = std::min(M - i_m_step, m_step);
+      const size_t actual_n = std::min(N - i_n_step, n_step);
+
+      ukernel.run_matmul(actual_m, actual_n, K,  // Dimensions
+                         lhs_ptr,                // LHS
+                         lhs_stride,             // LHS stride
+                         rhs_ptr,                // RHS packed
+                         dst_ptr,                // DST
+                         dst_stride_row,         // DST stride (row)
+                         dst_stride_col,         // DST stride (col)
+                         -FLT_MAX, FLT_MAX       // Min and max for the clamp operation
+      );
     }
   }
+
+  delete[] rhs_packed;
 }
 
 }  // namespace mllm::arm
