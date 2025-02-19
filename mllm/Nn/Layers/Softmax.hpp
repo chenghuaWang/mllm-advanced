@@ -18,6 +18,7 @@ class Softmax : public Layer {
  public:
   Softmax();
   explicit Softmax(const SoftmaxOpCargo& cargo);
+  explicit Softmax(int axis);
 };
 
 }  // namespace mllm::nn

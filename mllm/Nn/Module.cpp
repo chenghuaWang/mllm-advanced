@@ -37,6 +37,7 @@ void ModuleImpl::dump(DumpPrinter& printer) {
 std::vector<std::shared_ptr<HierarchyBase>>& ModuleImpl::hierarchies() { return reg_hierarchies_; }
 
 void ModuleImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
+  param_loader_ = ploader;
   auto& h = hierarchies();
   for (auto& hb : h) {
     switch (hb->type()) {
@@ -45,6 +46,8 @@ void ModuleImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
     }
   }
 }
+
+std::shared_ptr<ParameterLoader> ModuleImpl::params() const { return param_loader_; }
 
 Module::Module() { impl_ = std::make_shared<ModuleImpl>(); }
 

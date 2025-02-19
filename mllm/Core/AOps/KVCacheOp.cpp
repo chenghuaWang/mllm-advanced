@@ -16,7 +16,7 @@ KVCacheOp::KVCacheOp(const KVCacheOpCargo& cargo) : BaseOp(OpType::kKVCache), ca
 
 void KVCacheOp::load(std::shared_ptr<ParameterLoader>& ploader) {}
 
-void KVCacheOp::trace(void* trace_contex, std::vector<Tensor>& inputs,
+void KVCacheOp::trace(void* trace_context, std::vector<Tensor>& inputs,
                       std::vector<Tensor>& outputs) {
   NYI("KVCacheOp::trace is not implemented")
 }

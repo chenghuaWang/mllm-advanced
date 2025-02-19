@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(MLLM_ENABLE_TEST "Enable mllm test" ON)
 option(MLLM_ENABLE_BENCHMARK "Enable mllm benchmark" ON)
+option(MLLM_ENABLE_EXAMPLE "Enable mllm example" ON)
 
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
@@ -30,6 +31,10 @@ if(MLLM_ENABLE_BENCHMARK)
   set(BENCHMARK_ENABLE_TESTING OFF)
   add_subdirectory(third_party/benchmark EXCLUDE_FROM_ALL)
   add_subdirectory(benchmarks)
+endif()
+
+if(MLLM_ENABLE_EXAMPLE)
+  add_subdirectory(examples/Models)
 endif()
 
 add_subdirectory(tools/Quantizer)

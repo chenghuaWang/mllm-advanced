@@ -17,6 +17,8 @@ namespace mllm::arm {
 ArmRMSNormOp::ArmRMSNormOp(const RMSNormOpCargo& cargo) : RMSNormOp(cargo) {}
 
 void ArmRMSNormOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+  // TODO
+  // should support [B, S, H * D]
   auto X = inputs[0];
   auto Y = outputs[0];
 

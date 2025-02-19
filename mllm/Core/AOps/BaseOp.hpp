@@ -30,6 +30,7 @@ enum class OpType : int32_t {
   kDiv,
 
   kMatMul,
+  kLLMEmbeddingToken,
 
   kLinear,
   kRoPE,
@@ -38,6 +39,7 @@ enum class OpType : int32_t {
   kRMSNorm,
   kSiLU,
   kKVCache,
+  kCausalMask,
 
   kOpType_End,
 };

@@ -1,8 +1,8 @@
 /**
- * @file MatMulOp.hpp
+ * @file LLMEmbeddingTokenOp.hpp
  * @author chenghua Wang (chenghua.wang.edu@gmail.com)
  * @version 0.1
- * @date 2025-02-18
+ * @date 2025-02-19
  *
  * @copyright Copyright (c) 2025
  *
@@ -13,14 +13,14 @@
 
 namespace mllm {
 
-struct MatMulOpCargo : public BaseOpCargo<MatMulOpCargo> {
-  bool transpose_a = false;
-  bool transpose_b = false;
+struct LLMEmbeddingTokenOpCargo : public BaseOpCargo<LLMEmbeddingTokenOpCargo> {
+  int vocab_size = 0;
+  int hidden_size = 0;
 };
 
-class MatMulOp : public BaseOp {
+class LLMEmbeddingTokenOp : public BaseOp {
  public:
-  explicit MatMulOp(const MatMulOpCargo& cargo);
+  explicit LLMEmbeddingTokenOp(const LLMEmbeddingTokenOpCargo& cargo);
 
   void load(std::shared_ptr<ParameterLoader>& ploader) override;
 
@@ -34,7 +34,8 @@ class MatMulOp : public BaseOp {
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
  protected:
-  MatMulOpCargo cargo_;
+  Tensor weight_;
+  LLMEmbeddingTokenOpCargo cargo_;
 };
 
 }  // namespace mllm

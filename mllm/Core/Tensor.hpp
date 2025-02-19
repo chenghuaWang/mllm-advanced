@@ -67,6 +67,14 @@ class Tensor {
 
   Tensor operator/(const Tensor& rhs);
 
+  Tensor operator+(float rhs);
+
+  Tensor operator-(float rhs);
+
+  Tensor operator*(float rhs);
+
+  Tensor operator/(float rhs);
+
   Tensor transpose(int dim0, int dim1);
 
   Tensor& to(DeviceTypes device);

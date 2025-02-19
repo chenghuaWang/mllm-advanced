@@ -95,6 +95,42 @@ Tensor Tensor::operator/(const Tensor& rhs) {
   return MllmEngineCtx::instance().dispatch(OpType::kDiv, DivOpCargo{}, {*this, rhs})[0];
 }
 
+Tensor Tensor::operator+(float rhs) {
+  if (dtype() != kFp32) {
+    MLLM_ERROR_EXIT(kError, "Trying to add float constant value with non-float tensor");
+  }
+  auto st = Tensor::empty({1}, dtype(), device()).alloc();
+  *(st.ptr<float>()) = rhs;
+  return *this + st;
+}
+
+Tensor Tensor::operator-(float rhs) {
+  if (dtype() != kFp32) {
+    MLLM_ERROR_EXIT(kError, "Trying to sub float constant value with non-float tensor");
+  }
+  auto st = Tensor::empty({1}, dtype(), device()).alloc();
+  *(st.ptr<float>()) = rhs;
+  return *this - st;
+}
+
+Tensor Tensor::operator*(float rhs) {
+  if (dtype() != kFp32) {
+    MLLM_ERROR_EXIT(kError, "Trying to mul float constant value with non-float tensor");
+  }
+  auto st = Tensor::empty({1}, dtype(), device()).alloc();
+  *(st.ptr<float>()) = rhs;
+  return *this * st;
+}
+
+Tensor Tensor::operator/(float rhs) {
+  if (dtype() != kFp32) {
+    MLLM_ERROR_EXIT(kError, "Trying to div float constant value with non-float tensor");
+  }
+  auto st = Tensor::empty({1}, dtype(), device()).alloc();
+  *(st.ptr<float>()) = rhs;
+  return *this / st;
+}
+
 Tensor Tensor::transpose(int dim0, int dim1) {
   auto shape_size = impl_->shape().size();
   MLLM_RT_ASSERT(dim0 < shape_size);

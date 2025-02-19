@@ -17,4 +17,6 @@ Softmax::Softmax() : Layer(OpType::kSoftmax, SoftmaxOpCargo{}) {}
 
 Softmax::Softmax(const SoftmaxOpCargo& cargo) : Layer(OpType::kSoftmax, cargo) {}
 
+Softmax::Softmax(int axis) : Layer(OpType::kSoftmax, SoftmaxOpCargo{.axis = axis}) {}
+
 }  // namespace mllm::nn

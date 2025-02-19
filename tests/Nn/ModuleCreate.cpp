@@ -23,7 +23,7 @@ class ExampleModule : public nn::Module {
     x_cache_ = reg<nn::KVCache>("x_cache", 1, 8, 2, kFp32, 1024, 2);
   }
 
-  std::vector<Tensor> forward(std::vector<Tensor>& inputs) override {
+  std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
     return {x_cache_(inputs[0])};
   }
 };

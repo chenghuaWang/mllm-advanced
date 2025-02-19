@@ -46,7 +46,22 @@ struct LinearOpCargo : public BaseOpCargo<LinearOpCargo> {
 
 class LinearOp : public BaseOp {
  public:
- private:
+  explicit LinearOp(const LinearOpCargo& cargo);
+
+  void load(std::shared_ptr<ParameterLoader>& ploader) override;
+
+  void trace(void* trace_context, std::vector<Tensor>& inputs,
+             std::vector<Tensor>& outputs) override;
+
+  void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+
+  void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+
+  void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+
+ protected:
+  Tensor weight_;
+  Tensor bias_;
   LinearOpCargo cargo_;
 };
 

@@ -15,7 +15,7 @@ namespace mllm {
 RMSNormOp::RMSNormOp(const RMSNormOpCargo& cargo) : BaseOp(OpType::kRMSNorm), cargo_(cargo) {}
 
 void RMSNormOp::load(std::shared_ptr<ParameterLoader>& ploader) {
-  weight_ = Tensor(ploader->params()[name() + ".weight"]);
+  weight_ = Tensor(ploader->operator[](name() + ".weight"));
 }
 
 void RMSNormOp::trace(void* trace_context, std::vector<Tensor>& inputs,
