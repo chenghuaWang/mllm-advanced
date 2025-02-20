@@ -26,7 +26,13 @@ size_t _log2_ceil(size_t size) {
 }  // namespace
 
 MemManager::~MemManager() {
-  // TODO
+  for (auto& kv : buddy_ctx_st_._raw_data()) {
+    auto buddy_ctx = kv.second;
+    for (auto& seg : buddy_ctx->segments) {
+      auto allocator = allocators_st_[kv.first];
+      allocator->generalFree(seg.second->ptr);
+    }
+  }
 }
 
 MemManager::MemManager(MemManagerCargo cargo) : cargo_(std::move(cargo)) {}

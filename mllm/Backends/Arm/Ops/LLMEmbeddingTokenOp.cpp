@@ -8,6 +8,7 @@
  *
  */
 #include "mllm/Backends/Arm/Ops/LLMEmbeddingTokenOp.hpp"
+#include <cstring>
 
 namespace mllm::arm {
 
@@ -16,7 +17,28 @@ ArmLLMEmbeddingTokenOp::ArmLLMEmbeddingTokenOp(const LLMEmbeddingTokenOpCargo& c
 
 void ArmLLMEmbeddingTokenOp::forward(const std::vector<Tensor>& inputs,
                                      std::vector<Tensor>& outputs) {
-  // TODO
+  auto ins = inputs[0];
+  auto ous = outputs[0];
+
+  auto B = ins.shape()[0];
+  auto S = ins.shape()[1];
+
+  auto weight_dtype = weight_.dtype();
+
+  for (size_t b = 0; b < B; ++b) {
+    for (size_t s = 0; s < S; ++s) {
+      switch (weight_dtype) {
+        case kFp32:
+          std::memcpy(
+              ous.offsettedRawPtr({b, s, 0}),
+              weight_.ptr<float>() + cargo_.hidden_size * (*ins.offsettedPtr<int64_t>({b, s})),
+              cargo_.hidden_size * sizeof(float));
+          break;
+        case kFp16:
+        default: NYI("Not supported weight dtype for arm llm embedding token op");
+      }
+    }
+  }
 }
 
 }  // namespace mllm::arm

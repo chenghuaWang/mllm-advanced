@@ -35,25 +35,22 @@ void MatMulOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   std::vector<size_t> shape_c;
 
   // check.
-  MLLM_RT_ASSERT_EQ(shape_a.size(), shape_b.size());
-  auto size = shape_a.size();
-  for (int i = 0; i < size - 2; ++i) {
-    MLLM_RT_ASSERT_EQ(shape_a[i], shape_b[i]);
-    shape_c.push_back(shape_a[i]);
-  }
+  auto size_a = shape_a.size();
+  auto size_b = shape_b.size();
+  for (int i = 0; i < size_a - 2; ++i) { shape_c.push_back(shape_a[i]); }
 
   // transform shape.
   // MxK, KxN
   if (!cargo_.transpose_a && !cargo_.transpose_b) {
-    MLLM_RT_ASSERT_EQ(shape_a[size - 1], shape_b[size - 2]);
-    shape_c.push_back(shape_a[size - 2]);
-    shape_c.push_back(shape_b[size - 1]);
+    MLLM_RT_ASSERT_EQ(shape_a[size_a - 1], shape_b[size_b - 2]);
+    shape_c.push_back(shape_a[size_a - 2]);
+    shape_c.push_back(shape_b[size_b - 1]);
   }
   // MxK, NxK
   else if (!cargo_.transpose_a && cargo_.transpose_b) {
-    MLLM_RT_ASSERT_EQ(shape_a[size - 1], shape_b[size - 1]);
-    shape_c.push_back(shape_a[size - 2]);
-    shape_c.push_back(shape_b[size - 2]);
+    MLLM_RT_ASSERT_EQ(shape_a[size_a - 1], shape_b[size_b - 1]);
+    shape_c.push_back(shape_a[size_a - 2]);
+    shape_c.push_back(shape_b[size_b - 2]);
   }
   // not supported
   else {

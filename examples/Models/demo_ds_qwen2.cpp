@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include <cstdint>
 #include "mllm/Engine/Context.hpp"
 #if defined(__aarch64__)
 #define MLLM_ON_ARM
@@ -72,6 +73,10 @@ int main(int argc, char* argv[]) {
 
     auto loader = mllm::load(model_files.get());
     model.load(loader);
+
+    auto input = tokenizer.convert2Ids(tokenizer.tokenize("你好!"));
+
+    auto o = model(input);
   }
 
   ctx.shutdown();
