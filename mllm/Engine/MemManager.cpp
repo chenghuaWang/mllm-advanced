@@ -113,17 +113,17 @@ void MemManager::report() const {
 
 void MemManager::initBuddyCtx(DeviceTypes device) {
   // MemManager will init
-  auto deafult_device = kCPU;
-  if (buddy_ctx_st_.has(deafult_device)) {
+  auto default_device = kCPU;
+  if (buddy_ctx_st_.has(default_device)) {
     MLLM_ERROR_EXIT(kError,
                     "Double init buddy ctx of device type {} is not allowed in mllm. You can push "
                     "a feature request to mllm-advanced repo.",
-                    deviceTypes2Str(deafult_device));
+                    deviceTypes2Str(default_device));
   }
 
   // align to 4KB
   void* _p = nullptr;
-  allocators_st_[deafult_device]->generalAlloc(&_p, cargo_.buddy_first_segment_cap, 4096);
+  allocators_st_[default_device]->generalAlloc(&_p, cargo_.buddy_first_segment_cap, 4096);
 
   auto new_seg = new ObjMemSegment{
       .ptr = (char*)_p,
@@ -139,7 +139,7 @@ void MemManager::initBuddyCtx(DeviceTypes device) {
   buddy_ctx->segment_blocks.insert(
       {new_seg->ptr,
        std::vector<std::list<ObjMemBlock*>>(cargo_.buddy_max_order - cargo_.buddy_min_order + 1)});
-  buddy_ctx_st_.reg(deafult_device, buddy_ctx);
+  buddy_ctx_st_.reg(default_device, buddy_ctx);
 
   auto block = new ObjMemBlock{
       .ptr = new_seg->ptr,
@@ -162,73 +162,77 @@ Tensor MemManager::getGlobalTensor(const std::string& name) { return global_tens
 
 bool MemManager::hasGlobalTensor(const std::string& name) { return global_tensor_st_.has(name); }
 
-void MemManager::clearGlobalTensor() { global_tensor_st_._raw_data().clear(); }
+void MemManager::clearGlobalTensor() { global_tensor_st_._ref_raw_data().clear(); }
 
 ObjMemBlock* MemManager::_alloc_buddy(DeviceTypes device, size_t omb_size) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  auto& cur_segs = buddy_ctx_st_[device]->segments;
-  auto& cur_seg_blocks = buddy_ctx_st_[device]->segment_blocks;
+  // lock_guard should in this scope.
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto& cur_segs = buddy_ctx_st_[device]->segments;
+    auto& cur_seg_blocks = buddy_ctx_st_[device]->segment_blocks;
 
-  // loop all seg.
-  for (auto seg : cur_segs) {
-    auto& free_lists = cur_seg_blocks[seg.first];
-    auto min_order = seg.second->min_order;
-    auto max_order = seg.second->max_order;
+    // loop all seg.
+    for (auto seg : cur_segs) {
+      auto& free_lists = cur_seg_blocks[seg.first];
+      auto min_order = seg.second->min_order;
+      auto max_order = seg.second->max_order;
 
-    size_t required_size = std::max(omb_size, (size_t)(1ULL << min_order));
-    if (required_size > (seg.second->cap - seg.second->used)) continue;
+      size_t required_size = std::max(omb_size, (size_t)(1ULL << min_order));
+      if (required_size > (seg.second->cap - seg.second->used)) continue;
 
-    size_t order = _log2_ceil(required_size);
+      size_t order = _log2_ceil(required_size);
 
-    if (order > max_order) {
-      MLLM_ERROR_EXIT(
-          kError,
-          "The tensor size {} you want to alloc is too large. Buddy memory ppol support max tensor "
-          "size is {}. You should change the `buddy_first_segment_cap` in MemManagerCargo.",
-          required_size, cargo_.buddy_first_segment_cap);
-    }
-    if (order < min_order) order = min_order;
-
-    // search for usable order
-    auto current_order = order;
-    while (current_order <= max_order) {
-      size_t idx = current_order - min_order;
-      if (idx >= free_lists.size() || free_lists[idx].empty()) {
-        current_order++;
-        continue;
+      if (order > max_order) {
+        MLLM_ERROR_EXIT(
+            kError,
+            "The tensor size {} you want to alloc is too large. Buddy memory pool support max "
+            "tensor "
+            "size is {}. You should change the `buddy_first_segment_cap` in MemManagerCargo.",
+            required_size, cargo_.buddy_first_segment_cap);
       }
+      if (order < min_order) order = min_order;
 
-      // get the empty block
-      auto block = free_lists[idx].front();
-      free_lists[idx].pop_front();
+      // search for usable order
+      auto current_order = order;
+      while (current_order <= max_order) {
+        size_t idx = current_order - min_order;
+        if (idx >= free_lists.size() || free_lists[idx].empty()) {
+          current_order++;
+          continue;
+        }
 
-      // split this empty block if it has larger order
-      while (block->buddy_order > order) {
-        size_t new_size = block->size / 2;
-        block->size = new_size;
-        block->buddy_order--;
+        // get the empty block
+        auto block = free_lists[idx].front();
+        free_lists[idx].pop_front();
 
-        // create block's buddy
-        auto buddy = new ObjMemBlock{
-            .ptr = block->ptr + new_size,
-            .offset = block->offset + new_size,
-            .size = new_size,
-            .segment = block->segment,
-            .buddy_order = block->buddy_order,  // solver specific data
-            .allocated = false,
-        };
+        // split this empty block if it has larger order
+        while (block->buddy_order > order) {
+          size_t new_size = block->size / 2;
+          block->size = new_size;
+          block->buddy_order--;
 
-        free_lists[block->buddy_order - min_order].push_back(buddy);
+          // create block's buddy
+          auto buddy = new ObjMemBlock{
+              .ptr = block->ptr + new_size,
+              .offset = block->offset + new_size,
+              .size = new_size,
+              .segment = block->segment,
+              .buddy_order = block->buddy_order,  // solver specific data
+              .allocated = false,
+          };
+
+          free_lists[block->buddy_order - min_order].push_back(buddy);
+        }
+
+        block->allocated = true;
+
+        seg.second->used += block->size;
+
+        return block;
       }
-
-      block->allocated = true;
-
-      seg.second->used += block->size;
-
-      return block;
     }
   }
-
+  // lock_guard freed, so that we can call _alloc_buddy again
   // if not found, alloc a new seg.
   if (_expand_buddy_segment(device)) { return _alloc_buddy(device, omb_size); }
 

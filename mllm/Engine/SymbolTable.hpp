@@ -54,6 +54,8 @@ class SymbolTable {
 
   std::unordered_map<KeyT, ValueT> _raw_data() const { return symbol_table_; }
 
+  std::unordered_map<KeyT, ValueT>& _ref_raw_data() { return symbol_table_; }
+
  private:
   std::unordered_map<KeyT, ValueT> symbol_table_;
 };

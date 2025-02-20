@@ -15,7 +15,7 @@ CausalMaskOp::CausalMaskOp(const CausalMaskOpCargo& cargo)
     : BaseOp(OpType::kCausalMask), cargo_(cargo) {}
 
 void CausalMaskOp::load(std::shared_ptr<ParameterLoader>& ploader) {
-  NYI("CausalMaskOp::load is not implemented");
+  // do nothing
 }
 
 void CausalMaskOp::trace(void* trace_context, std::vector<Tensor>& inputs,

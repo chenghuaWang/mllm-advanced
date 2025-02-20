@@ -19,6 +19,7 @@ enum DataTypes : uint32_t {
   kInt8,
   kInt16,
   kInt32,
+  kInt64,
   kFp4,
   kFp8,
   kFp16,
@@ -50,7 +51,7 @@ enum DataTypes : uint32_t {
 """
 
 TYPE_MAPPING = {
-    "BFLOAT16": 7,
+    "BFLOAT16": 8,
 }
 
 

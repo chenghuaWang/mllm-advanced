@@ -27,7 +27,7 @@ void MllmEngineCtx::setTraceMode(bool trace_mode) { trace_mode_ = trace_mode; }
 std::shared_ptr<MllmEngineThread> MllmEngineCtx::thisThread() {
   if (!thread_map_.count(std::this_thread::get_id())) {
     MLLM_WARN("This control thread did registered a MllmEngineThread in MllmEngineCtx. The "
-              "MllmEngineCtx will automaticly create one for you. But it is recommend to create "
+              "MllmEngineCtx will automatically create one for you. But it is recommend to create "
               "MllmEngineThread manually.");
     thread_map_.insert({std::this_thread::get_id(), std::make_shared<MllmEngineThread>()});
   }
