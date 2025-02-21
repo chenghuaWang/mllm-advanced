@@ -38,7 +38,7 @@ void ArmTransposeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tens
         if (S == 1) { return; }
 
         transpose_bshd_bhsd(i.ptr<float>(), o.ptr<float>(), B, S, H, D);
-        break;
+        return;
       }
     }
     default:
@@ -64,9 +64,8 @@ void ArmTransposeOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tens
       auto i = inputs[0];
       // o = i[:, :, :, :]
       outputs.emplace_back(i.refFrom({{}, {}, {}, {}}));
+      return;
     }
-
-    return;
   }
 
   // Common cases
@@ -83,7 +82,7 @@ void ArmTransposeOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor
   if (inputs[0].shape().size() == 4
       && ((cargo_.transpose_dim_x == 1 && cargo_.transpose_dim_y == 2)
           || (cargo_.transpose_dim_x == 2 && cargo_.transpose_dim_y == 1))) {
-    return;
+    if (inputs[0].shape()[1] == 1) { return; }
   }
 
   // Common cases

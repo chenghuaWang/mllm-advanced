@@ -7,7 +7,7 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include <cstdint>
+#include <iostream>
 #include "mllm/Engine/Context.hpp"
 #if defined(__aarch64__)
 #define MLLM_ON_ARM
@@ -65,6 +65,9 @@ int main(int argc, char* argv[]) {
                                            // TODO run benchmark to get the best cache size
                                        });
 
+  // perf or not.
+  ctx.perf_ = false;
+
   {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(se_json_fp.get());
     mllm::models::QWenConfig cfg;
@@ -74,9 +77,11 @@ int main(int argc, char* argv[]) {
     auto loader = mllm::load(model_files.get());
     model.load(loader);
 
-    auto input = tokenizer.convert2Ids(tokenizer.tokenize("你好!"));
+    auto input = tokenizer.convert2Ids(tokenizer.tokenize("hello, what's u name?"));
 
     auto o = model(input);
+
+    std::wcout << tokenizer.detokenize(o[0]) << std::endl;
   }
 
   ctx.shutdown();

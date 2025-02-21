@@ -44,6 +44,29 @@ enum class OpType : int32_t {
   kOpType_End,
 };
 
+inline const char* opType2Str(OpType type) {
+  switch (type) {
+    case OpType::kOpType_Start: return "kOpType_Start";
+    case OpType::kFill: return "kFill";
+    case OpType::kAdd: return "kAdd";
+    case OpType::kSub: return "kSub";
+    case OpType::kMul: return "kMul";
+    case OpType::kDiv: return "kDiv";
+    case OpType::kMatMul: return "kMatMul";
+    case OpType::kLLMEmbeddingToken: return "kLLMEmbeddingToken";
+    case OpType::kLinear: return "kLinear";
+    case OpType::kRoPE: return "kRoPE";
+    case OpType::kSoftmax: return "kSoftmax";
+    case OpType::kTranspose: return "kTranspose";
+    case OpType::kRMSNorm: return "kRMSNorm";
+    case OpType::kSiLU: return "kSiLU";
+    case OpType::kKVCache: return "kKVCache";
+    case OpType::kCausalMask: return "kCausalMask";
+    case OpType::kOpType_End: return "kOpType_End";
+    default: return "Unknown";
+  }
+}
+
 // Keep the CRTP Design Pattern Pls.
 template<typename DerivedT>
 class BaseOpCargo {

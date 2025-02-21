@@ -10,6 +10,7 @@
 #include "mllm/Models/ds_qwen2/tokenization_ds_qwen2.hpp"
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
+#include "mllm/Utils/Common.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -154,6 +155,9 @@ bool deepSeekQwen2Regex(const std::string& str, std::vector<std::wstring>& split
 DeepSeekQwen2Tokenizer::DeepSeekQwen2Tokenizer(const std::string& file_path) {
   preprocessor::initLocal();
   preprocessor::makeBytes2UnicodeMap(bytes_2_unicode_dict_);
+  for (auto& kv : bytes_2_unicode_dict_) {
+    bytes_2_unicode_dict_inverse_.insert({kv.second, kv.first});
+  }
   bpe_.initFromSentencePieceJson(file_path);
   special_tokens_trie_.add(L"<｜end▁of▁sentence｜>");
   special_tokens_trie_.add(L"<｜begin▁of▁sentence｜>");
@@ -197,12 +201,43 @@ std::vector<std::wstring> DeepSeekQwen2Tokenizer::tokenize(const std::string& st
   return all_tokens;
 }
 
+std::wstring DeepSeekQwen2Tokenizer::_detokenize(Tensor token_tensor) {
+  // inputs shape should be [B, S, D]
+  MLLM_RT_ASSERT_EQ(token_tensor.shape().size(), 3);
+  MLLM_RT_ASSERT_EQ(token_tensor.dtype(), kFp32);
+
+  auto shape = token_tensor.shape();
+  auto B = shape[0];
+  auto S = shape[1];
+  auto D = shape[2];
+
+  // find best token in last dimension
+  auto ptr = token_tensor.ptr<float>() + B * (S - 1) * D;
+  int pos = 0;
+  float max = -1e5;
+  for (int i = 0; i < D; ++i) {
+    if (ptr[i] > max) {
+      max = ptr[i];
+      pos = i;
+    }
+  }
+
+  return bpe_._lookup_inverse_vocab(pos);
+}
+
+std::wstring DeepSeekQwen2Tokenizer::detokenize(Tensor token_tensor) {
+  auto str = _detokenize(token_tensor);
+  std::string utf_8_str;
+  for (wchar_t c : str) { utf_8_str.push_back((unsigned char)(bytes_2_unicode_dict_inverse_[c])); }
+  return {mllm::preprocessor::utf8string2WideString(utf_8_str)};
+}
+
 Tensor DeepSeekQwen2Tokenizer::convert2Ids(const std::vector<std::wstring>& strs) {
   std::vector<long> ids;
   ids.reserve(strs.size() + 1);
   ids.emplace_back(bpe_._lookup_vocab(L"<｜begin▁of▁sentence｜>"));
   for (const auto& str : strs) { ids.emplace_back(bpe_._lookup_vocab(str)); }
-  Tensor ret = Tensor::empty({ids.size()}, kInt64, kCPU)
+  Tensor ret = Tensor::empty({/*batch*/ 1, /*seq*/ ids.size()}, kInt64, kCPU)
                    .setMemType(kExtraInput)
                    .setName("qwen2-tokenizer-i0")
                    .alloc();

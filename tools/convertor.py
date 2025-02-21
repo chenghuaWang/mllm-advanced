@@ -51,8 +51,14 @@ enum DataTypes : uint32_t {
 """
 
 TYPE_MAPPING = {
-    "BFLOAT16": 8,
+    "BFLOAT16": 9,  # NOTE: Map tp fp32. transform_dtype will transform fp16 to fp32
 }
+
+
+def transform_dtype(data, dtype):
+    if dtype == "BFLOAT16":
+        return data.to(torch.float32)
+    return data
 
 
 def convert_safetensor(input_path, output_path):
@@ -86,7 +92,7 @@ def convert_safetensor(input_path, output_path):
                 {
                     "name": name,
                     "dtype": dtype,
-                    "numpy": tensor.to(torch.float16).numpy(),
+                    "numpy": transform_dtype(tensor, dtype.upper()).numpy(),
                     "descriptor": {
                         "parameter_id": len(tensors),
                         "parameter_type": TYPE_MAPPING[dtype.upper()],

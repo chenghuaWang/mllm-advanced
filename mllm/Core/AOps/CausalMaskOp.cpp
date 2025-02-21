@@ -28,7 +28,7 @@ void CausalMaskOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
 }
 
 void CausalMaskOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs.emplace_back(Tensor::ones(inputs[0].shape(), inputs[0].dtype(), inputs[0].device()));
+  outputs.emplace_back(Tensor::empty(inputs[0].shape(), inputs[0].dtype(), inputs[0].device()));
 }
 
 void CausalMaskOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

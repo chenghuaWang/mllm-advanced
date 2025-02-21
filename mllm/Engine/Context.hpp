@@ -56,6 +56,8 @@ class MllmEngineCtx {
 
   void shutdown();
 
+  bool perf_ = false;
+
  private:
   // backend
   SymbolTable<DeviceTypes, std::shared_ptr<BackendBase>> backends_table_;

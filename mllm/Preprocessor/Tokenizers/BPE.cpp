@@ -34,27 +34,37 @@ bool BPE::initFromSentencePieceJson(const std::string& file_path) {
   }
 
   for (const auto& [key, value] : json_data["model"]["vocab"].items()) {
+    auto str = utf8string2WideString(key);
     vocab_.insert({
-        utf8string2WideString(key),
+        str,
         value,
+    });
+    vocab_inverse_.insert({
+        value,
+        str,
     });
   }
 
   for (const auto& add_token : json_data["added_tokens"].items()) {
     auto id = add_token.value()["id"];
     auto content = add_token.value()["content"];
+    auto str = utf8string2WideString(content);
     vocab_.insert({
-        utf8string2WideString(content),
+        str,
         id,
+    });
+    vocab_inverse_.insert({
+        id,
+        str,
     });
   }
 
   long cnt = 0;
   for (auto& merge_item : json_data["model"]["merges"]) {
     auto wide_merge_item = utf8string2WideString(merge_item);
-    auto blanck_pos = wide_merge_item.find(L' ');
-    auto first = wide_merge_item.substr(0, blanck_pos);
-    auto second = wide_merge_item.substr(blanck_pos + 1);
+    auto blank_pos = wide_merge_item.find(L' ');
+    auto first = wide_merge_item.substr(0, blank_pos);
+    auto second = wide_merge_item.substr(blank_pos + 1);
     bpe_ranks_.insert({{first, second}, cnt++});
   }
 
@@ -129,6 +139,15 @@ long BPE::_lookup_vocab(const std::wstring& token) {
   } else {
     MLLM_WARN("Cannot find token in BPE vocab");
     return 0;
+  }
+}
+
+std::wstring BPE::_lookup_inverse_vocab(long idx) {
+  if (vocab_inverse_.find(idx) != vocab_inverse_.end()) {
+    return vocab_inverse_[idx];
+  } else {
+    MLLM_WARN("Cannot find token in BPE vocab. When doing _lookup_inverse_vocab");
+    return L"";
   }
 }
 

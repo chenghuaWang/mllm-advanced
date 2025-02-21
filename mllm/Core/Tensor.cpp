@@ -308,7 +308,7 @@ Tensor& Tensor::view(const std::vector<int>& indicies) {
     MLLM_ERROR_EXIT(kError, "Can not view on non-contiguous tensor. Pls use reshape instead.");
   }
 
-  std::vector<int32_t> new_shape(indicies.size());
+  std::vector<int32_t> new_shape;
 
   int acc = 1;
   for (auto idx : indicies) {

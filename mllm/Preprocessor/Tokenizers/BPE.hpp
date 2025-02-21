@@ -29,18 +29,21 @@ struct BPEPairHash {
 
 class BPE {
  public:
-  // BPE can accepct sentence piece's json foramt.
+  // BPE can accept sentence piece's json foramt.
   bool initFromSentencePieceJson(const std::string& file_path);
 
   std::vector<std::wstring> _bpe(const std::wstring& token);
 
   long _lookup_vocab(const std::wstring& token);
 
+  std::wstring _lookup_inverse_vocab(long idx);
+
  private:
   std::unordered_set<std::pair<std::wstring, std::wstring>, BPEPairHash> _get_pairs(
       const std::vector<std::wstring>& word);
 
   std::unordered_map<std::wstring, long> vocab_;
+  std::unordered_map<long, std::wstring> vocab_inverse_;
   std::unordered_map<std::pair<std::wstring, std::wstring>, long, BPEPairHash> bpe_ranks_;
 };
 

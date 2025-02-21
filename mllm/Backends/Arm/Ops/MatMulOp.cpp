@@ -45,7 +45,13 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         auto a_ptr = A + l * M * K;
         auto b_ptr = broad_cast_flag ? B : B + l * M * K;
         auto c_ptr = C + l * M * N;
-        sgemm_mk_kn_mn_V1(a_ptr, b_ptr, c_ptr, M, K, N, nullptr, cargo_.thread());
+
+        // FIXME(LEVEL 0): Currently we use kleidiai kernel. And it's only support bias. so we need
+        // to alloc bias. we should not use this.
+        auto bias = new float[N];
+        std::fill(bias, bias + N, 0);
+        sgemm_mk_kn_mn_V1(a_ptr, b_ptr, c_ptr, M, K, N, bias, cargo_.thread());
+        delete[] bias;
       }
       return;
     }

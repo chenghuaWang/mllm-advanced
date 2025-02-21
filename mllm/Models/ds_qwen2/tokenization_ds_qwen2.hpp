@@ -32,11 +32,16 @@ class DeepSeekQwen2Tokenizer final : public mllm::preprocessor::AutoTokenizer {
 
   std::vector<std::wstring> tokenize(const std::string& str) override;
 
+  std::wstring _detokenize(Tensor token_tensor) override;
+
+  std::wstring detokenize(Tensor token_tensor) override;
+
   Tensor convert2Ids(const std::vector<std::wstring>& strs) override;
 
  private:
   preprocessor::BPE bpe_;
   std::unordered_map<std::wint_t, wchar_t> bytes_2_unicode_dict_;
+  std::unordered_map<wchar_t, std::wint_t> bytes_2_unicode_dict_inverse_;
 };
 
 }  // namespace mllm::models

@@ -48,6 +48,50 @@ inline void _ew_div_fp32_tile_16(const float* __restrict a, const float* __restr
     vst1q_f32(c + offset, vdivq_f32(va, vb));
   }
 }
+
+inline void _ew_add_constant_fp32_tile_16(const float* __restrict a, const float b,
+                                          float* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 4; ++i) {
+    const int offset = i * 4;
+    float32x4_t va = vld1q_f32(a + offset);
+    float32x4_t vb = vdupq_n_f32(b);
+    vst1q_f32(c + offset, vaddq_f32(va, vb));
+  }
+}
+
+inline void _ew_sub_constant_fp32_tile_16(const float* __restrict a, const float b,
+                                          float* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 4; ++i) {
+    const int offset = i * 4;
+    float32x4_t va = vld1q_f32(a + offset);
+    float32x4_t vb = vdupq_n_f32(b);
+    vst1q_f32(c + offset, vsubq_f32(va, vb));
+  }
+}
+
+inline void _ew_mul_constant_fp32_tile_16(const float* __restrict a, const float b,
+                                          float* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 4; ++i) {
+    const int offset = i * 4;
+    float32x4_t va = vld1q_f32(a + offset);
+    float32x4_t vb = vdupq_n_f32(b);
+    vst1q_f32(c + offset, vmulq_f32(va, vb));
+  }
+}
+
+inline void _ew_div_constant_fp32_tile_16(const float* __restrict a, const float b,
+                                          float* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 4; ++i) {
+    const int offset = i * 4;
+    float32x4_t va = vld1q_f32(a + offset);
+    float32x4_t vb = vdupq_n_f32(b);
+    vst1q_f32(c + offset, vdivq_f32(va, vb));
+  }
+}
 }  // namespace
 
 void ew_add_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
@@ -188,6 +232,74 @@ void ew_div_fp32(const float* __restrict A, const float* __restrict B, float* __
   const float* b_remain = B + blocks * TILE_SIZE;
   float* c_remain = C + blocks * TILE_SIZE;
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / b_remain[i]; }
+}
+
+void ew_add_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_add_constant_fp32_tile_16(A + offset, B, C + offset);
+  }
+
+  const float* a_remain = A + blocks * TILE_SIZE;
+  float* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] + B; }
+}
+
+void ew_sub_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_sub_constant_fp32_tile_16(A + offset, B, C + offset);
+  }
+
+  const float* a_remain = A + blocks * TILE_SIZE;
+  float* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - B; }
+}
+
+void ew_mul_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_mul_constant_fp32_tile_16(A + offset, B, C + offset);
+  }
+
+  const float* a_remain = A + blocks * TILE_SIZE;
+  float* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * B; }
+}
+
+void ew_div_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_div_constant_fp32_tile_16(A + offset, B, C + offset);
+  }
+
+  const float* a_remain = A + blocks * TILE_SIZE;
+  float* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / B; }
 }
 
 #if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
