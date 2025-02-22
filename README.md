@@ -4,16 +4,88 @@
 
 # Features
 
+# Run Examples
+
+We demonstrate the usage with an example using DeepSeek distill qwen2 1.5B as the model.
+
+```shell
+./demo_ds_qwen2 -m {model path} -j {tokenize.json file}
+```
+
 # Install
 
-## For User
+## Build From Source
 
-### Build from source
+The following commands have been tested on Linux systems.
 
-### Install from PyPI
+```shell
+git clone --recursive https://github.com/chenghuaWang/mllm-advanced.git
 
-## For Developer
+export ANDROID_NDK_PATH = /path/to/android-ndk
+
+# build
+python task.py tasks/android_build.yaml
+
+# push to u device
+python task.py tasks/adb_push.yaml
+```
+
+## Install From PyPI
 
 # Tools
 
+## Model Convertor
 
+Use the following command to convert models:
+
+```shell
+python tools/convertor.py --input {safetensors file} --output {output file} --format safetensors
+```
+
+## mllm-quantizer
+
+Usage:
+
+```shell
+Usage:
+ [-h|--help] <FILE> [-s|--show]
+
+Options:
+  -h, --help    Show help message
+  <FILE>        Input file path
+  -s, --show    Show parameters meta data
+```
+
+## mllm-tokenize-checker
+
+Usage:
+
+```shell
+Usage:
+ [-h|--help] [-j|--json] [-m|--merge] [-t|--type] [-i|--input_str]
+
+Options:
+  -h, --help    Show help message.
+  -j, --json    SentencePiece json file path.
+  -m, --merge   Merge file path.
+  -t, --type    Model Type.
+  -i, --input_str       Input string for testing.
+```
+
+Example:
+
+```shell
+./mllm-tokenize-checker -j ../mllm-models/DeepSeek-R1-Distill-Qwen-1.5B/tokenizer.json -t ds-qwen2 -i "你好"
+```
+
+Output:
+
+```shell
+Tensor Meta Info
+address:  0x7f85e8224000
+name:     qwen2-tokenizer-i0
+shape:    1x2
+device:   kCPU
+dtype:    kInt64
+[[151646, 108386]]
+```

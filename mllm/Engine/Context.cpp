@@ -57,16 +57,20 @@ std::vector<Tensor> MllmEngineCtx::dispatch(const std::string& name,
   // dispatching already registered layer.
   auto op = thisThread()->layer_ops_table[name];
 
-  auto start = std::chrono::high_resolution_clock::now();
   std::vector<Tensor> outputs;
-  op->reshape(inputs, outputs);
-  op->setup(inputs, outputs);
-  op->forward(inputs, outputs);
-  auto end = std::chrono::high_resolution_clock::now();
 
   if (perf_) {
+    auto start = std::chrono::high_resolution_clock::now();
+    op->reshape(inputs, outputs);
+    op->setup(inputs, outputs);
+    op->forward(inputs, outputs);
+    auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end - start;
     MLLM_INFO("perf| Layer: {}, Time:{} ms", name, duration.count());
+  } else {
+    op->reshape(inputs, outputs);
+    op->setup(inputs, outputs);
+    op->forward(inputs, outputs);
   }
 
   return outputs;
@@ -76,16 +80,21 @@ std::vector<Tensor> MllmEngineCtx::dispatch(OpType op_type, const BaseOpCargoBas
                                             const std::vector<Tensor>& inputs) {
   auto op = backends_table_[inputs[0].device()]->createOp(op_type, base_cargo);
 
-  auto start = std::chrono::high_resolution_clock::now();
   std::vector<Tensor> outputs;
-  op->reshape(inputs, outputs);
-  op->setup(inputs, outputs);
-  op->forward(inputs, outputs);
-  auto end = std::chrono::high_resolution_clock::now();
 
   if (perf_) {
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<Tensor> outputs;
+    op->reshape(inputs, outputs);
+    op->setup(inputs, outputs);
+    op->forward(inputs, outputs);
+    auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end - start;
     MLLM_INFO("perf| Op: {}, Time:{} ms", opType2Str(op_type), duration.count());
+  } else {
+    op->reshape(inputs, outputs);
+    op->setup(inputs, outputs);
+    op->forward(inputs, outputs);
   }
 
   return outputs;
