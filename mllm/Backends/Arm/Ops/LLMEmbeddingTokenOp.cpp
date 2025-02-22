@@ -9,6 +9,7 @@
  */
 #include "mllm/Backends/Arm/Ops/LLMEmbeddingTokenOp.hpp"
 #include <cstring>
+#include "mllm/Utils/Dbg.hpp"
 
 namespace mllm::arm {
 

@@ -20,17 +20,17 @@ namespace mllm::arm {
 void precompute_normal_hf_sin_cos(int seq_len, int output_dim, float base, float* __restrict sin,
                                   float* __restrict cos, int threads) {
   auto mid = output_dim / 2;
-#pragma omp parallel for num_threads(4) schedule(auto) if (threads > 0)
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
   for (int s = 0; s < seq_len; ++s) {
     for (int d = 0; d < mid; ++d) {
-      float theta = 1.0f / powf(base, 2.0f * (float)d / (float)mid);
+      float theta = 1.0f / powf(base, 2.0f * (float)d / (float)output_dim);
       theta *= (float)s;
       float sin_value = sinf(theta);
       float cos_value = cosf(theta);
-      sin[s * mid + d] = sin_value;
-      cos[s * mid + d] = cos_value;
-      sin[s * mid + d + mid] = sin_value;
-      cos[s * mid + d + mid] = cos_value;
+      sin[s * output_dim + d] = sin_value;
+      cos[s * output_dim + d] = cos_value;
+      sin[s * output_dim + d + mid] = sin_value;
+      cos[s * output_dim + d + mid] = cos_value;
     }
   }
 }
@@ -44,7 +44,7 @@ void normal_hf_rope(const float* __restrict X, float* Y, const float* __restrict
 
     // Prefill Stage: cur_seq_cnt is always 0
     // Decoding Stage: s is always 0
-    const int sin_cos_base = (s + cur_seq_cnt) * mid_dim;
+    const int sin_cos_base = (s + cur_seq_cnt) * dims;
 
     // Keep in mind that threads may not accelerate this function.
     int d = 0;

@@ -73,6 +73,9 @@ void ArmRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
     }
     default: NYI("ArmRoPEOp find a unsupported rope type."); break;
   }
+
+  // inputs is [B, H, S, D]
+  cur_seq_cnt_ += inputs[0].shape()[2];
 }
 
 }  // namespace mllm::arm

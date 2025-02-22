@@ -24,12 +24,22 @@ void ArmCausalMaskOp::forward(const std::vector<Tensor>& inputs, std::vector<Ten
   auto B = shape[0];
   auto H = shape[1];
   auto S = shape[2];
-
-  MLLM_RT_ASSERT_EQ(S, shape[3]);
+  auto D = shape[3];
 
   switch (ins.dtype()) {
     case kFp32: {
       const float32x4_t mask_val = vdupq_n_f32(-1e10f);
+
+      if (S == 1) {
+        for (size_t b = 0; b < B; ++b) {
+          for (size_t h = 0; h < H; ++h) {
+            auto* i_ptr = ins.offsettedPtr<float>({b, h, 0, 0});
+            auto* o_ptr = ous.offsettedPtr<float>({b, h, 0, 0});
+            memcpy(o_ptr, i_ptr, D * sizeof(float));
+          }
+        }
+        return;
+      }
 
       for (size_t b = 0; b < B; ++b) {
         for (size_t h = 0; h < H; ++h) {

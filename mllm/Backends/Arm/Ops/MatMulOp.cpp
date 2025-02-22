@@ -33,14 +33,35 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
     auto M = i_a_shape[i_a_shape.size() - 2];
     auto K = i_a_shape[i_a_shape.size() - 1];
     auto N = i_b_shape[i_b_shape.size() - 1];
-    size_t loops = 1;
-    for (int i = 0; i < i_a_shape.size() - 2; i++) { loops *= i_a_shape[i]; }
+
+    if (i_a_shape.size() == 4 && i_b_shape.size() == 4 && i_a.dtype() == kFp32
+        && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
+      auto DIM_0 = i_a_shape[0];
+      auto DIM_1 = i_a_shape[1];
+
+      // FIXME(LEVEL 0): Currently we use kleidiai kernel. And it's only support bias. so we need
+      // to alloc bias. we should not use this.
+      auto bias = new float[N];
+      std::fill(bias, bias + N, 0);
+      for (size_t d0 = 0; d0 < DIM_0; d0++) {
+        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+          sgemm_mk_kn_mn_V1(i_a.offsettedPtr<float>({d0, d1, 0, 0}),
+                            i_b.offsettedPtr<float>({d0, d1, 0, 0}),
+                            o.offsettedPtr<float>({d0, d1, 0, 0}), M, K, N, bias, cargo_.thread());
+        }
+      }
+      delete[] bias;
+    }
 
     // fp32 @ fp32 -> fp32
-    if (i_a.dtype() == kFp32 && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
+    if (i_a_shape.size() != 4 && i_b_shape.size() != 4 && i_a.dtype() == kFp32
+        && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
       auto A = i_a.ptr<float>();
       auto B = i_b.ptr<float>();
       auto C = o.ptr<float>();
+      size_t loops = 1;
+      for (int i = 0; i < i_a_shape.size() - 2; i++) { loops *= i_a_shape[i]; }
+
       for (size_t l = 0; l < loops; l++) {
         auto a_ptr = A + l * M * K;
         auto b_ptr = broad_cast_flag ? B : B + l * M * K;
@@ -62,11 +83,27 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
     auto M = i_a_shape[i_a_shape.size() - 2];
     auto K = i_a_shape[i_a_shape.size() - 1];
     auto N = i_b_shape[i_b_shape.size() - 2];
-    size_t loops = 1;
-    for (int i = 0; i < i_a_shape.size() - 2; i++) { loops *= i_a_shape[i]; }
 
     // fp32 @ fp32 -> fp32
-    if (i_a.dtype() == kFp32 && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
+    if (i_a_shape.size() == 4 && i_b_shape.size() == 4 && i_a.dtype() == kFp32
+        && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
+      auto DIM_0 = i_a_shape[0];
+      auto DIM_1 = i_a_shape[1];
+      for (size_t d0 = 0; d0 < DIM_0; d0++) {
+        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+          sgemm_mk_nk_mn_V1(
+              i_a.offsettedPtr<float>({d0, d1, 0, 0}), i_b.offsettedPtr<float>({d0, d1, 0, 0}),
+              o.offsettedPtr<float>({d0, d1, 0, 0}), M, K, N, nullptr, cargo_.thread());
+        }
+      }
+    }
+
+    // fp32 @ fp32 -> fp32
+    if (i_a_shape.size() != 4 && i_b_shape.size() != 4 && i_a.dtype() == kFp32
+        && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
+      size_t loops = 1;
+      for (int i = 0; i < i_a_shape.size() - 2; i++) { loops *= i_a_shape[i]; }
+
       auto A = i_a.ptr<float>();
       auto B = i_b.ptr<float>();
       auto C = o.ptr<float>();

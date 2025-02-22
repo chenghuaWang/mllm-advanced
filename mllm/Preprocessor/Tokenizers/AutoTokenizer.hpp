@@ -66,9 +66,9 @@ class AutoTokenizer {
 
   virtual std::vector<std::wstring> tokenize(const std::string& str) = 0;
 
-  virtual std::wstring _detokenize(Tensor token_tensor) = 0;
+  virtual std::wstring _detokenize(long pos_idx) = 0;
 
-  virtual std::wstring detokenize(Tensor token_tensor) = 0;
+  virtual std::wstring detokenize(long pos_idx) = 0;
 
   virtual Tensor convert2Ids(const std::vector<std::wstring>& strs) = 0;
 

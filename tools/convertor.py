@@ -86,13 +86,14 @@ def convert_safetensor(input_path, output_path):
             shape = list(tensor.shape)
             shape += [0] * (MLLM_TENSOR_SHAPE_MAX_LEN - len(shape))
 
+            tensor = transform_dtype(tensor, dtype.upper())
             param_size = tensor.nbytes
 
             tensors.append(
                 {
                     "name": name,
                     "dtype": dtype,
-                    "numpy": transform_dtype(tensor, dtype.upper()).numpy(),
+                    "numpy": tensor.numpy(),
                     "descriptor": {
                         "parameter_id": len(tensors),
                         "parameter_type": TYPE_MAPPING[dtype.upper()],

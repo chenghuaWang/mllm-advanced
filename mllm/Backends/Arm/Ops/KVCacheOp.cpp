@@ -49,7 +49,8 @@ void ArmKVCacheOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
     for (size_t h = 0; h < cargo_.heads_num; ++h) {
       for (size_t s = 0; s < S; ++s) {
         for (size_t h_rep = 0; h_rep < cargo_.head_repeat_times; ++h_rep) {
-          std::memcpy(cache_.offsettedRawPtr({b, h + h_rep, cur_kv_cache_seq_len_ + s, 0}),
+          std::memcpy(cache_.offsettedRawPtr(
+                          {b, h * cargo_.head_repeat_times + h_rep, cur_kv_cache_seq_len_ + s, 0}),
                       t.offsettedRawPtr({b, h, s, 0}), D * dataTypeSize(t.dtype()));
         }
       }

@@ -9,6 +9,7 @@
  */
 #include <iostream>
 #include "mllm/Engine/Context.hpp"
+#include "mllm/Models/AutoLLM.hpp"
 #if defined(__aarch64__)
 #define MLLM_ON_ARM
 #include "mllm/Backends/Arm/ArmBackend.hpp"
@@ -71,17 +72,19 @@ int main(int argc, char* argv[]) {
   {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(se_json_fp.get());
     mllm::models::QWenConfig cfg;
-    mllm::models::QWenForCausalLM model(cfg);
-    model.print();
+    mllm::models::AutoLLM<mllm::models::QWenForCausalLM> auto_llm(cfg);
+    auto_llm.model()->print();
 
     auto loader = mllm::load(model_files.get());
-    model.load(loader);
+    auto_llm.model()->load(loader);
 
-    auto input = tokenizer.convert2Ids(tokenizer.tokenize("hello, what's u name?"));
+    auto input = tokenizer.convert2Ids(
+        tokenizer.tokenize("<｜begin▁of▁sentence｜>You are a helpful assistant.<｜User｜>hello, "
+                           "what's u name?<｜Assistant｜>"));
 
-    auto o = model(input);
-
-    std::wcout << tokenizer.detokenize(o[0]) << std::endl;
+    auto_llm.generate(input, 1024, cfg.eos_token_id, [&](long pos) -> void {
+      std::wcout << tokenizer.detokenize(pos) << std::flush;
+    });
   }
 
   ctx.shutdown();

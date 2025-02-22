@@ -168,6 +168,8 @@ DeepSeekQwen2Tokenizer::DeepSeekQwen2Tokenizer(const std::string& file_path) {
   special_tokens_trie_.add(L"<|vision_pad|>");
   special_tokens_trie_.add(L"<|image_pad|>");
   special_tokens_trie_.add(L"<|video_pad|>");
+  special_tokens_trie_.add(L"<｜User｜>");
+  special_tokens_trie_.add(L"<｜Assistant｜>");
 }
 
 std::vector<std::wstring> DeepSeekQwen2Tokenizer::_tokenize(const std::string& str) {
@@ -201,32 +203,12 @@ std::vector<std::wstring> DeepSeekQwen2Tokenizer::tokenize(const std::string& st
   return all_tokens;
 }
 
-std::wstring DeepSeekQwen2Tokenizer::_detokenize(Tensor token_tensor) {
-  // inputs shape should be [B, S, D]
-  MLLM_RT_ASSERT_EQ(token_tensor.shape().size(), 3);
-  MLLM_RT_ASSERT_EQ(token_tensor.dtype(), kFp32);
-
-  auto shape = token_tensor.shape();
-  auto B = shape[0];
-  auto S = shape[1];
-  auto D = shape[2];
-
-  // find best token in last dimension
-  auto ptr = token_tensor.ptr<float>() + B * (S - 1) * D;
-  int pos = 0;
-  float max = -1e5;
-  for (int i = 0; i < D; ++i) {
-    if (ptr[i] > max) {
-      max = ptr[i];
-      pos = i;
-    }
-  }
-
-  return bpe_._lookup_inverse_vocab(pos);
+std::wstring DeepSeekQwen2Tokenizer::_detokenize(long pos_idx) {
+  return bpe_._lookup_inverse_vocab(pos_idx);
 }
 
-std::wstring DeepSeekQwen2Tokenizer::detokenize(Tensor token_tensor) {
-  auto str = _detokenize(token_tensor);
+std::wstring DeepSeekQwen2Tokenizer::detokenize(long pos_idx) {
+  auto str = _detokenize(pos_idx);
   std::string utf_8_str;
   for (wchar_t c : str) { utf_8_str.push_back((unsigned char)(bytes_2_unicode_dict_inverse_[c])); }
   return {mllm::preprocessor::utf8string2WideString(utf_8_str)};

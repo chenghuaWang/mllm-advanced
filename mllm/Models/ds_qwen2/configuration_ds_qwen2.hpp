@@ -50,5 +50,7 @@ struct QWenConfig {
   int vocab_size = 151936;
 
   int max_cache_length = 1024;
+
+  long eos_token_id = 151643;
 };
 }  // namespace mllm::models
