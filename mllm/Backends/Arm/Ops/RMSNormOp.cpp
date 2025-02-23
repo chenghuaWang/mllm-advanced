@@ -75,6 +75,9 @@ void ArmRMSNormOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
       }
       break;
     }
+    case kFp16: {
+      break;
+    }
     default: NYI("ArmRMSNormOp not support type {} as input", dataTypes2Str(X.dtype())); break;
   }
 }

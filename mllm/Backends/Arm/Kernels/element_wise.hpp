@@ -48,6 +48,24 @@ void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
 
 void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
                  float16_t* __restrict C, int32_t len, int threads = 0);
+
+void ew_mul_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads = 0);
+
+void ew_div_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads = 0);
+
+void ew_add_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads = 0);
+
+void ew_sub_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads = 0);
+
+void ew_mul_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads = 0);
+
+void ew_div_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads = 0);
 #endif  // fp16
 }  // namespace mllm::arm
 

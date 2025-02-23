@@ -7,9 +7,13 @@
  * @copyright Copyright (c) 2025
  *
  */
+#if !defined(__aarch64__) || !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) \
+    || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
+#error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
+#endif
 #include "mllm/Backends/Arm/Ops/LLMEmbeddingTokenOp.hpp"
 #include <cstring>
-#include "mllm/Utils/Dbg.hpp"
+#include <arm_neon.h>
 
 namespace mllm::arm {
 
@@ -36,6 +40,11 @@ void ArmLLMEmbeddingTokenOp::forward(const std::vector<Tensor>& inputs,
               cargo_.hidden_size * sizeof(float));
           break;
         case kFp16:
+          std::memcpy(
+              ous.offsettedRawPtr({b, s, 0}),
+              weight_.ptr<float16_t>() + cargo_.hidden_size * (*ins.offsettedPtr<int64_t>({b, s})),
+              cargo_.hidden_size * sizeof(float16_t));
+          break;
         default: NYI("Not supported weight dtype for arm llm embedding token op");
       }
     }

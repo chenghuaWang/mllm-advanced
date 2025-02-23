@@ -383,9 +383,205 @@ void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
   for (int i = 0; i < lefts; ++i) { c_ptr[i] = static_cast<float16_t>(a_ptr[i] + b_ptr[i]); }
 }
 
+namespace {
+inline void _ew_sub_fp16_tile_32(const float16_t* __restrict a, const float16_t* __restrict b,
+                                 float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vld1q_f16(b + offset);
+    vst1q_f16(c + offset, vsubq_f16(va, vb));
+  }
+}
+
+inline void _ew_mul_fp16_tile_32(const float16_t* __restrict a, const float16_t* __restrict b,
+                                 float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vld1q_f16(b + offset);
+    vst1q_f16(c + offset, vmulq_f16(va, vb));
+  }
+}
+
+inline void _ew_div_fp16_tile_32(const float16_t* __restrict a, const float16_t* __restrict b,
+                                 float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vld1q_f16(b + offset);
+    vst1q_f16(c + offset, vdivq_f16(va, vb));
+  }
+}
+
+inline void _ew_add_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
+                                          float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vdupq_n_f16(b);
+    vst1q_f16(c + offset, vaddq_f16(va, vb));
+  }
+}
+
+inline void _ew_sub_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
+                                          float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vdupq_n_f16(b);
+    vst1q_f16(c + offset, vsubq_f16(va, vb));
+  }
+}
+
+inline void _ew_mul_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
+                                          float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vdupq_n_f16(b);
+    vst1q_f16(c + offset, vmulq_f16(va, vb));
+  }
+}
+
+inline void _ew_div_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
+                                          float16_t* __restrict c) {
+#pragma unroll
+  for (int i = 0; i < 8; ++i) {
+    const int offset = i * 8;
+    float16x8_t va = vld1q_f16(a + offset);
+    float16x8_t vb = vdupq_n_f16(b);
+    vst1q_f16(c + offset, vdivq_f16(va, vb));
+  }
+}
+}  // namespace
+
 void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
                  float16_t* __restrict C, int32_t len, int threads) {
-  // TODO
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_sub_fp16_tile_32(A + offset, B + offset, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  const float16_t* b_remain = B + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - b_remain[i]; }
+}
+
+void ew_mul_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_mul_fp16_tile_32(A + offset, B + offset, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  const float16_t* b_remain = B + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * b_remain[i]; }
+}
+
+void ew_div_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
+                 float16_t* __restrict C, int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_div_fp16_tile_32(A + offset, B + offset, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  const float16_t* b_remain = B + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / b_remain[i]; }
+}
+
+void ew_add_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_add_constant_fp16_tile_32(A + offset, B, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] + B; }
+}
+
+void ew_sub_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_sub_constant_fp16_tile_32(A + offset, B, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - B; }
+}
+
+void ew_mul_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_mul_constant_fp16_tile_32(A + offset, B, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * B; }
+}
+
+void ew_div_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
+                          int32_t len, int threads) {
+  constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
+  const int32_t blocks = len / TILE_SIZE;
+  const int32_t lefts = len % TILE_SIZE;
+
+#pragma omp parallel for num_threads(threads) schedule(auto) if (threads > 0)
+  for (int32_t b = 0; b < blocks; ++b) {
+    const int32_t offset = b * TILE_SIZE;
+    _ew_div_constant_fp16_tile_32(A + offset, B, C + offset);
+  }
+
+  const float16_t* a_remain = A + blocks * TILE_SIZE;
+  float16_t* c_remain = C + blocks * TILE_SIZE;
+  for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / B; }
 }
 #endif  // fp16
 

@@ -166,6 +166,25 @@ static inline float16x8_t vexpq_fast_f16(float16x8_t x) {
   return vcombine_f16(vcvt_f16_f32(result_lo), vcvt_f16_f32(result_hi));
 }
 
+static inline float vsquare_mean_fp16(const float16_t* __restrict X, int dim) {
+  float32x4_t sum = vdupq_n_f32(0.0f);
+
+  int i;
+  for (i = 0; i <= dim - 8; i += 8) {
+    float16x8_t vec = vld1q_f16(X + i);
+    float16x8_t square_f16 = vmulq_f16(vec, vec);
+
+    sum = vaddq_f32(sum, vcvt_f32_f16(vget_low_f16(square_f16)));
+    sum = vaddq_f32(sum, vcvt_f32_f16(vget_high_f16(square_f16)));
+  }
+
+  float acc = vaddvq_f32(sum);
+
+  for (; i < dim; ++i) { acc += (float)(X[i] * X[i]); }
+
+  return acc / (float)dim;
+}
+
 #endif
 
 }  // namespace mllm::arm

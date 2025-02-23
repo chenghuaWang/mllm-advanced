@@ -25,6 +25,16 @@ void ArmAddOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
                   static_cast<int>(a_tensor.numel()));
       return;
     }
+
+    // broadcast to ele wise.
+    // Such as:
+    // Tensor a;
+    // auto b = a + 1;
+    if (b_tensor.shape().size() == 1 && b_tensor.shape()[0] == 1) {
+      ew_add_constant_fp16(a_tensor.ptr<float16_t>(), *(b_tensor.ptr<float16_t>()),
+                           c_tensor.ptr<float16_t>(), static_cast<int>(a_tensor.numel()));
+      return;
+    }
   }
 
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
@@ -53,6 +63,24 @@ void ArmSubOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   auto& b_tensor = inputs[1];
   auto& c_tensor = outputs[0];
 
+  if (a_tensor.dtype() == kFp16 && b_tensor.dtype() == kFp16 && c_tensor.dtype() == kFp16) {
+    if (a_tensor.shape() == b_tensor.shape()) {
+      ew_sub_fp16(a_tensor.ptr<float16_t>(), b_tensor.ptr<float16_t>(), c_tensor.ptr<float16_t>(),
+                  static_cast<int>(a_tensor.numel()));
+      return;
+    }
+
+    // broadcast to ele wise.
+    // Such as:
+    // Tensor a;
+    // auto b = a - 1;
+    if (b_tensor.shape().size() == 1 && b_tensor.shape()[0] == 1) {
+      ew_sub_constant_fp16(a_tensor.ptr<float16_t>(), *(b_tensor.ptr<float16_t>()),
+                           c_tensor.ptr<float16_t>(), static_cast<int>(a_tensor.numel()));
+      return;
+    }
+  }
+
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_sub_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
@@ -79,6 +107,24 @@ void ArmMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   auto& b_tensor = inputs[1];
   auto& c_tensor = outputs[0];
 
+  if (a_tensor.dtype() == kFp16 && b_tensor.dtype() == kFp16 && c_tensor.dtype() == kFp16) {
+    if (a_tensor.shape() == b_tensor.shape()) {
+      ew_mul_fp16(a_tensor.ptr<float16_t>(), b_tensor.ptr<float16_t>(), c_tensor.ptr<float16_t>(),
+                  static_cast<int>(a_tensor.numel()));
+      return;
+    }
+
+    // broadcast to ele wise.
+    // Such as:
+    // Tensor a;
+    // auto b = a * 1;
+    if (b_tensor.shape().size() == 1 && b_tensor.shape()[0] == 1) {
+      ew_mul_constant_fp16(a_tensor.ptr<float16_t>(), *(b_tensor.ptr<float16_t>()),
+                           c_tensor.ptr<float16_t>(), static_cast<int>(a_tensor.numel()));
+      return;
+    }
+  }
+
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {
       ew_mul_fp32(a_tensor.ptr<float>(), b_tensor.ptr<float>(), c_tensor.ptr<float>(),
@@ -104,6 +150,24 @@ void ArmDivOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   auto& a_tensor = inputs[0];
   auto& b_tensor = inputs[1];
   auto& c_tensor = outputs[0];
+
+  if (a_tensor.dtype() == kFp16 && b_tensor.dtype() == kFp16 && c_tensor.dtype() == kFp16) {
+    if (a_tensor.shape() == b_tensor.shape()) {
+      ew_div_fp16(a_tensor.ptr<float16_t>(), b_tensor.ptr<float16_t>(), c_tensor.ptr<float16_t>(),
+                  static_cast<int>(a_tensor.numel()));
+      return;
+    }
+
+    // broadcast to ele wise.
+    // Such as:
+    // Tensor a;
+    // auto b = a * 1;
+    if (b_tensor.shape().size() == 1 && b_tensor.shape()[0] == 1) {
+      ew_div_constant_fp16(a_tensor.ptr<float16_t>(), *(b_tensor.ptr<float16_t>()),
+                           c_tensor.ptr<float16_t>(), static_cast<int>(a_tensor.numel()));
+      return;
+    }
+  }
 
   if (a_tensor.dtype() == kFp32 && b_tensor.dtype() == kFp32 && c_tensor.dtype() == kFp32) {
     if (a_tensor.shape() == b_tensor.shape()) {

@@ -9,6 +9,7 @@
  */
 #include "mllm/Backends/Arm/Ops/MatMulOp.hpp"
 #include "mllm/Backends/Arm/Kernels/sgemm.hpp"
+#include "mllm/Backends/Arm/Kernels/hgemm.hpp"
 #include "mllm/Utils/Log.hpp"
 
 namespace mllm::arm {
@@ -34,6 +35,7 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
     auto K = i_a_shape[i_a_shape.size() - 1];
     auto N = i_b_shape[i_b_shape.size() - 1];
 
+    // fp32 @ fp32 -> fp32, all shape_len = 4
     if (i_a_shape.size() == 4 && i_b_shape.size() == 4 && i_a.dtype() == kFp32
         && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
       auto DIM_0 = i_a_shape[0];
@@ -51,9 +53,10 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         }
       }
       delete[] bias;
+      return;
     }
 
-    // fp32 @ fp32 -> fp32
+    // fp32 @ fp32 -> fp32, all shape_len != 4
     if (i_a_shape.size() != 4 && i_b_shape.size() != 4 && i_a.dtype() == kFp32
         && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
       auto A = i_a.ptr<float>();
@@ -72,6 +75,52 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         auto bias = new float[N];
         std::fill(bias, bias + N, 0);
         sgemm_mk_kn_mn_V1(a_ptr, b_ptr, c_ptr, M, K, N, bias, cargo_.thread());
+        delete[] bias;
+      }
+      return;
+    }
+
+    // fp16 @ fp16 -> fp16, all shape_len = 4
+    if (i_a_shape.size() == 4 && i_b_shape.size() == 4 && i_a.dtype() == kFp16
+        && i_b.dtype() == kFp16 && o.dtype() == kFp16) {
+      auto DIM_0 = i_a_shape[0];
+      auto DIM_1 = i_a_shape[1];
+
+      // FIXME(LEVEL 0): Currently we use kleidiai kernel. And it's only support bias. so we need
+      // to alloc bias. we should not use this.
+      auto bias = new float16_t[N];
+      std::fill(bias, bias + N, 0);
+      for (size_t d0 = 0; d0 < DIM_0; d0++) {
+        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+          hgemm_mk_kn_mn_V1(i_a.offsettedPtr<float16_t>({d0, d1, 0, 0}),
+                            i_b.offsettedPtr<float16_t>({d0, d1, 0, 0}),
+                            o.offsettedPtr<float16_t>({d0, d1, 0, 0}), M, K, N, bias,
+                            cargo_.thread());
+        }
+      }
+      delete[] bias;
+      return;
+    }
+
+    // fp16 @ fp16 -> fp16, all shape_len != 4
+    if (i_a_shape.size() != 4 && i_b_shape.size() != 4 && i_a.dtype() == kFp16
+        && i_b.dtype() == kFp16 && o.dtype() == kFp16) {
+      auto A = i_a.ptr<float16_t>();
+      auto B = i_b.ptr<float16_t>();
+      auto C = o.ptr<float16_t>();
+      size_t loops = 1;
+      for (int i = 0; i < i_a_shape.size() - 2; i++) { loops *= i_a_shape[i]; }
+
+      for (size_t l = 0; l < loops; l++) {
+        auto a_ptr = A + l * M * K;
+        auto b_ptr = broad_cast_flag ? B : B + l * M * K;
+        auto c_ptr = C + l * M * N;
+
+        // FIXME(LEVEL 0): Currently we use kleidiai kernel. And it's only support bias. so we need
+        // to alloc bias. we should not use this.
+        auto bias = new float16_t[N];
+        std::fill(bias, bias + N, 0);
+        hgemm_mk_kn_mn_V1(a_ptr, b_ptr, c_ptr, M, K, N, bias, cargo_.thread());
         delete[] bias;
       }
       return;
@@ -96,6 +145,7 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
               o.offsettedPtr<float>({d0, d1, 0, 0}), M, K, N, nullptr, cargo_.thread());
         }
       }
+      return;
     }
 
     // fp32 @ fp32 -> fp32
@@ -112,6 +162,40 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         auto b_ptr = broad_cast_flag ? B : B + l * M * K;
         auto c_ptr = C + l * M * N;
         sgemm_mk_nk_mn_V1(a_ptr, b_ptr, c_ptr, M, K, N, nullptr, cargo_.thread());
+      }
+      return;
+    }
+
+    // fp16 @ fp16 -> fp16
+    if (i_a_shape.size() == 4 && i_b_shape.size() == 4 && i_a.dtype() == kFp16
+        && i_b.dtype() == kFp16 && o.dtype() == kFp16) {
+      auto DIM_0 = i_a_shape[0];
+      auto DIM_1 = i_a_shape[1];
+      for (size_t d0 = 0; d0 < DIM_0; d0++) {
+        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+          hgemm_mk_nk_mn_V1(i_a.offsettedPtr<float16_t>({d0, d1, 0, 0}),
+                            i_b.offsettedPtr<float16_t>({d0, d1, 0, 0}),
+                            o.offsettedPtr<float16_t>({d0, d1, 0, 0}), M, K, N, nullptr,
+                            cargo_.thread());
+        }
+      }
+      return;
+    }
+
+    // fp16 @ fp16 -> fp16
+    if (i_a_shape.size() != 4 && i_b_shape.size() != 4 && i_a.dtype() == kFp16
+        && i_b.dtype() == kFp16 && o.dtype() == kFp16) {
+      size_t loops = 1;
+      for (int i = 0; i < i_a_shape.size() - 2; i++) { loops *= i_a_shape[i]; }
+
+      auto A = i_a.ptr<float16_t>();
+      auto B = i_b.ptr<float16_t>();
+      auto C = o.ptr<float16_t>();
+      for (size_t l = 0; l < loops; l++) {
+        auto a_ptr = A + l * M * K;
+        auto b_ptr = broad_cast_flag ? B : B + l * M * K;
+        auto c_ptr = C + l * M * N;
+        hgemm_mk_nk_mn_V1(a_ptr, b_ptr, c_ptr, M, K, N, nullptr, cargo_.thread());
       }
       return;
     }
