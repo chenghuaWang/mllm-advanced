@@ -43,6 +43,29 @@ void ArmTransposeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tens
         transpose_bshd_bhsd(i.ptr<float>(), o.ptr<float>(), B, S, H, D);
         return;
       }
+      break;
+    }
+    case kFp16: {
+      // [B, S, H, D] -> [B, H, S, D]
+      if (i.shape().size() == 4 && o.shape().size() == 4
+          && ((cargo_.transpose_dim_x == 1 && cargo_.transpose_dim_y == 2)
+              || (cargo_.transpose_dim_x == 2 && cargo_.transpose_dim_y == 1))) {
+        auto shape = i.shape();
+        auto B = shape[0];
+        auto S = shape[1];
+        auto H = shape[2];
+        auto D = shape[3];
+
+        // if S == 1, there is no need to transpose.
+        if (S == 1) {
+          memcpy(o.ptr<float16_t>(), i.ptr<float16_t>(), B * S * H * D * sizeof(float16_t));
+          return;
+        }
+
+        transpose_bshd_bhsd_fp16(i.ptr<float16_t>(), o.ptr<float16_t>(), B, S, H, D);
+        return;
+      }
+      break;
     }
     default:
       NYI("The dtype {} is not supported in transpose op yet", dataTypes2Str(i.dtype()));

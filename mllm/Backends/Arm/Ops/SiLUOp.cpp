@@ -25,6 +25,10 @@ void ArmSiLUOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       silu_V1(X.ptr<float>(), Y.ptr<float>(), X.numel());
       break;
     }
+    case kFp16: {
+      silu_fp16_V1(X.ptr<float16_t>(), Y.ptr<float16_t>(), X.numel());
+      break;
+    }
     default: NYI("ArmSiLUOp::forward not support dtype {}", dataTypes2Str(X.dtype())); break;
   }
 }

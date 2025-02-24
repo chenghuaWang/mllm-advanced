@@ -22,6 +22,8 @@ void silu_V1(const float* __restrict X, float* __restrict Y, int len);
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else
 
+void silu_fp16_V1(const float16_t* __restrict X, float16_t* __restrict Y, int len);
+
 #endif  // fp16
 
 }  // namespace mllm::arm

@@ -94,7 +94,6 @@ static inline void _hgemm_mk_nk_mn_tile_s8_k16_V2(const float16_t* __restrict A,
     }
   }
 
-  // 结果存储
   for (size_t i = 0; i < M_TILE_SIZE; ++i) {
 #ifdef USE_FP16_FMA
     vst1q_f16(C + i * N, c[i]);
@@ -187,7 +186,7 @@ void hgemm_mk_kn_mn_V1(const float16_t* __restrict lhs, const float16_t* __restr
                          dst_ptr,                // DST
                          dst_stride_row,         // DST stride (row)
                          dst_stride_col,         // DST stride (col)
-                         -FLT_MAX, FLT_MAX       // Min and max for the clamp operation
+                         -65504, 65504           // Min and max for the clamp operation
       );
     }
   }

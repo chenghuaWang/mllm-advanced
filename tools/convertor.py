@@ -10,6 +10,14 @@ MLLM_PARAMETER_MAGIC_NUMBER = 0x519ACE0519ACE000
 PARAMETER_NAME_LEN = 256
 MLLM_TENSOR_SHAPE_MAX_LEN = 8
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--input", type=str, required=True)
+parser.add_argument("--output", type=str, required=True)
+parser.add_argument("--format", type=str, default="safetensors")
+parser.add_argument("--bf16_2_fp32", action="store_true")
+parser.add_argument("--bf16_2_fp16", action="store_true")
+args = parser.parse_args()
+
 """
 enum DataTypes : uint32_t {
   kDataTypes_Start = 0,
@@ -46,19 +54,27 @@ enum DataTypes : uint32_t {
   // TODO
   kPG_End,
 
+  kBF16,
+
   kDataTypes_End,
 };
 """
 
 TYPE_MAPPING = {
-    "BFLOAT16": 9,  # NOTE: Map tp fp32. transform_dtype will transform fp16 to fp32
+    "FLOAT16": 8,
+    "FLOAT32": 9,
+    "BFLOAT16": 24,
 }
 
 
 def transform_dtype(data, dtype):
     if dtype == "BFLOAT16":
-        return data.to(torch.float32)
-    return data
+        if args.bf16_2_fp32:
+            return data.to(torch.float32), TYPE_MAPPING["FLOAT32"]
+        if args.bf16_2_fp16:
+            return data.to(torch.float16), TYPE_MAPPING["FLOAT16"]
+
+    return data, TYPE_MAPPING[dtype.upper()]
 
 
 def convert_safetensor(input_path, output_path):
@@ -86,7 +102,7 @@ def convert_safetensor(input_path, output_path):
             shape = list(tensor.shape)
             shape += [0] * (MLLM_TENSOR_SHAPE_MAX_LEN - len(shape))
 
-            tensor = transform_dtype(tensor, dtype.upper())
+            tensor, mllm_type_idx = transform_dtype(tensor, dtype.upper())
             param_size = tensor.nbytes
 
             tensors.append(
@@ -96,7 +112,7 @@ def convert_safetensor(input_path, output_path):
                     "numpy": tensor.numpy(),
                     "descriptor": {
                         "parameter_id": len(tensors),
-                        "parameter_type": TYPE_MAPPING[dtype.upper()],
+                        "parameter_type": mllm_type_idx,
                         "parameter_size": param_size,
                         "parameter_offset": data_offset,
                         "shape_len": len(tensor.shape),
@@ -145,13 +161,7 @@ def convert_safetensor(input_path, output_path):
                 out_f.write(b"\x00" * pad_size)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--input", type=str, required=True)
-parser.add_argument("--output", type=str, required=True)
-parser.add_argument("--format", type=str, default="safetensors")
-
 if __name__ == "__main__":
-    args = parser.parse_args()
     input_path = Path(args.input)
     output_path = Path(args.output)
     if args.format == "safetensors":

@@ -63,11 +63,28 @@ void ArmRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       auto H = shape[1];
       auto S = shape[2];
       auto D = shape[3];
-      for (size_t b = 0; b < B; ++b) {
-        for (size_t h = 0; h < H; ++h) {
-          normal_hf_rope(X.offsettedPtr<float>({b, h, 0, 0}), Y.offsettedPtr<float>({b, h, 0, 0}),
-                         sin_.ptr<float>(), cos_.ptr<float>(), cur_seq_cnt_, S, D);
+      switch (X.dtype()) {
+        case kFp32: {
+          for (size_t b = 0; b < B; ++b) {
+            for (size_t h = 0; h < H; ++h) {
+              normal_hf_rope(X.offsettedPtr<float>({b, h, 0, 0}),
+                             Y.offsettedPtr<float>({b, h, 0, 0}), sin_.ptr<float>(),
+                             cos_.ptr<float>(), cur_seq_cnt_, S, D);
+            }
+          }
+          break;
         }
+        case kFp16: {
+          for (size_t b = 0; b < B; ++b) {
+            for (size_t h = 0; h < H; ++h) {
+              normal_hf_rope_fp16(X.offsettedPtr<float16_t>({b, h, 0, 0}),
+                                  Y.offsettedPtr<float16_t>({b, h, 0, 0}), sin_.ptr<float>(),
+                                  cos_.ptr<float>(), cur_seq_cnt_, S, D);
+            }
+          }
+          break;
+        }
+        default: break;
       }
       break;
     }

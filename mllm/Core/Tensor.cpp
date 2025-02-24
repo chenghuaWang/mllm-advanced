@@ -96,38 +96,42 @@ Tensor Tensor::operator/(const Tensor& rhs) {
 }
 
 Tensor Tensor::operator+(float rhs) {
-  if (dtype() != kFp32) {
-    MLLM_ERROR_EXIT(kError, "Trying to add float constant value with non-float tensor");
-  }
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
-  *(st.ptr<float>()) = rhs;
+  switch (dtype()) {
+    case kFp32: *(st.ptr<float>()) = rhs; break;
+    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    default: NYI("Type is not supported"); break;
+  }
   return *this + st;
 }
 
 Tensor Tensor::operator-(float rhs) {
-  if (dtype() != kFp32) {
-    MLLM_ERROR_EXIT(kError, "Trying to sub float constant value with non-float tensor");
-  }
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
-  *(st.ptr<float>()) = rhs;
+  switch (dtype()) {
+    case kFp32: *(st.ptr<float>()) = rhs; break;
+    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    default: NYI("Type is not supported"); break;
+  }
   return *this - st;
 }
 
 Tensor Tensor::operator*(float rhs) {
-  if (dtype() != kFp32) {
-    MLLM_ERROR_EXIT(kError, "Trying to mul float constant value with non-float tensor");
-  }
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
-  *(st.ptr<float>()) = rhs;
+  switch (dtype()) {
+    case kFp32: *(st.ptr<float>()) = rhs; break;
+    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    default: NYI("Type is not supported"); break;
+  }
   return *this * st;
 }
 
 Tensor Tensor::operator/(float rhs) {
-  if (dtype() != kFp32) {
-    MLLM_ERROR_EXIT(kError, "Trying to div float constant value with non-float tensor");
-  }
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
-  *(st.ptr<float>()) = rhs;
+  switch (dtype()) {
+    case kFp32: *(st.ptr<float>()) = rhs; break;
+    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    default: NYI("Type is not supported"); break;
+  }
   return *this / st;
 }
 

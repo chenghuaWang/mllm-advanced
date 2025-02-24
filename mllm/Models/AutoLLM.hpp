@@ -69,17 +69,38 @@ class AutoLLM {
   long _greedy_search(Tensor inputs) {
     auto S = inputs.shape()[1];
     auto D = inputs.shape()[2];
-    auto _ptr = inputs.ptr<float>() + (S - 1) * D;
-    float max = -1e10f;
-    long pos = 0;
-    for (int i = 0; i < D; ++i) {
-      auto value = _ptr[i];
-      if (value > max) {
-        max = value;
-        pos = i;
+    switch (inputs.dtype()) {
+      case kFp32: {
+        auto _ptr = inputs.ptr<float>() + (S - 1) * D;
+        float max = -1e10f;
+        long pos = 0;
+        for (int i = 0; i < D; ++i) {
+          auto value = _ptr[i];
+          if (value > max) {
+            max = value;
+            pos = i;
+          }
+        }
+        return pos;
+        break;
       }
+      case kFp16: {
+        auto _ptr = inputs.ptr<__fp16>() + (S - 1) * D;
+        __fp16 max = -60000;
+        long pos = 0;
+        for (int i = 0; i < D; ++i) {
+          auto value = _ptr[i];
+          if (value > max) {
+            max = value;
+            pos = i;
+          }
+        }
+        return pos;
+        break;
+      }
+      default: NYI("Type Not Supported"); break;
     }
-    return pos;
+    return 0;
   }
 
   long _top_p_sampling(Tensor inputs, float top_p) {

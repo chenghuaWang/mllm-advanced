@@ -52,6 +52,29 @@ void silu_V1(const float* __restrict X, float* __restrict Y, int len) {
   for (; i < len; i++) { Y[i] = X[i] / (1.0f + std::exp(-X[i])); }
 }
 
+void silu_fp16_V1(const float16_t* __restrict X, float16_t* __restrict Y, int len) {
+  int i = 0;
+  for (; i <= len - 16; i += 16) {
+    float16x8_t x0 = vld1q_f16(X + i);
+    float16x8_t silu0 = vmulq_f16(x0, vsigmoid_f16(x0));
+    vst1q_f16(Y + i, silu0);
+
+    float16x8_t x1 = vld1q_f16(X + i + 8);
+    float16x8_t silu1 = vmulq_f16(x1, vsigmoid_f16(x1));
+    vst1q_f16(Y + i + 8, silu1);
+  }
+  for (; i <= len - 8; i += 8) {
+    float16x8_t x = vld1q_f16(X + i);
+    float16x8_t silu = vmulq_f16(x, vsigmoid_f16(x));
+    vst1q_f16(Y + i, silu);
+  }
+
+  for (; i < len; ++i) {
+    float x = X[i];
+    Y[i] = static_cast<float16_t>(x * (1.0f / (1.0f + expf(-x))));
+  }
+}
+
 }  // namespace mllm::arm
 
 #endif

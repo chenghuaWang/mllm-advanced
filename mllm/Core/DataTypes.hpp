@@ -49,6 +49,8 @@ enum DataTypes : uint32_t {
   // TODO
   kPG_End,
 
+  kBF16,
+
   kDataTypes_End,
 };
 
@@ -77,6 +79,7 @@ inline const char* dataTypes2Str(DataTypes type) {
     case DataTypes::kPC_End: return "kPC_End";
     case DataTypes::kPG_Start: return "kPG_Start";
     case DataTypes::kPG_End: return "kPG_End";
+    case DataTypes::kBF16: return "kBF16";
     default: return "Unknown";
   }
 }
@@ -92,6 +95,7 @@ inline float dataTypeSize(DataTypes type) {
     case DataTypes::kFp8: return 1.f;
     case DataTypes::kFp16: return 2.f;
     case DataTypes::kFp32: return 4.f;
+    case DataTypes::kBF16: return 2.f;
     default: MLLM_ERROR_EXIT(kError, "dataTypeSize of {} is not defined yet.", dataTypes2Str(type));
   }
   return 4.f;

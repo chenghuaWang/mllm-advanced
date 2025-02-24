@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
                           .meta("FILE")
                           .positional();
   auto& se_json_fp = Argparse::add<std::string>("-j|--json").help("SentencePiece json file path.");
+  auto& pref = Argparse::add<bool>("-p|--prefix").help("Prefix for the prompt.");
 
   Argparse::parse(argc, argv);
 
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
                                        });
 
   // perf or not.
-  ctx.perf_ = false;
+  ctx.perf_ = pref.isSet();
 
   {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(se_json_fp.get());

@@ -35,6 +35,16 @@ void ArmSoftmaxOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
         }
       }
       break;
+    case kFp16:
+      for (size_t b = 0; b < B; ++b) {
+        for (size_t h = 0; h < H; ++h) {
+          for (size_t s = 0; s < S; ++s) {
+            hsoftmax_V1(X.offsettedPtr<float16_t>({b, h, s, 0}),
+                        Y.offsettedPtr<float16_t>({b, h, s, 0}), D, 1);
+          }
+        }
+      }
+      break;
     default: NYI("ArmSoftmaxOp::forward not support dtype {}", dataTypes2Str(X.dtype())); break;
   }
 }

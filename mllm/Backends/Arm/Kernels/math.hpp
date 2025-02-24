@@ -185,6 +185,28 @@ static inline float vsquare_mean_fp16(const float16_t* __restrict X, int dim) {
   return acc / (float)dim;
 }
 
+static inline float16x8_t vsigmoid_f16(float16x8_t x) {
+  float32x4_t x_low = vcvt_f32_f16(vget_low_f16(x));
+  float32x4_t x_high = vcvt_f32_f16(vget_high_f16(x));
+
+  float32x4_t ones = vdupq_n_f32(1.0f);
+  x_low = vnegq_f32(x_low);
+  x_low = vexpq_fast_f32(x_low);
+  x_low = vaddq_f32(x_low, ones);
+  float32x4_t out_low = vrecpeq_f32(x_low);
+  out_low = vmulq_f32(vrecpsq_f32(x_low, out_low), out_low);
+  out_low = vmulq_f32(vrecpsq_f32(x_low, out_low), out_low);
+
+  x_high = vnegq_f32(x_high);
+  x_high = vexpq_fast_f32(x_high);
+  x_high = vaddq_f32(x_high, ones);
+  float32x4_t out_high = vrecpeq_f32(x_high);
+  out_high = vmulq_f32(vrecpsq_f32(x_high, out_high), out_high);
+  out_high = vmulq_f32(vrecpsq_f32(x_high, out_high), out_high);
+
+  return vcombine_f16(vcvt_f16_f32(out_low), vcvt_f16_f32(out_high));
+}
+
 #endif
 
 }  // namespace mllm::arm

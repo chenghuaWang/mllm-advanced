@@ -84,7 +84,6 @@ std::vector<Tensor> MllmEngineCtx::dispatch(OpType op_type, const BaseOpCargoBas
 
   if (perf_) {
     auto start = std::chrono::high_resolution_clock::now();
-    std::vector<Tensor> outputs;
     op->reshape(inputs, outputs);
     op->setup(inputs, outputs);
     op->forward(inputs, outputs);
