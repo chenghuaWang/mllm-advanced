@@ -8,6 +8,7 @@
  *
  */
 #include "mllm/Core/Tensor.hpp"
+#include "mllm/Core/AOps/CastTypeOp.hpp"
 #include "mllm/Core/AOps/ElewiseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
 #include "mllm/Core/AOps/TransposeOp.hpp"
@@ -59,7 +60,7 @@ Tensor& Tensor::alloc() {
   return *this;
 }
 
-Tensor& Tensor::to(DeviceTypes device) {
+Tensor Tensor::to(DeviceTypes device) {
   if (device == impl_->device()) { return *this; }
   // TODO create a function like op
   // H2D, D2H Ops
@@ -67,12 +68,10 @@ Tensor& Tensor::to(DeviceTypes device) {
   return *this;
 }
 
-Tensor& Tensor::to(DataTypes dtype) {
+Tensor Tensor::to(DataTypes dtype) {
   if (dtype == impl_->dtype()) { return *this; }
-  // TODO create a function like op
-  // data casting ops
-  // TODO reset dtype
-  return *this;
+  return MllmEngineCtx::instance().dispatch(OpType::kCastType, CastTypeOpCargo{.to_dtype = dtype},
+                                            {*this})[0];
 }
 
 Tensor Tensor::operator[](const SliceIndices& slice_index) {

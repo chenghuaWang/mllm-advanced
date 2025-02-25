@@ -9,6 +9,7 @@
  */
 #include "mllm/Backends/Arm/ArmBackend.hpp"
 #include "mllm/Backends/Arm/ArmAllocator.hpp"
+#include "mllm/Backends/Arm/Ops/CastTypeOp.hpp"
 #include "mllm/Backends/Arm/Ops/CausalMaskOp.hpp"
 #include "mllm/Backends/Arm/Ops/ElewiseOps.hpp"
 #include "mllm/Backends/Arm/Ops/FillOp.hpp"
@@ -29,7 +30,7 @@ ArmBackend::ArmBackend() : BackendBase(kCPU) {
   regOpFactory<ArmAddOpFactory, ArmSubOpFactory, ArmMulOpFactory, ArmDivOpFactory, ArmFillOpFactory,
                ArmKVCacheOpFactory, ArmRMSNormOpFactory, ArmTransposeOpFactory, ArmRoPEOpFactory,
                ArmSoftmaxOpFactory, ArmMatMulOpFactory, ArmCausalMaskOpFactory, ArmLinearOpFactory,
-               ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory>();
+               ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory, ArmCastTypeOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

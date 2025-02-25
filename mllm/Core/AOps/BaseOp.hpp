@@ -40,6 +40,7 @@ enum class OpType : int32_t {
   kSiLU,
   kKVCache,
   kCausalMask,
+  kCastType,
 
   kOpType_End,
 };

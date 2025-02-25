@@ -77,9 +77,9 @@ class Tensor {
 
   Tensor transpose(int dim0, int dim1);
 
-  Tensor& to(DeviceTypes device);
+  Tensor to(DeviceTypes device);
 
-  Tensor& to(DataTypes dtype);
+  Tensor to(DataTypes dtype);
 
   [[nodiscard]] std::string name() const;
 

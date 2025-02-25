@@ -10,6 +10,7 @@
 #pragma once
 
 #include <string>
+#include "mllm/Core/DataTypes.hpp"
 
 namespace mllm::models {
 struct QWenConfig {
@@ -50,6 +51,8 @@ struct QWenConfig {
   int vocab_size = 151936;
 
   int max_cache_length = 1024;
+
+  DataTypes kv_cache_dtype = kFp32;
 
   long eos_token_id = 151643;
 };

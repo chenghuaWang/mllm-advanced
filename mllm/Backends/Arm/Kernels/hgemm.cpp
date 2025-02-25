@@ -28,94 +28,139 @@
 
 namespace mllm::arm {
 
-static inline void _hgemm_mk_nk_mn_tile_s8_k16_V2(const float16_t* __restrict A,
-                                                  const float16_t* __restrict B,
-                                                  const float16_t* __restrict BIAS,
-                                                  float16_t* __restrict C, size_t ACTUAL_TILE_M,
-                                                  size_t ACTUAL_TILE_N, size_t M, size_t K,
-                                                  size_t N) {
-  constexpr size_t S_TILE = 8;
-  constexpr size_t K_TILE = 16;
+static inline void _hgemm_mk_nk_mn_tile_s4_k16_V1(const __fp16* __restrict A,
+                                                  const __fp16* __restrict B,
+                                                  const __fp16* __restrict BIAS,
+                                                  __fp16* __restrict C, int ACTUAL_TILE_M,
+                                                  int ACTUAL_TILE_N, int M, int K, int N) {
+  constexpr int S_TILE = 4;
+  constexpr int K_TILE = 16;
 
-  const size_t M_TILE_SIZE = std::min(S_TILE, ACTUAL_TILE_M);
-  const size_t N_TILE_SIZE = std::min(S_TILE, ACTUAL_TILE_N);
+  int M_TILE_SIZE = std::min(S_TILE, ACTUAL_TILE_M);
+  int N_TILE_SIZE = std::min(S_TILE, ACTUAL_TILE_N);
 
-#ifdef USE_FP16_FMA
-  float16x8_t c[8] = {vdupq_n_f16(0)};
-#else
-  float32x4_t c[8][2] = {{vdupq_n_f32(0)}};
-#endif
+  const __fp16 FP16_MIN = -65504.0f;
+  const __fp16 FP16_MAX = 65504.0f;
+  const float16x4_t clamp_min = vdup_n_f16(FP16_MIN);
+  const float16x4_t clamp_max = vdup_n_f16(FP16_MAX);
+
+  float16x4_t c0 = vdup_n_f16(0);
+  float16x4_t c1 = vdup_n_f16(0);
+  float16x4_t c2 = vdup_n_f16(0);
+  float16x4_t c3 = vdup_n_f16(0);
 
   if (BIAS) {
-    for (size_t i = 0; i < M_TILE_SIZE; ++i) {
-#ifdef USE_FP16_FMA
-      float16x8_t bias = vld1q_f16(BIAS);
-      for (size_t j = 0; j < N_TILE_SIZE; j += 8) { c[i] = vaddq_f16(c[i], bias); }
-#else
-      float32x4_t bias_low = vcvt_f32_f16(vld1_f16(BIAS));
-      float32x4_t bias_high = vcvt_f32_f16(vld1_f16(BIAS + 4));
-      c[i][0] = vaddq_f32(c[i][0], bias_low);
-      c[i][1] = vaddq_f32(c[i][1], bias_high);
-#endif
+    if (N_TILE_SIZE >= 4) {
+      c0 = vld1_f16(BIAS);
+      c1 = c0;
+      c2 = c0;
+      c3 = c0;
+    } else {
+      __fp16 bias_buf[4] = {0};
+      for (int n = 0; n < N_TILE_SIZE; ++n) bias_buf[n] = BIAS[n];
+      c0 = vld1_f16(bias_buf);
+      c1 = c0;
+      c2 = c0;
+      c3 = c0;
     }
   }
 
-  for (size_t k = 0; k < K; k += K_TILE) {
-    const size_t k_end = std::min(k + K_TILE, K);
-    for (size_t k_step = k; k_step < k_end; k_step += 8) {
-      float16x8_t a[S_TILE];
-      for (size_t i = 0; i < M_TILE_SIZE; ++i) { a[i] = vld1q_f16(A + i * K + k_step); }
+  for (int k = 0; k < K; k += K_TILE) {
+    int k_end = std::min(k + K_TILE, K);
+    for (int k_step = k; k_step < k_end; k_step += 4) {
+      float16x4_t a[4];
+      for (int i = 0; i < M_TILE_SIZE; ++i) { a[i] = vld1_f16(A + i * K + k_step); }
 
-      float16x8_t b[S_TILE];
-      for (size_t j = 0; j < N_TILE_SIZE; ++j) { b[j] = vld1q_f16(B + j * K + k_step); }
+      float16x4_t b[4];
+      for (int j = 0; j < N_TILE_SIZE; ++j) { b[j] = vld1_f16(B + j * K + k_step); }
 
-      for (size_t i = 0; i < M_TILE_SIZE; ++i) {
-        const float16x8_t ai = a[i];
-        for (size_t j = 0; j < N_TILE_SIZE; j += 4) {
-#ifdef USE_FP16_FMA
-          c[i] = vfmaq_f16(c[i], ai, b[j]);
-          c[i] = vfmaq_f16(c[i], ai, b[j + 1]);
-          c[i] = vfmaq_f16(c[i], ai, b[j + 2]);
-          c[i] = vfmaq_f16(c[i], ai, b[j + 3]);
-#else
-          float32x4_t ai_low = vcvt_f32_f16(vget_low_f16(ai));
-          float32x4_t ai_high = vcvt_f32_f16(vget_high_f16(ai));
+      // Transpose B matrix
+      float16x4x2_t tmp0 = vtrn_f16(b[0], b[1]);
+      float16x4x2_t tmp1 = vtrn_f16(b[2], b[3]);
 
-          for (size_t n = 0; n < 4; ++n) {
-            float32x4_t bj_low = vcvt_f32_f16(vget_low_f16(b[j + n]));
-            float32x4_t bj_high = vcvt_f32_f16(vget_high_f16(b[j + n]));
+      // Construct transposed vectors
+      __fp16 bt0_data[4] = {vget_lane_f16(tmp0.val[0], 0), vget_lane_f16(tmp0.val[0], 1),
+                            vget_lane_f16(tmp1.val[0], 0), vget_lane_f16(tmp1.val[0], 1)};
+      __fp16 bt1_data[4] = {vget_lane_f16(tmp0.val[1], 0), vget_lane_f16(tmp0.val[1], 1),
+                            vget_lane_f16(tmp1.val[1], 0), vget_lane_f16(tmp1.val[1], 1)};
+      __fp16 bt2_data[4] = {vget_lane_f16(tmp0.val[0], 2), vget_lane_f16(tmp0.val[0], 3),
+                            vget_lane_f16(tmp1.val[0], 2), vget_lane_f16(tmp1.val[0], 3)};
+      __fp16 bt3_data[4] = {vget_lane_f16(tmp0.val[1], 2), vget_lane_f16(tmp0.val[1], 3),
+                            vget_lane_f16(tmp1.val[1], 2), vget_lane_f16(tmp1.val[1], 3)};
 
-            c[i][0] = vmlaq_lane_f32(c[i][0], bj_low, ai_low, n);
-            c[i][1] = vmlaq_lane_f32(c[i][1], bj_high, ai_high, n);
-          }
-#endif
+      float16x4_t bt0 = vld1_f16(bt0_data);
+      float16x4_t bt1 = vld1_f16(bt1_data);
+      float16x4_t bt2 = vld1_f16(bt2_data);
+      float16x4_t bt3 = vld1_f16(bt3_data);
+
+      for (int i = 0; i < M_TILE_SIZE; ++i) {
+        float16x4_t ai = a[i];
+        float16x4_t a0 = vdup_n_f16(vget_lane_f16(ai, 0));
+        float16x4_t a1 = vdup_n_f16(vget_lane_f16(ai, 1));
+        float16x4_t a2 = vdup_n_f16(vget_lane_f16(ai, 2));
+        float16x4_t a3 = vdup_n_f16(vget_lane_f16(ai, 3));
+
+        float16x4_t* c = nullptr;
+        switch (i) {
+          case 0: c = &c0; break;
+          case 1: c = &c1; break;
+          case 2: c = &c2; break;
+          case 3: c = &c3; break;
         }
+
+        *c = vfma_f16(*c, a0, bt0);
+        *c = vfma_f16(*c, a1, bt1);
+        *c = vfma_f16(*c, a2, bt2);
+        *c = vfma_f16(*c, a3, bt3);
       }
     }
   }
 
-  for (size_t i = 0; i < M_TILE_SIZE; ++i) {
-#ifdef USE_FP16_FMA
-    vst1q_f16(C + i * N, c[i]);
-#else
-    float16x8_t result = vcombine_f16(vcvt_f16_f32(c[i][0]), vcvt_f16_f32(c[i][1]));
-    vst1q_f16(C + i * N, result);
-#endif
+  for (int i = 0; i < M_TILE_SIZE; ++i) {
+    float16x4_t result;
+    switch (i) {
+      case 0: result = c0; break;
+      case 1: result = c1; break;
+      case 2: result = c2; break;
+      case 3: result = c3; break;
+    }
+
+    result = vmax_f16(result, clamp_min);  // lower bound
+    result = vmin_f16(result, clamp_max);  // upper bound
+
+    if (N_TILE_SIZE >= 4) {
+      vst1_f16(C + i * N, result);
+    } else {
+      switch (N_TILE_SIZE) {
+        case 1: vst1_lane_f16(C + i * N, result, 0); break;
+        case 2: {
+          vst1_lane_f16(C + i * N, result, 0);
+          vst1_lane_f16(C + i * N + 1, result, 1);
+          break;
+        }
+        case 3: {
+          vst1_lane_f16(C + i * N, result, 0);
+          vst1_lane_f16(C + i * N + 1, result, 1);
+          vst1_lane_f16(C + i * N + 2, result, 2);
+          break;
+        }
+      }
+    }
   }
 }
 
 void hgemm_mk_nk_mn_V1(const float16_t* __restrict lhs, const float16_t* __restrict rhs,
                        float16_t* __restrict dst, size_t M, size_t K, size_t N,
                        const float16_t* __restrict bias, int threads) {
-  constexpr size_t TILE_M = 8;
-  constexpr size_t TILE_N = 8;
+  constexpr size_t TILE_M = 4;
+  constexpr size_t TILE_N = 4;
 
 #pragma omp parallel for collapse(2) num_threads(threads) schedule(guided)
   for (size_t m = 0; m < M; m += TILE_M) {
     size_t tile_m = std::min(TILE_M, M - m);
     for (size_t n = 0; n < N; n += TILE_N) {
       size_t tile_n = std::min(TILE_N, N - n);
-      _hgemm_mk_nk_mn_tile_s8_k16_V2(lhs + m * K, rhs + n * K, bias ? (bias + n) : nullptr,
+      _hgemm_mk_nk_mn_tile_s4_k16_V1(lhs + m * K, rhs + n * K, bias ? (bias + n) : nullptr,
                                      dst + m * N + n, tile_m, tile_n, M, K, N);
     }
   }

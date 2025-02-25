@@ -93,9 +93,9 @@ class QWenAttention final : public nn::Module {
     k_rope_ = reg<nn::RoPE>(cfg.k_rope_name, RoPETypes::kLlama2, cfg.rope_theta,
                             cfg.max_position_embeddings, head_dim_);
     k_cache_ = reg<nn::KVCache>(cfg.k_cache_name, num_key_value_heads_, head_dim_,
-                                num_key_value_groups_, kFp32, cfg.max_cache_length);
+                                num_key_value_groups_, cfg.kv_cache_dtype, cfg.max_cache_length);
     v_cache_ = reg<nn::KVCache>(cfg.v_cache_name, num_key_value_heads_, head_dim_,
-                                num_key_value_groups_, kFp32, cfg.max_cache_length);
+                                num_key_value_groups_, cfg.kv_cache_dtype, cfg.max_cache_length);
     mask_ = reg<nn::CausalMask>(cfg.mask_name);
     softmax_ = reg<nn::Softmax>(cfg.softmax_name, -1);
   }
@@ -127,11 +127,20 @@ class QWenAttention final : public nn::Module {
     key_states = k_cache_(key_states);
     value_states = v_cache_(value_states);
 
-    // attention weight
-    // [B, H, S, S]
-    auto attn = nn::F::matmul(query_states, key_states, false, true) * (1.f / sqrtf(head_dim_));
-    attn = mask_(attn);
-    attn = softmax_(attn);
+    Tensor attn;
+    if (key_states.dtype() == kFp32) {
+      // attention weight
+      // [B, H, S, S]
+      attn = nn::F::matmul(query_states, key_states, false, true) * (1.f / sqrtf(head_dim_));
+      attn = mask_(attn);
+      attn = softmax_(attn);
+    } else if (key_states.dtype() == kFp16) {
+      attn = nn::F::matmul(query_states.to(kFp32), key_states.to(kFp32), false, true)
+             * (1.f / sqrtf(head_dim_));
+      attn = mask_(attn);
+      attn = softmax_(attn);
+      attn = attn.to(kFp16);
+    }
 
     // attn output
     // [B, H, S, S] @ [B, H, S, D] -> [B, H, S, D]
