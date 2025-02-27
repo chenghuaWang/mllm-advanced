@@ -20,6 +20,10 @@ if(MLLM_BUILD_ARM_BACKEND)
   add_subdirectory(Backends/Arm)
 endif()
 
+if(MLLM_BUILD_CUDA_BACKEND)
+  add_subdirectory(Backends/CUDA)
+endif()
+
 if(NOT MLLM_CROSS_COMPILE)
   add_subdirectory(Backends/X86)
 endif()

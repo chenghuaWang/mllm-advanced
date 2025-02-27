@@ -21,6 +21,7 @@ enum ExitCode : int32_t {
   kAssert,
   kSliceOB,  // slice out of bound
   kMemory,
+  kCudaError,
 };
 
 // mllm runtime assert

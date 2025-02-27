@@ -1,0 +1,10 @@
+CMakeConfigTask:
+  cmake_cfg_path: "build-cuda"
+  cmake_build_type: "Release"
+  cmake_extra_args:
+    - "-DMLLM_BUILD_CUDA_BACKEND=ON"
+    - "-DCMAKE_C_COMPILER=clang"
+    - "-DCMAKE_CXX_COMPILER=clang++"
+
+CMakeBuildTask:
+  cmake_cfg_path: "build-cuda"
