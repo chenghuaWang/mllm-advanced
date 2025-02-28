@@ -2,6 +2,8 @@ CMakeFormatTask:
   ignore_path:
     - "build"
     - "build-android-arm64-v8a"
+    - "build-cuda"
     - "third_party"
     - "mllm/Backends/OpenCL/Vendors"
     - "mllm/Backends/Arm/Vendors"
+    - "mllm/Backends/CUDA/Vendors/cutlass"

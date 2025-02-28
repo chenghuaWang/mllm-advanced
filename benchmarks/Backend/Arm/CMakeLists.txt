@@ -12,5 +12,4 @@ target_link_libraries(MllmArmKernels-ComplexOps PRIVATE benchmark::benchmark
 
 add_executable(MllmArmKernels-GemmOps GemmOps.cpp)
 target_link_libraries(MllmArmKernels-GemmOps PRIVATE benchmark::benchmark
-                                                        MllmRT MllmArmBackend)
-                                                        
+                                                     MllmRT MllmArmBackend)
