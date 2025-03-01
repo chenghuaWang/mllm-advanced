@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(MLLM_ENABLE_TEST "Enable mllm test" ON)
 option(MLLM_ENABLE_BENCHMARK "Enable mllm benchmark" ON)
 option(MLLM_ENABLE_EXAMPLE "Enable mllm example" ON)
+option(MLLM_ENABLE_PY_MLLM "Enable mllm python binding" OFF)
 
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
@@ -39,3 +40,32 @@ endif()
 
 add_subdirectory(tools/Quantizer)
 add_subdirectory(tools/TokenizeChecker)
+
+if(MLLM_ENABLE_PY_MLLM)
+  target_compile_options(MllmRT PRIVATE -fPIC)
+
+  find_package(Python3 COMPONENTS Interpreter Development)
+  include_directories(${Python3_INCLUDE_DIRS})
+  add_subdirectory(${PROJECT_SOURCE_DIR}/third_party/pybind11)
+
+  set(_py_dep_libs MllmRT
+                   # MLLM_QNN ${CMAKE_DL_LIBS}
+  )
+
+  # pybind compile options
+  set(_py_compile_opts
+      # Override depends on RTTI.
+      # -frtti
+      # -fexceptions
+      -fPIC)
+
+  # pybind portable lib _C
+  pybind11_add_module(
+    _C SHARED ${PROJECT_SOURCE_DIR}/pymllm/_C/PyWarp.cpp
+    ${PROJECT_SOURCE_DIR}/pymllm/_C/Core.cpp
+    ${PROJECT_SOURCE_DIR}/pymllm/_C/Engine.cpp)
+  target_compile_options(_C PUBLIC ${_py_compile_opts})
+  target_link_libraries(_C PRIVATE ${_py_dep_libs})
+
+  install(TARGETS _C LIBRARY DESTINATION pymllm/)
+endif()

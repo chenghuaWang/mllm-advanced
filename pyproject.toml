@@ -8,7 +8,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mllm"
+name = "pymllm"
 dynamic = [
   # version is in setup.py file
   'version',
@@ -18,7 +18,7 @@ readme = "README.md"
 authors = [
   {name="chenghua.wang", email="chenghua.wang.edu@gmail.com"},
 ]
-keywords = ["mllm", "llm", "inference", "machine learning"]
+keywords = ["pymllm", "llm", "inference", "machine learning"]
 
 # Python dependencies
 requires-python = ">=3.10"

@@ -1,11 +1,11 @@
 CMakeConfigTask:
   cmake_cfg_path: "build-cuda"
-  cmake_build_type: "Release"
+  cmake_build_type: "Debug"
   cmake_extra_args:
+    - "-DMLLM_ENABLE_PY_MLLM=ON"
     - "-DMLLM_BUILD_CUDA_BACKEND=ON"
     - "-DCMAKE_C_COMPILER=clang"
     - "-DCMAKE_CXX_COMPILER=clang++"
     - "-DCMAKE_CUDA_ARCHITECTURES=89"
 
-CMakeBuildTask:
-  cmake_cfg_path: "build-cuda"
+GenPybind11StubsTask:

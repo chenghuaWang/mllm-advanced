@@ -4,3 +4,6 @@ tasks/mllmteam*
 build*/
 temp/
 .cspell/
+pymllm.egg-info/
+py-build-out/
+stubs/

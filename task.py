@@ -302,12 +302,44 @@ class ArmKernelBenchmarkTask(Task):
                 file.write(markdown)
 
 
+class GenPybind11StubsTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def run(self):
+        COMMANDS = [
+            "pybind11-stubgen",
+            "pymllm._C",
+        ]
+        os.system(self.make_command_str(COMMANDS))
+        logging.info(self.make_command_str(COMMANDS))
+        tmp_C_path = PROJECT_ROOT_PATH / "stubs" / "pymllm" / "_C"
+        _C_path = PROJECT_ROOT_PATH / "pymllm" / "_C"
+        self.copy_files(tmp_C_path, _C_path)
+
+    def copy_files(self, src_dir, dst_dir):
+        import shutil
+
+        os.makedirs(dst_dir, exist_ok=True)
+        for root, dirs, files in os.walk(src_dir):
+            rel_path = os.path.relpath(root, src_dir)
+            dest_path = os.path.join(dst_dir, rel_path)
+
+            os.makedirs(dest_path, exist_ok=True)
+
+            for file in files:
+                src_file = os.path.join(root, file)
+                dest_file = os.path.join(dest_path, file)
+                shutil.copy(src_file, dest_file)
+
+
 TASKS = {
     "CMakeConfigTask": CMakeConfigTask,
     "CMakeFormatTask": CMakeFormatTask,
     "CMakeBuildTask": CMakeBuildTask,
     "AdbPushTask": AdbPushTask,
     "ArmKernelBenchmarkTask": ArmKernelBenchmarkTask,
+    "GenPybind11StubsTask": GenPybind11StubsTask,
 }
 
 

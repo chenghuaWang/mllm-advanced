@@ -4,6 +4,7 @@ CMakeFormatTask:
     - "build-android-arm64-v8a"
     - "build-cuda"
     - "third_party"
+    - "py-build-out"
     - "mllm/Backends/OpenCL/Vendors"
     - "mllm/Backends/Arm/Vendors"
     - "mllm/Backends/CUDA/Vendors/cutlass"
