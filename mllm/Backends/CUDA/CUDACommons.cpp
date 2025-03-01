@@ -166,6 +166,8 @@ GpuMetaInfo::GpuMetaInfo() {
     } else {
       info.architecture = 0;
     }
+
+    this->devices.emplace_back(info);
   }
 
   MLLM_CHECK_NVML_ERROR(nvmlShutdown());

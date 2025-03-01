@@ -42,6 +42,9 @@ enum class OpType : int32_t {
   kCausalMask,
   kCastType,
 
+  kD2H,
+  kH2D,
+
   kOpType_End,
 };
 

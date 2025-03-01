@@ -32,6 +32,10 @@ python task.py tasks/adb_push.yaml
 
 ## Install From PyPI
 
+```shell
+pip install .
+```
+
 # Tools
 
 ## Model Convertor

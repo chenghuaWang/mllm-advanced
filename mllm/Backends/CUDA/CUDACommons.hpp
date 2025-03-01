@@ -11,6 +11,7 @@
 
 #include <nvml.h>
 #include <cuda_runtime.h>
+#include <vector>
 #include "mllm/Utils/Common.hpp"
 
 #define MLLM_CHECK_CUDA_ERROR(err)                                          \
@@ -48,6 +49,8 @@ class GpuMetaInfo {
 
   GpuMetaInfo(const GpuMetaInfo&) = delete;
   GpuMetaInfo& operator=(const GpuMetaInfo&) = delete;
+
+  std::vector<GpuInfo> devices;
 };
 
 }  // namespace mllm::cuda
