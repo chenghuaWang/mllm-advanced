@@ -14,4 +14,4 @@ namespace mllm::cuda {
 void vector_add_bf16_v0_call(void* Z, void* const X, void* const Y, int size, float a, float b,
                              float c);
 
-}
+}  // namespace mllm::cuda

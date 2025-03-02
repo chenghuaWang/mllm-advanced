@@ -13,6 +13,12 @@
 namespace mllm::cuda {
 
 template<int NUM_ELE_PER_THREAD>
+__global__ void vector_add_f32_v0(float* z, const float* x, const float* y, int num, const float a,
+                                  const float b, const float c) {
+  // TODO
+}
+
+template<int NUM_ELE_PER_THREAD>
 __global__ void vector_add_bf16_v0(nv_bfloat16* z, const nv_bfloat16* x, const nv_bfloat16* y,
                                    int num, const nv_bfloat16 a, const nv_bfloat16 b,
                                    const nv_bfloat16 c) {
