@@ -8,7 +8,7 @@
  *
  */
 #include "mllm/Backends/CUDA/CUDACommons.hpp"
-#include "mllm/Backends/CUDA/Ops/D2HOp.cuh"
+#include "mllm/Backends/CUDA/Ops/D2HOp.hpp"
 #include "mllm/Core/DataTypes.hpp"
 
 namespace mllm::cuda {

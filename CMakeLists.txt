@@ -5,6 +5,7 @@ project(
   LANGUAGES CXX C ASM)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(MLLM_ENABLE_TEST "Enable mllm test" ON)
@@ -16,7 +17,7 @@ message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
 set(MLLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/FP16/include/)
+                     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include/)
 set(MLLM_JSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/json/)
 
 add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)

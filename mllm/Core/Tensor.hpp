@@ -81,6 +81,10 @@ class Tensor {
 
   Tensor to(DataTypes dtype);
 
+  Tensor cpu();
+
+  Tensor cuda();
+
   [[nodiscard]] std::string name() const;
 
   [[nodiscard]] TensorMemTypes memType() const;

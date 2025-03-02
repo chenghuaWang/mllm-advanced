@@ -61,6 +61,11 @@ __global__ void vector_add_bf16_v0(nv_bfloat16* z, const nv_bfloat16* x, const n
   copy(tzRx, tzr);
 }
 
+// instance to make dynamic lib's symbols visible
+template __global__ void vector_add_bf16_v0<8>(nv_bfloat16* z, const nv_bfloat16* x,
+                                               const nv_bfloat16* y, int num, const nv_bfloat16 a,
+                                               const nv_bfloat16 b, const nv_bfloat16 c);
+
 template<int NUM_ELE_PER_THREAD>
 __global__ void vector_sub_bf16_v0(nv_bfloat16* z, const nv_bfloat16* x, const nv_bfloat16* y,
                                    int num) {
@@ -104,5 +109,9 @@ __global__ void vector_sub_bf16_v0(nv_bfloat16* z, const nv_bfloat16* x, const n
   // STG.128
   copy(tzRx, tzr);
 }
+
+// instance to make dynamic lib's symbols visible
+template __global__ void vector_sub_bf16_v0<8>(nv_bfloat16* z, const nv_bfloat16* x,
+                                               const nv_bfloat16* y, int num);
 
 }  // namespace mllm::cuda

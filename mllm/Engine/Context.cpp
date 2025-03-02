@@ -104,6 +104,9 @@ void MllmEngineCtx::shutdown() {
   main_thread_.reset();
   main_thread_mem_->clearGlobalTensor();
   main_thread_mem_->report();
+
+  // we should reset before some dynamic lib unload.(such as cuda rt)
+  main_thread_mem_.reset();
 }
 
 }  // namespace mllm

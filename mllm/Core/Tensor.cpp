@@ -9,6 +9,7 @@
  */
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/AOps/CastTypeOp.hpp"
+#include "mllm/Core/AOps/D2HOp.hpp"
 #include "mllm/Core/AOps/ElewiseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
 #include "mllm/Core/AOps/TransposeOp.hpp"
@@ -16,6 +17,7 @@
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Engine/Context.hpp"
 #include "mllm/Utils/Common.hpp"
+#include <half/half.hpp>
 
 namespace mllm {
 
@@ -74,6 +76,18 @@ Tensor Tensor::to(DataTypes dtype) {
                                             {*this})[0];
 }
 
+Tensor Tensor::cpu() {
+  if (kCPU == impl_->device()) { return *this; }
+  return MllmEngineCtx::instance().dispatch(
+      OpType::kD2H, D2HOpCargo{.from_device_type = impl_->device(), .to_device_type = kCPU},
+      {*this})[0];
+}
+
+Tensor Tensor::cuda() {
+  if (kCUDA == impl_->device()) { return *this; }
+  // TODO Host 2 Device || Device to Device
+}
+
 Tensor Tensor::operator[](const SliceIndices& slice_index) {
   return refFrom(slice_index).contiguous();
 }
@@ -98,7 +112,7 @@ Tensor Tensor::operator+(float rhs) {
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
   switch (dtype()) {
     case kFp32: *(st.ptr<float>()) = rhs; break;
-    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    case kFp16: *(st.ptr<half_float::half>()) = half_float::half(rhs); break;
     default: NYI("Type is not supported"); break;
   }
   return *this + st;
@@ -108,7 +122,7 @@ Tensor Tensor::operator-(float rhs) {
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
   switch (dtype()) {
     case kFp32: *(st.ptr<float>()) = rhs; break;
-    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    case kFp16: *(st.ptr<half_float::half>()) = half_float::half(rhs); break;
     default: NYI("Type is not supported"); break;
   }
   return *this - st;
@@ -118,7 +132,7 @@ Tensor Tensor::operator*(float rhs) {
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
   switch (dtype()) {
     case kFp32: *(st.ptr<float>()) = rhs; break;
-    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    case kFp16: *(st.ptr<half_float::half>()) = half_float::half(rhs); break;
     default: NYI("Type is not supported"); break;
   }
   return *this * st;
@@ -128,7 +142,7 @@ Tensor Tensor::operator/(float rhs) {
   auto st = Tensor::empty({1}, dtype(), device()).alloc();
   switch (dtype()) {
     case kFp32: *(st.ptr<float>()) = rhs; break;
-    case kFp16: *(st.ptr<__fp16>()) = static_cast<__fp16>(rhs); break;
+    case kFp16: *(st.ptr<half_float::half>()) = half_float::half(rhs); break;
     default: NYI("Type is not supported"); break;
   }
   return *this / st;

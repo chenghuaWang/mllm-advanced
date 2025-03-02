@@ -14,9 +14,9 @@
 #include <vector>
 #include "mllm/Utils/Common.hpp"
 
-#define MLLM_CHECK_CUDA_ERROR(err)                                          \
-  if (err != cudaSuccess) {                                                 \
-    MLLM_ERROR_EXIT(kCudaError, "CUDA error: {}", cudaGetErrorString(err)); \
+#define MLLM_CHECK_CUDA_ERROR(err)                                                            \
+  if (err != cudaSuccess) {                                                                   \
+    MLLM_ERROR_EXIT(kCudaError, "CUDA error code {}: {}", int(err), cudaGetErrorString(err)); \
   }
 
 #define MLLM_CHECK_NVML_ERROR(err) \

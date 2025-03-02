@@ -15,6 +15,7 @@
 #include <functional>
 #include <numeric>
 #include <random>
+#include <half/half.hpp>
 
 namespace mllm::models {
 
@@ -85,13 +86,13 @@ class AutoLLM {
         break;
       }
       case kFp16: {
-        auto _ptr = inputs.ptr<__fp16>() + (S - 1) * D;
-        __fp16 max = -60000;
+        auto _ptr = inputs.ptr<half_float::half>() + (S - 1) * D;
+        half_float::half max_value(-60000);
         long pos = 0;
         for (int i = 0; i < D; ++i) {
           auto value = _ptr[i];
-          if (value > max) {
-            max = value;
+          if (value > max_value) {
+            max_value = value;
             pos = i;
           }
         }
@@ -160,7 +161,10 @@ class AutoLLM {
     return ret;
   }
 
-  long _top_k_sampling(Tensor inputs) { NYI("Top K Sampling"); }
+  long _top_k_sampling(Tensor inputs) {
+    NYI("Top K Sampling");
+    return 0;
+  }
 
   std::shared_ptr<T> llm_;
 };

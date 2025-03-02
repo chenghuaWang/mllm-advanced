@@ -33,7 +33,10 @@ bool CUDAAllocator::generalAlloc(void** ptr, size_t cap, size_t align) {
   return true;
 }
 
-void CUDAAllocator::generalFree(void* ptr) { MLLM_CHECK_CUDA_ERROR(cudaFree(ptr)); }
+void CUDAAllocator::generalFree(void* ptr) {
+  MLLM_CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+  MLLM_CHECK_CUDA_ERROR(cudaFree(ptr));
+}
 
 size_t CUDAAllocator::allocSize(const std::shared_ptr<TensorImpl>& tensor) {
   // remember that alloc size should be aligned

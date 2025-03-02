@@ -7,8 +7,8 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "mllm/Backends/CUDA/Ops/ElewiseOps.cuh"
-#include "mllm/Backends/CUDA/Kernels/elewise.cuh"
+#include "mllm/Backends/CUDA/Ops/OpSelection.hpp"
+#include "mllm/Backends/CUDA/Ops/ElewiseOps.hpp"
 
 namespace mllm::cuda {
 
@@ -19,10 +19,7 @@ void CUDAAddOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
   auto size = X.numel();
 
   if (X.dtype() == kBF16 && Y.dtype() == kBF16 && Z.dtype() == kBF16) {
-    int block_size = 1024;
-    int grid = (size + block_size * 8 - 1) / (block_size * 8);
-    vector_add_bf16_v0<8><<<grid, block_size>>>(Z.ptr<nv_bfloat16>(), X.ptr<nv_bfloat16>(),
-                                                Y.ptr<nv_bfloat16>(), size, 1.0f, 1.0f, 0.0f);
+    vector_add_bf16_v0_call(Z.ptr<char>(), X.ptr<char>(), Y.ptr<char>(), size, 1.0, 1.0, 0.0);
   }
 }
 

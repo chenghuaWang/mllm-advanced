@@ -119,7 +119,7 @@ void MemManager::report() const {
 
 void MemManager::initBuddyCtx(DeviceTypes device) {
   // MemManager will init
-  auto default_device = kCPU;
+  auto default_device = device;
   if (buddy_ctx_st_.has(default_device)) {
     MLLM_ERROR_EXIT(kError,
                     "Double init buddy ctx of device type {} is not allowed in mllm. You can push "
