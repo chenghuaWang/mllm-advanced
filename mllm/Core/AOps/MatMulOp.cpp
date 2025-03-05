@@ -9,19 +9,23 @@
  */
 #include "mllm/Core/AOps/MatMulOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 #include "mllm/Utils/Common.hpp"
 
 namespace mllm {
 
 MatMulOp::MatMulOp(const MatMulOpCargo& cargo) : BaseOp(OpType::kMatMul), cargo_(cargo) {}
 
-void MatMulOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void MatMulOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing
 }
 
-void MatMulOp::trace(void* trace_context, std::vector<Tensor>& inputs,
+void MatMulOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                      std::vector<Tensor>& outputs) {
-  NYI("MatMulOp::trace is not implemented");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::MatMulOp>(this, i_irs, o_irs);
 }
 
 void MatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

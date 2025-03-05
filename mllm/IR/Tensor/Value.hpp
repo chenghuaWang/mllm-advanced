@@ -9,6 +9,7 @@
  */
 #pragma once
 
+#include <memory>
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/IR/Builtin/Interface.hpp"
 #include "mllm/IR/Node.hpp"
@@ -42,4 +43,14 @@ class TensorValue : public TensorIRValue, public SymbolInterface<TensorValue> {
 
   Tensor tensor_;
 };
+
+static inline std::vector<std::shared_ptr<TensorValue>> wrapTensors2TensorIR(
+    IRContext* ctx, const std::vector<Tensor>& tensors) {
+  std::vector<std::shared_ptr<TensorValue>> tensor_ir_values;
+  for (auto& t : tensors) {
+    auto ret = ctx->create<TensorValue>(t);
+    tensor_ir_values.emplace_back(ret);
+  }
+  return tensor_ir_values;
+}
 }  // namespace mllm::ir::tensor

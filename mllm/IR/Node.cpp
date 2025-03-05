@@ -181,9 +181,9 @@ node_ptr_t IRContext::lookupSymbolTable(const std::string& name) {
   return symbol_table_.count(name) ? symbol_table_[name] : nullptr;
 }
 
-void IRContext::setDevice(const std::string& device_name) { device_name_ = device_name; }
+void IRContext::setDevice(DeviceTypes device_type) { device_type_ = device_type; }
 
-std::string IRContext::getDevice() { return device_name_; }
+DeviceTypes IRContext::getDevice() { return device_type_; }
 
 IRWriterGuard::IRWriterGuard(const std::shared_ptr<IRContext>& ctx,
                              const std::shared_ptr<Region>& new_region)

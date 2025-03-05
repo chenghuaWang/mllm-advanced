@@ -20,7 +20,7 @@ std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& LayerImpl::refPara
   return parameter_loader_->params();
 }
 
-void LayerImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
+void LayerImpl::load(const std::shared_ptr<ParameterLoader>& ploader) {
   parameter_loader_ = ploader;
   MllmEngineCtx::instance().thisThread()->layer_ops_table[absoluteName()]->load(ploader);
 }
@@ -30,6 +30,7 @@ void LayerImpl::to(DeviceTypes device_type) {
   ctx.thisThread()->layer_ops_table.remove(absoluteName());
   ctx.thisThread()->layer_ops_table.reg(absoluteName(),
                                         ctx.getBackend(device_type)->createOp(op_type_, cargo_));
+  ctx.thisThread()->layer_ops_table[absoluteName()]->setName(absoluteName());
   if (parameter_loader_) {
     // reload param to current op
     ctx.thisThread()->layer_ops_table[absoluteName()]->load(parameter_loader_);

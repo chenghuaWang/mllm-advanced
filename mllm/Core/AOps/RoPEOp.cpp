@@ -9,16 +9,21 @@
  */
 #include "mllm/Core/AOps/RoPEOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 
 namespace mllm {
 RoPEOp::RoPEOp(const RoPEOpCargo& cargo) : BaseOp(OpType::kRoPE), cargo_(cargo) {}
 
-void RoPEOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void RoPEOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   MLLM_WARN("RoPEOp::load is not implemented");
 }
 
-void RoPEOp::trace(void* trace_context, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  MLLM_WARN("RoPEOp::trace is not implemented");
+void RoPEOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
+                   std::vector<Tensor>& outputs) {
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::RoPEOp>(this, i_irs, o_irs);
 }
 
 void RoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

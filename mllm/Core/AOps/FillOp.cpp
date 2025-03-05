@@ -8,17 +8,22 @@
  *
  */
 #include "mllm/Core/AOps/FillOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 
 namespace mllm {
 
 FillOp::FillOp(const FillOpCargo& cargo) : BaseOp(OpType::kFill), cargo_(cargo) {}
 
-void FillOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void FillOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing.
 }
 
-void FillOp::trace(void* trace_context, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  MLLM_WARN("FillOp::trace is not implemented");
+void FillOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
+                   std::vector<Tensor>& outputs) {
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::FillOp>(this, i_irs, o_irs);
 }
 
 void FillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

@@ -9,18 +9,22 @@
  */
 #include "mllm/Core/AOps/RMSNormOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 
 namespace mllm {
 
 RMSNormOp::RMSNormOp(const RMSNormOpCargo& cargo) : BaseOp(OpType::kRMSNorm), cargo_(cargo) {}
 
-void RMSNormOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void RMSNormOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   weight_ = Tensor(ploader->operator[](name() + ".weight"));
 }
 
-void RMSNormOp::trace(void* trace_context, std::vector<Tensor>& inputs,
+void RMSNormOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                       std::vector<Tensor>& outputs) {
-  MLLM_WARN("RMSNormOp::trace is not implemented");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::RMSNormOp>(this, i_irs, o_irs);
 }
 
 void RMSNormOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

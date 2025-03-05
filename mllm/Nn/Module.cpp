@@ -36,7 +36,7 @@ void ModuleImpl::dump(DumpPrinter& printer) {
 
 std::vector<std::shared_ptr<HierarchyBase>>& ModuleImpl::hierarchies() { return reg_hierarchies_; }
 
-void ModuleImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
+void ModuleImpl::load(const std::shared_ptr<ParameterLoader>& ploader) {
   param_loader_ = ploader;
   auto& h = hierarchies();
   for (auto& hb : h) {
@@ -56,7 +56,7 @@ void ModuleImpl::to(DeviceTypes device_type) {
       case HierarchyTypes::kModule:
         std::static_pointer_cast<ModuleImpl>(hb)->to(device_type);
         break;
-      case HierarchyTypes::kLayer: break;
+      case HierarchyTypes::kLayer: std::static_pointer_cast<LayerImpl>(hb)->to(device_type); break;
     }
   }
   device_type_ = device_type;
@@ -86,7 +86,7 @@ void Module::print() {
   impl_->dump(p);
 }
 
-Module& Module::load(std::shared_ptr<ParameterLoader>& ploader) {
+Module& Module::load(const std::shared_ptr<ParameterLoader>& ploader) {
   impl_->load(ploader);
   return *this;
 }

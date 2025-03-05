@@ -38,7 +38,7 @@ class ModuleImpl : public HierarchyBase {
 
   std::vector<std::shared_ptr<HierarchyBase>>& hierarchies();
 
-  void load(std::shared_ptr<ParameterLoader>& ploader);
+  void load(const std::shared_ptr<ParameterLoader>& ploader);
 
   std::shared_ptr<ParameterLoader> params() const;
 
@@ -88,6 +88,10 @@ class Module {
 
   template<typename... Args>
   std::vector<Tensor> operator()(Args&&... args) {
+    if (MllmEngineCtx::instance().traceMode()) { return trace(std::forward<Args>(args)...); }
+
+    // TODO if isCompiledObj, run directly.
+
     std::vector<Tensor> inputs = {std::forward<Args>(args)...};
 
     // check inputs first
@@ -103,7 +107,9 @@ class Module {
   }
 
   template<typename... Args>
-  std::vector<Tensor> trace(std::shared_ptr<ir::IRContext> ir_ctx, Args&&... args) {
+  std::vector<Tensor> trace(Args&&... args) {
+    auto ir_ctx = std::static_pointer_cast<ir::IRContext>(MllmEngineCtx::instance().ir_context_);
+
     // create call graph.
     auto call_op = ir_ctx->create<ir::graph::CallGraphOp>(
         ir_ctx->create<ir::SymbolAttr>(impl_->absoluteName()));
@@ -114,8 +120,9 @@ class Module {
       auto guard =
           ir::IRWriterGuard(ir_ctx, ir_ctx->topLevelOp()->cast_<ir::ModuleOp>()->getTopRegion());
       this_graph_ir = ir_ctx->create<ir::graph::SubGraphOp>(
-          ir_ctx->create<ir::SymbolAttr>(impl_->absoluteName()));
+          ir_ctx->create<ir::SymbolAttr>(impl_->absoluteName()), impl_);
     }
+    this_graph_ir->setDevice(impl_->device());
 
     // to tensor vector
     std::vector<Tensor> inputs = {std::forward<Args>(args)...};
@@ -128,11 +135,14 @@ class Module {
     for (size_t i = 0; i < inputs_ir.size(); ++i) {
       auto input_ir = inputs_ir[i];
       (*input_ir)-- > this_graph_ir;
+      (*input_ir)-- > call_op;
+      this_graph_ir->getTopRegion()->inputs().push_back(input_ir);
     }
 
     // forward
     std::vector<Tensor> outputs;
     {
+      ir_ctx->setDevice(impl_->device());
       auto guard = ir::IRWriterGuard(ir_ctx, this_graph_ir->getTopRegion());
       outputs = forward(inputs);
     }
@@ -145,6 +155,8 @@ class Module {
     for (size_t i = 0; i < outputs_ir.size(); ++i) {
       auto output_ir = outputs_ir[i];
       (*this_graph_ir)-- > output_ir;
+      (*call_op)-- > output_ir;
+      this_graph_ir->getTopRegion()->outputs().push_back(output_ir);
     }
 
     // create return op
@@ -161,7 +173,7 @@ class Module {
 
   void print();
 
-  Module& load(std::shared_ptr<ParameterLoader>& ploader);
+  Module& load(const std::shared_ptr<ParameterLoader>& ploader);
 
   virtual std::vector<Tensor> forward(const std::vector<Tensor>& inputs) = 0;
 

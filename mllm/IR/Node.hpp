@@ -15,6 +15,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Utils/IRPrinter.hpp"
 #include "mllm/Utils/RTTIHelper.hpp"
 
@@ -119,14 +120,14 @@ class Region : public std::enable_shared_from_this<Region> {
 template<typename T>
 class DeviceInterface {
  public:
-  void setDeviceName(const std::string& name) { device_name_ = name; }
+  void setDevice(DeviceTypes device_type) { device_type_ = device_type; }
 
-  std::string getDeviceName() { return device_name_; }
+  DeviceTypes getDevice() { return device_type_; }
 
-  bool hasDeviceName() { return !device_name_.empty(); }
+  bool hasDevice() { return true; }
 
  private:
-  std::string device_name_;
+  DeviceTypes device_type_;
 };
 
 class Op : public Node, public DeviceInterface<Op> {
@@ -216,7 +217,7 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
     // Op: insert into region
     if (created_node->template isa_<Op>()) {
       // set device
-      created_node->template cast_<Op>()->setDeviceName(getDevice());
+      created_node->template cast_<Op>()->setDevice(getDevice());
 
       auto prev_op = cur_insert_region_->ops().back();
 
@@ -235,11 +236,16 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
     // Value: add to symbol table. Giving them names.
     if (created_node->template isa_<Val>()) {
       // set device
-      created_node->template cast_<Val>()->setDeviceName(getDevice());
+      created_node->template cast_<Val>()->setDevice(getDevice());
 
-      setValueName(created_node->template cast_<Val>(), getAutoIndexedValueName());
-      created_node->template cast_<Val>()->name() =
-          value_names_[created_node->template cast_<Val>()];
+      if (created_node->template cast_<Val>()->name().empty()) {
+        setValueName(created_node->template cast_<Val>(), getAutoIndexedValueName());
+        created_node->template cast_<Val>()->name() =
+            value_names_[created_node->template cast_<Val>()];
+      } else {
+        setValueName(created_node->template cast_<Val>(),
+                     created_node->template cast_<Val>()->name());
+      }
     }
 
     // Attribute: do nothing
@@ -251,12 +257,12 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
 
   node_ptr_t lookupSymbolTable(const std::string& name);
 
-  void setDevice(const std::string& device_name);
+  void setDevice(DeviceTypes device_type);
 
-  std::string getDevice();
+  DeviceTypes getDevice();
 
  private:
-  std::string device_name_ = "cpu";
+  DeviceTypes device_type_ = kCPU;
   std::unordered_map<std::string, node_ptr_t> symbol_table_;
   uint32_t auto_indexed_value_name_cnt_ = 0;
   std::unordered_map<val_ptr_t, std::string> value_names_;
@@ -300,7 +306,7 @@ class IRWriter {
     // Op: insert into region
     if (created_node->template isa_<Op>()) {
       // set device
-      created_node->template cast_<Op>()->setDeviceName(ctx_->getDevice());
+      created_node->template cast_<Op>()->setDevice(ctx_->getDevice());
 
       auto prev_op = cur_region_->ops().back();
 
@@ -319,7 +325,7 @@ class IRWriter {
     // Value: add to symbol table. Giving them names.
     if (created_node->template isa_<Val>) {
       // set device
-      created_node->template cast_<Op>()->setDeviceName(ctx_->getDevice());
+      created_node->template cast_<Op>()->setDevice(ctx_->getDevice());
 
       auto name = ctx_->getAutoIndexedValueName();
       ctx_->setValueName(created_node->template cast_<Val>(), name);
@@ -345,7 +351,7 @@ class IRWriter {
     // Op: insert into region
     if (created_node->template isa_<Op>()) {
       // set device
-      created_node->template cast_<Op>()->setDeviceName(ctx_->getDevice());
+      created_node->template cast_<Op>()->setDevice(ctx_->getDevice());
 
       switch (pos) {
         case AFTER: {
@@ -380,7 +386,7 @@ class IRWriter {
     // Value: add to symbol table. Giving them names.
     if (created_node->template isa_<Val>()) {
       // set device
-      created_node->template cast_<Op>()->setDeviceName(ctx_->getDevice());
+      created_node->template cast_<Op>()->setDevice(ctx_->getDevice());
 
       auto name = ctx_->getAutoIndexedValueName();
       ctx_->setValueName(created_node->template cast_<Val>(), name);
@@ -405,7 +411,7 @@ class IRWriter {
     // Op: insert into region
     if (created_node->template isa_<Op>()) {
       // set device
-      created_node->template cast_<Op>()->setDeviceName(ctx_->getDevice());
+      created_node->template cast_<Op>()->setDevice(ctx_->getDevice());
 
       auto prev_op = cur_region_->ops().back();
 

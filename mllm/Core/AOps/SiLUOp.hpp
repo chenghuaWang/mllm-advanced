@@ -18,9 +18,9 @@ class SiLUOp : public BaseOp {
  public:
   explicit SiLUOp(const SiLUOpCargo& cargo);
 
-  void load(std::shared_ptr<ParameterLoader>& ploader) override;
+  void load(const std::shared_ptr<ParameterLoader>& ploader) override;
 
-  void trace(void* trace_context, std::vector<Tensor>& inputs,
+  void trace(void* trace_context, const std::vector<Tensor>& inputs,
              std::vector<Tensor>& outputs) override;
 
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;

@@ -1,4 +1,4 @@
-// Auto generated: 2025-02-14 18:15:23
+// Auto generated: 2025-03-05 19:50:56
 // do not modify this file
 #pragma once
 namespace mllm::ir {
@@ -20,59 +20,66 @@ struct NodeRTTIClassOfImpl {
   return (v)->getKind() >= RK_Op_LinalgIROp_CustomKernelOp \
          && (v)->getKind() <= RK_Op_LinalgIROp_CustomKernelOp
 
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_Last
+#define RTTI_RK_OP_LINALGIROP_FILLOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_FillOp && (v)->getKind() <= RK_Op_LinalgIROp_FillOp
 
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EADDOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EAddOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EAddOp
+#define RTTI_RK_OP_LINALGIROP_ADDOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_AddOp && (v)->getKind() <= RK_Op_LinalgIROp_AddOp
 
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_ESUBOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_ESubOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_ESubOp
+#define RTTI_RK_OP_LINALGIROP_SUBOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_SubOp && (v)->getKind() <= RK_Op_LinalgIROp_SubOp
 
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EMULOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EMulOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EMulOp
+#define RTTI_RK_OP_LINALGIROP_MULOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_MulOp && (v)->getKind() <= RK_Op_LinalgIROp_MulOp
 
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EDIVOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EDivOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EDivOp
-
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EBROADCASTADDOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastAddOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastAddOp
-
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EBROADCASTSUBOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastSubOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastSubOp
-
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EBROADCASTMULOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastMulOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastMulOp
-
-#define RTTI_RK_OP_LINALGIROP_ELEMENTWISEOP_EBROADCASTDIVOP_IMPL(v)       \
-  return (v)->getKind() >= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastDivOp \
-         && (v)->getKind() <= RK_Op_LinalgIROp_ElementwiseOp_EBroadcastDivOp
+#define RTTI_RK_OP_LINALGIROP_DIVOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_DivOp && (v)->getKind() <= RK_Op_LinalgIROp_DivOp
 
 #define RTTI_RK_OP_LINALGIROP_MATMULOP_IMPL(v) \
   return (v)->getKind() >= RK_Op_LinalgIROp_MatMulOp && (v)->getKind() <= RK_Op_LinalgIROp_MatMulOp
 
+#define RTTI_RK_OP_LINALGIROP_LLMEMBEDDINGTOKENOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_LLMEmbeddingTokenOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_LLMEmbeddingTokenOp
+
 #define RTTI_RK_OP_LINALGIROP_LINEAROP_IMPL(v) \
   return (v)->getKind() >= RK_Op_LinalgIROp_LinearOp && (v)->getKind() <= RK_Op_LinalgIROp_LinearOp
-
-#define RTTI_RK_OP_LINALGIROP_SDPAOP_IMPL(v) \
-  return (v)->getKind() >= RK_Op_LinalgIROp_SDPAOp && (v)->getKind() <= RK_Op_LinalgIROp_SDPAOp
 
 #define RTTI_RK_OP_LINALGIROP_ROPEOP_IMPL(v) \
   return (v)->getKind() >= RK_Op_LinalgIROp_RoPEOp && (v)->getKind() <= RK_Op_LinalgIROp_RoPEOp
 
-#define RTTI_RK_OP_LINALGIROP_ROPE2DOP_IMPL(v) \
-  return (v)->getKind() >= RK_Op_LinalgIROp_RoPE2dOp && (v)->getKind() <= RK_Op_LinalgIROp_RoPE2dOp
+#define RTTI_RK_OP_LINALGIROP_SOFTMAXOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_SoftmaxOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_SoftmaxOp
 
-#define RTTI_RK_OP_LINALGIROP_CONV2DOP_IMPL(v) \
-  return (v)->getKind() >= RK_Op_LinalgIROp_Conv2dOp && (v)->getKind() <= RK_Op_LinalgIROp_Conv2dOp
+#define RTTI_RK_OP_LINALGIROP_TRANSPOSEOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_TransposeOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_TransposeOp
+
+#define RTTI_RK_OP_LINALGIROP_RMSNORMOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_RMSNormOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_RMSNormOp
+
+#define RTTI_RK_OP_LINALGIROP_SILUOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_SiLUOp && (v)->getKind() <= RK_Op_LinalgIROp_SiLUOp
+
+#define RTTI_RK_OP_LINALGIROP_KVCACHEOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_KVCacheOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_KVCacheOp
+
+#define RTTI_RK_OP_LINALGIROP_CAUSALMASKOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_CausalMaskOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_CausalMaskOp
+
+#define RTTI_RK_OP_LINALGIROP_CASTTYPEOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_CastTypeOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_CastTypeOp
+
+#define RTTI_RK_OP_LINALGIROP_D2HOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_D2HOp && (v)->getKind() <= RK_Op_LinalgIROp_D2HOp
+
+#define RTTI_RK_OP_LINALGIROP_H2DOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_H2DOp && (v)->getKind() <= RK_Op_LinalgIROp_H2DOp
 
 #define RTTI_RK_OP_GRAPHIROP_IMPL(v) \
   return (v)->getKind() >= RK_Op_GraphIROp && (v)->getKind() <= RK_Op_GraphIROp_Last

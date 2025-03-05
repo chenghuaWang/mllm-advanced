@@ -16,7 +16,7 @@ class ArmRoPEOp final : public RoPEOp {
  public:
   explicit ArmRoPEOp(const RoPEOpCargo& cargo);
 
-  void load(std::shared_ptr<ParameterLoader>& ploader) override;
+  void load(const std::shared_ptr<ParameterLoader>& ploader) override;
 
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 

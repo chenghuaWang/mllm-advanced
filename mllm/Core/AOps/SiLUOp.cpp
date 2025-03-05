@@ -9,17 +9,22 @@
  */
 #include "mllm/Core/AOps/SiLUOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 
 namespace mllm {
 
 SiLUOp::SiLUOp(const SiLUOpCargo& cargo) : BaseOp(OpType::kSiLU), cargo_(cargo) {}
 
-void SiLUOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void SiLUOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing
 }
 
-void SiLUOp::trace(void* trace_context, std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  MLLM_WARN("SiLUOp::trace is not implemented");
+void SiLUOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
+                   std::vector<Tensor>& outputs) {
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::SiLUOp>(this, i_irs, o_irs);
 }
 
 void SiLUOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

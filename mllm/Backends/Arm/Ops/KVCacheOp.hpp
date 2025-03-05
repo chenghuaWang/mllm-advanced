@@ -19,10 +19,7 @@ class ArmKVCacheOp final : public KVCacheOp {
  public:
   explicit ArmKVCacheOp(const KVCacheOpCargo& cargo);
 
-  void load(std::shared_ptr<ParameterLoader>& ploader) override;
-
-  void trace(void* trace_context, std::vector<Tensor>& inputs,
-             std::vector<Tensor>& outputs) override;
+  void load(const std::shared_ptr<ParameterLoader>& ploader) override;
 
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 

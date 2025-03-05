@@ -59,18 +59,24 @@ std::vector<Tensor> MllmEngineCtx::dispatch(const std::string& name,
 
   std::vector<Tensor> outputs;
 
-  if (perf_) {
-    auto start = std::chrono::high_resolution_clock::now();
+  if (trace_mode_) {
     op->reshape(inputs, outputs);
     op->setup(inputs, outputs);
-    op->forward(inputs, outputs);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration = end - start;
-    MLLM_INFO("perf| Layer: {}, Time:{} ms", name, duration.count());
+    op->trace(ir_context_.get(), inputs, outputs);
   } else {
-    op->reshape(inputs, outputs);
-    op->setup(inputs, outputs);
-    op->forward(inputs, outputs);
+    if (perf_) {
+      auto start = std::chrono::high_resolution_clock::now();
+      op->reshape(inputs, outputs);
+      op->setup(inputs, outputs);
+      op->forward(inputs, outputs);
+      auto end = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double, std::milli> duration = end - start;
+      MLLM_INFO("perf| Layer: {}, Time:{} ms", name, duration.count());
+    } else {
+      op->reshape(inputs, outputs);
+      op->setup(inputs, outputs);
+      op->forward(inputs, outputs);
+    }
   }
 
   return outputs;
@@ -82,18 +88,24 @@ std::vector<Tensor> MllmEngineCtx::dispatch(OpType op_type, const BaseOpCargoBas
 
   std::vector<Tensor> outputs;
 
-  if (perf_) {
-    auto start = std::chrono::high_resolution_clock::now();
+  if (trace_mode_) {
     op->reshape(inputs, outputs);
     op->setup(inputs, outputs);
-    op->forward(inputs, outputs);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration = end - start;
-    MLLM_INFO("perf| Op: {}, Time:{} ms", opType2Str(op_type), duration.count());
+    op->trace(ir_context_.get(), inputs, outputs);
   } else {
-    op->reshape(inputs, outputs);
-    op->setup(inputs, outputs);
-    op->forward(inputs, outputs);
+    if (perf_) {
+      auto start = std::chrono::high_resolution_clock::now();
+      op->reshape(inputs, outputs);
+      op->setup(inputs, outputs);
+      op->forward(inputs, outputs);
+      auto end = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double, std::milli> duration = end - start;
+      MLLM_INFO("perf| Op: {}, Time:{} ms", opType2Str(op_type), duration.count());
+    } else {
+      op->reshape(inputs, outputs);
+      op->setup(inputs, outputs);
+      op->forward(inputs, outputs);
+    }
   }
 
   return outputs;

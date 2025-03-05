@@ -10,19 +10,23 @@
  */
 #include "mllm/Core/AOps/TransposeOp.hpp"
 #include <utility>
+#include "mllm/IR/Linalg/Op.hpp"
 
 namespace mllm {
 
 TransposeOp::TransposeOp(const TransposeOpCargo& cargo)
     : BaseOp(OpType::kTranspose), cargo_(cargo) {}
 
-void TransposeOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void TransposeOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing.
 }
 
-void TransposeOp::trace(void* trace_context, std::vector<Tensor>& inputs,
+void TransposeOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                         std::vector<Tensor>& outputs) {
-  MLLM_WARN("TransposeOp::trace is not implemented");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::TransposeOp>(this, i_irs, o_irs);
 }
 
 void TransposeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

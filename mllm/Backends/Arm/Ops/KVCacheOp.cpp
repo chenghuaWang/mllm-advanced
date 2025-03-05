@@ -26,12 +26,9 @@ ArmKVCacheOp::ArmKVCacheOp(const KVCacheOpCargo& cargo) : KVCacheOp(cargo) {
   cur_kv_cache_seq_len_ = 0;
 }
 
-void ArmKVCacheOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void ArmKVCacheOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing.
 }
-
-void ArmKVCacheOp::trace(void* trace_context, std::vector<Tensor>& inputs,
-                         std::vector<Tensor>& outputs) {}
 
 void ArmKVCacheOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
   // inputs is [B, H, S, D]

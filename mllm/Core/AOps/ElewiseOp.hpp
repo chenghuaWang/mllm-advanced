@@ -9,13 +9,14 @@
  */
 #pragma once
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 
 #define __MLLM_ELEWISE_OP_DEFINE(name)                                                      \
   class name : public BaseOp {                                                              \
    public:                                                                                  \
     name();                                                                                 \
-    void load(std::shared_ptr<ParameterLoader>& ploader) override;                          \
-    void trace(void* trace_contex, std::vector<Tensor>& inputs,                             \
+    void load(const std::shared_ptr<ParameterLoader>& ploader) override;                    \
+    void trace(void* trace_context, const std::vector<Tensor>& inputs,                      \
                std::vector<Tensor>& outputs) override;                                      \
     void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override; \
     void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override; \
@@ -25,10 +26,13 @@
 // TODO I have not impl the broad cast yet.
 #define __MLLM_ELEWISE_OP_IMPL(name)                                                           \
   name::name() : BaseOp(OpType::kAdd) {}                                                       \
-  void name::load(std::shared_ptr<ParameterLoader>& ploader) {}                                \
-  void name::trace(void* trace_contex, std::vector<Tensor>& inputs,                            \
+  void name::load(const std::shared_ptr<ParameterLoader>& ploader) {}                          \
+  void name::trace(void* trace_context, const std::vector<Tensor>& inputs,                     \
                    std::vector<Tensor>& outputs) {                                             \
-    MLLM_WARN(#name "::trace is not implemented");                                             \
+    auto ctx = (ir::IRContext*)trace_context;                                                  \
+    auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);                                \
+    auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);                               \
+    ctx->create<ir::linalg::name>(this, i_irs, o_irs);                                         \
   }                                                                                            \
   void name::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {        \
     MLLM_WARN(#name "::forward is not implemented");                                           \

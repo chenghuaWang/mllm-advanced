@@ -10,18 +10,24 @@
  */
 #include "mllm/Core/AOps/CastTypeOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
+#include "mllm/IR/Node.hpp"
+#include "mllm/IR/Tensor/Value.hpp"
 
 namespace mllm {
 
 CastTypeOp::CastTypeOp(const CastTypeOpCargo& cargo) : BaseOp(OpType::kCastType), cargo_(cargo) {}
 
-void CastTypeOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void CastTypeOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // do nothing.
 }
 
-void CastTypeOp::trace(void* trace_context, std::vector<Tensor>& inputs,
+void CastTypeOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                        std::vector<Tensor>& outputs) {
-  MLLM_WARN("CastTypeOp::trace is not implemented");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::CastTypeOp>(this, i_irs, o_irs);
 }
 
 void CastTypeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

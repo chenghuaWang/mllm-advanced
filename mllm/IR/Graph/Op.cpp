@@ -8,6 +8,7 @@
  *
  */
 #include "mllm/IR/Graph/Op.hpp"
+#include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/IR/Builtin/Attribute.hpp"
 #include "mllm/IR/GeneratedRTTIKind.hpp"
 
@@ -38,6 +39,9 @@ SubGraphOp::self_ptr_t SubGraphOp::build(IRContext* ctx,
 
 void SubGraphOp::dump(IRPrinter& p) {
   p.print("graph.SubGraphOp @{} ", getSymbolAttr()->str());
+  p.langle();
+  p.print("{}", deviceTypes2Str(hierarchy_base_->device()));
+  p.rangle();
   p.lbrace();
 
   getTopRegion()->dump(p);

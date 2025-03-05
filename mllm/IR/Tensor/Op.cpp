@@ -8,7 +8,7 @@
  *
  */
 #include "mllm/IR/Tensor/Op.hpp"
-
+#include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/IR/GeneratedRTTIKind.hpp"
 #include "mllm/IR/Tensor/Value.hpp"
 
@@ -39,7 +39,7 @@ AllocOp::self_ptr_t AllocOp::build(IRContext* ctx, const val_ptr_t& val) {
 }
 
 void AllocOp::dump(IRPrinter& p) {
-  p.print("tensor.{}.AllocOp", getDeviceName());
+  p.print("tensor.{}.AllocOp", deviceTypes2Str(getDevice()));
   Op::dump(p);
 }
 
@@ -65,7 +65,7 @@ AllocGlobalOp::self_ptr_t AllocGlobalOp::build(IRContext* ctx, const val_ptr_t& 
 }
 
 void AllocGlobalOp::dump(IRPrinter& p) {
-  p.print("tensor.{}.AllocGlobalOp", getDeviceName());
+  p.print("tensor.{}.AllocGlobalOp", deviceTypes2Str(getDevice()));
   Op::dump(p);
 }
 
@@ -88,7 +88,7 @@ FreeOp::self_ptr_t FreeOp::build(IRContext* ctx, const val_ptr_t& val) {
 }
 
 void FreeOp::dump(IRPrinter& p) {
-  p.print("tensor.{}.FreeOp", getDeviceName());
+  p.print("tensor.{}.FreeOp", deviceTypes2Str(getDevice()));
   Op::dump(p);
 }
 

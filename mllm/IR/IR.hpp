@@ -32,8 +32,9 @@ std::shared_ptr<IRContext> trace(NnModule& nn_module, Args&&... args) {
   auto ir_module = ir_ctx->createAndSetModuleOp<ModuleOp>(ir_ctx->create<SymbolAttr>("main"));
 
   auto& ctx = MllmEngineCtx::instance();
+  ctx.ir_context_ = ir_ctx;
   ctx.setTraceMode(true);
-  nn_module.trace(ir_ctx, std::forward<Args>(args)...);
+  nn_module.trace(std::forward<Args>(args)...);
   ctx.setTraceMode(false);
   return ir_ctx;
 }

@@ -9,7 +9,6 @@
  *
  */
 #pragma once
-#include <cstddef>
 #include "mllm/Core/AOps/BaseOp.hpp"
 #include "mllm/Core/DataTypes.hpp"
 
@@ -23,9 +22,9 @@ class CastTypeOp : public BaseOp {
  public:
   explicit CastTypeOp(const CastTypeOpCargo& cargo);
 
-  void load(std::shared_ptr<ParameterLoader>& ploader) override;
+  void load(const std::shared_ptr<ParameterLoader>& ploader) override;
 
-  void trace(void* trace_context, std::vector<Tensor>& inputs,
+  void trace(void* trace_context, const std::vector<Tensor>& inputs,
              std::vector<Tensor>& outputs) override;
 
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;

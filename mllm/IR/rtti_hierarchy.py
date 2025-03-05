@@ -215,27 +215,24 @@ def define_lianlg_ir(ir: dict):
 
     # op
     op.derive(Cls("CustomKernelOp"))
-    elementwise_op = Cls("ElementwiseOp")
-
-    # elementwise op
-    op.derive(elementwise_op)
-    elementwise_op.derive(Cls("EAddOp"))  # E means elementwise, same as below.
-    elementwise_op.derive(Cls("ESubOp"))
-    elementwise_op.derive(Cls("EMulOp"))
-    elementwise_op.derive(Cls("EDivOp"))
-    # E means elementwise, same as below.
-    elementwise_op.derive(Cls("EBroadcastAddOp"))
-    elementwise_op.derive(Cls("EBroadcastSubOp"))
-    elementwise_op.derive(Cls("EBroadcastMulOp"))
-    elementwise_op.derive(Cls("EBroadcastDivOp"))
-
-    # complex op
+    op.derive(Cls("FillOp"))
+    op.derive(Cls("AddOp"))
+    op.derive(Cls("SubOp"))
+    op.derive(Cls("MulOp"))
+    op.derive(Cls("DivOp"))
     op.derive(Cls("MatMulOp"))
+    op.derive(Cls("LLMEmbeddingTokenOp"))
     op.derive(Cls("LinearOp"))
-    op.derive(Cls("SDPAOp"))
     op.derive(Cls("RoPEOp"))
-    op.derive(Cls("RoPE2dOp"))
-    op.derive(Cls("Conv2dOp"))
+    op.derive(Cls("SoftmaxOp"))
+    op.derive(Cls("TransposeOp"))
+    op.derive(Cls("RMSNormOp"))
+    op.derive(Cls("SiLUOp"))
+    op.derive(Cls("KVCacheOp"))
+    op.derive(Cls("CausalMaskOp"))
+    op.derive(Cls("CastTypeOp"))
+    op.derive(Cls("D2HOp"))
+    op.derive(Cls("H2DOp"))
 
     # value
 

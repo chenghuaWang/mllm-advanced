@@ -9,19 +9,23 @@
  */
 #include "mllm/Core/AOps/LLMEmbeddingTokenOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 
 namespace mllm {
 
 LLMEmbeddingTokenOp::LLMEmbeddingTokenOp(const LLMEmbeddingTokenOpCargo& cargo)
     : BaseOp(OpType::kLLMEmbeddingToken), cargo_(cargo) {}
 
-void LLMEmbeddingTokenOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void LLMEmbeddingTokenOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   weight_ = Tensor(ploader->operator[](name() + ".weight"));
 }
 
-void LLMEmbeddingTokenOp::trace(void* trace_context, std::vector<Tensor>& inputs,
+void LLMEmbeddingTokenOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                                 std::vector<Tensor>& outputs) {
-  NYI("LLMEmbeddingTokenOp::trace is not implemented");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::LLMEmbeddingTokenOp>(this, i_irs, o_irs);
 }
 
 void LLMEmbeddingTokenOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

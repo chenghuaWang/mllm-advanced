@@ -58,6 +58,9 @@ class MllmEngineCtx {
 
   bool perf_ = false;
 
+  // param info place
+  std::shared_ptr<void> ir_context_ = nullptr;
+
  private:
   // backend
   SymbolTable<DeviceTypes, std::shared_ptr<BackendBase>> backends_table_;

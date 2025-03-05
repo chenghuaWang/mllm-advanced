@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <vector>
 #include "mllm/Core/DataTypes.hpp"
+#include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Engine/ParameterReader.hpp"
 
@@ -66,6 +67,9 @@ inline const char* opType2Str(OpType type) {
     case OpType::kSiLU: return "kSiLU";
     case OpType::kKVCache: return "kKVCache";
     case OpType::kCausalMask: return "kCausalMask";
+    case OpType::kCastType: return "kCastType";
+    case OpType::kD2H: return "kD2H";
+    case OpType::kH2D: return "kH2D";
     case OpType::kOpType_End: return "kOpType_End";
     default: return "Unknown";
   }
@@ -137,10 +141,10 @@ class BaseOp {
  public:
   explicit BaseOp(OpType op_type);
 
-  virtual void load(std::shared_ptr<ParameterLoader>& ploader) {};
+  virtual void load(const std::shared_ptr<ParameterLoader>& ploader) {};
 
   // TODO
-  virtual void trace(void* trace_contex, std::vector<Tensor>& inputs,
+  virtual void trace(void* trace_context, const std::vector<Tensor>& inputs,
                      std::vector<Tensor>& outputs) {};
 
   virtual void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
@@ -153,7 +157,12 @@ class BaseOp {
 
   void setName(const std::string& name);
 
+  DeviceTypes device() const;
+
+  void setDeviceType(DeviceTypes device_type);
+
  private:
+  DeviceTypes device_type_;
   std::string name_;
   OpType op_type_;
 };

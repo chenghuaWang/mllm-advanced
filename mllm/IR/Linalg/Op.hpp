@@ -1,0 +1,121 @@
+/**
+ * @file Op.hpp
+ * @author chenghua Wang (chenghua.wang.edu@gmail.com)
+ * @version 0.1
+ * @date 2025-03-05
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+#pragma once
+
+#include <memory>
+#include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/Core/DeviceTypes.hpp"
+#include "mllm/IR/Node.hpp"
+#include "mllm/IR/Tensor/Value.hpp"
+
+namespace mllm {
+class BaseOp;
+class AddOp;
+class SubOp;
+class MulOp;
+class DivOp;
+class FillOp;
+class MatMulOp;
+class LLMEmbeddingTokenOp;
+class LinearOp;
+class RoPEOp;
+class KVCacheOp;
+class SoftmaxOp;
+class TransposeOp;
+class RMSNormOp;
+class SiLUOp;
+class CausalMaskOp;
+class CastTypeOp;
+class D2HOp;
+class H2DOp;
+}  // namespace mllm
+
+#define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
+  class class_name : public LinalgIROp {                                           \
+   public:                                                                         \
+    DEFINE_SPECIFIC_IR_CLASS(class_name);                                          \
+    ~class_name() override;                                                        \
+    class_name();                                                                  \
+    explicit class_name(::mllm::class_name* aop);                                  \
+    ::mllm::class_name* getOp() { return (::mllm::class_name*)(op_); }             \
+    static inline bool classof(const Node* node) {                                 \
+      RTTI_RK_OP_LINALGIROP_##rtti_name##_IMPL(node);                              \
+    }                                                                              \
+    static std::shared_ptr<::mllm::ir::linalg::class_name> build(                  \
+        IRContext* ctx, ::mllm::class_name* aop,                                   \
+        const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ins,  \
+        const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ous); \
+    void dump(IRPrinter& p) override;                                              \
+  }
+
+#define LINALG_AOPS_DECL(op_type, class_name)                                                   \
+  class_name::~class_name() = default;                                                          \
+  class_name::class_name(::mllm::class_name* aop) : LinalgIROp(RK_Op_LinalgIROp_##class_name) { \
+    setAOp(op_type, (BaseOp*)aop);                                                              \
+  }                                                                                             \
+  std::shared_ptr<::mllm::ir::linalg::class_name> class_name::build(                            \
+      IRContext* ctx, ::mllm::class_name* aop,                                                  \
+      const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ins,                 \
+      const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ous) {               \
+    auto op = std::make_shared<::mllm::ir::linalg::class_name>(aop);                            \
+    for (auto& i : ins) { (*i)-- > op; }                                                        \
+    for (auto& o : ous) { (*op)-- > o; }                                                        \
+    return op;                                                                                  \
+  }                                                                                             \
+  void class_name::dump(IRPrinter& p) {                                                         \
+    p.print("linalg.{}.{}", deviceTypes2Str(getDevice()), #class_name);                         \
+    Op::dump(p);                                                                                \
+  }
+
+namespace mllm::ir::linalg {
+class LinalgIROp : public Op {
+ public:
+  DEFINE_SPECIFIC_IR_CLASS(LinalgIROp);
+
+  ~LinalgIROp() override = default;
+  LinalgIROp();
+  explicit LinalgIROp(const NodeKind& kind);
+
+  static inline bool classof(const Node* node) { RTTI_RK_OP_LINALGIROP_IMPL(node); }
+
+  inline void setAOp(OpType op_type, BaseOp* op) {
+    op_type_ = op_type;
+    op_ = op;
+  }
+
+ protected:
+  OpType op_type_;
+  BaseOp* op_;
+};
+
+LINALG_AOPS_DEFINE(FillOp, FILLOP);
+LINALG_AOPS_DEFINE(AddOp, ADDOP);
+LINALG_AOPS_DEFINE(SubOp, SUBOP);
+LINALG_AOPS_DEFINE(MulOp, MULOP);
+LINALG_AOPS_DEFINE(DivOp, DIVOP);
+
+LINALG_AOPS_DEFINE(MatMulOp, MATMULOP);
+
+LINALG_AOPS_DEFINE(LLMEmbeddingTokenOp, LLMEMBEDDINGTOKENOP);
+LINALG_AOPS_DEFINE(LinearOp, LINEAROP);
+LINALG_AOPS_DEFINE(RoPEOp, ROPEOP);
+LINALG_AOPS_DEFINE(KVCacheOp, KVCACHEOP);
+LINALG_AOPS_DEFINE(CausalMaskOp, CAUSALMASKOP);
+
+LINALG_AOPS_DEFINE(SoftmaxOp, SOFTMAXOP);
+LINALG_AOPS_DEFINE(TransposeOp, TRANSPOSEOP);
+LINALG_AOPS_DEFINE(RMSNormOp, RMSNORMOP);
+LINALG_AOPS_DEFINE(SiLUOp, SILUOP);
+
+LINALG_AOPS_DEFINE(CastTypeOp, CASTTYPEOP);
+
+LINALG_AOPS_DEFINE(D2HOp, D2HOP);
+
+}  // namespace mllm::ir::linalg

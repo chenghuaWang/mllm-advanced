@@ -9,6 +9,7 @@
  */
 #include "mllm/IR/Tensor/Value.hpp"
 #include "mllm/Core/DataTypes.hpp"
+#include <string>
 
 namespace mllm::ir::tensor {
 
@@ -25,6 +26,7 @@ TensorValue::TensorValue() : TensorIRValue(RK_Val_TensorIRVal_TensorVal) {}
 TensorValue::self_ptr_t TensorValue::build(IRContext* ctx, const Tensor& tensor) {
   auto ret = std::make_shared<TensorValue>();
   ret->tensor_ = tensor;
+  ret->name() = std::to_string(tensor.uuid());
   return ret;
 }
 
@@ -49,6 +51,11 @@ void TensorValue::dump(IRPrinter& p) {
 
   // dtype
   p.print("{}", dataTypes2Str(tensor_.dtype()));
+
+  IRPrinter::comma();
+
+  // device type
+  p.print("{}", deviceTypes2Str(tensor_.device()));
 
   IRPrinter::rangle();
 

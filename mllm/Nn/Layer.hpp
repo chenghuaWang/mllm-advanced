@@ -34,7 +34,7 @@ class LayerImpl : public HierarchyBase {
 
   std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& refParams();
 
-  void load(std::shared_ptr<ParameterLoader>& ploader);
+  void load(const std::shared_ptr<ParameterLoader>& ploader);
 
   void to(DeviceTypes device_type);
 
@@ -60,16 +60,6 @@ class Layer {
   template<typename... Args>
   Tensor operator()(Args&&... args) {
     // MLLM_RT_ASSERT((std::is_same_v<Tensor, Args> && ...));
-
-    if (MllmEngineCtx::instance().traceMode()) {
-      MLLM_RT_ASSERT((!args.name().empty() && ...));
-      // TODO if pre-planing(Trace flag is set in context).
-      // 1. reshape all layers first
-      // 2. setup all layers.
-      // return nullptr here. we create tensor impl in reshape phase
-      return Tensor(nullptr).setName(impl_->absoluteName() + ".out-0");
-    }
-
     // eager mode
     auto inputs = std::vector<Tensor>{std::forward<decltype(args)>(args)...};
     return MllmEngineCtx::instance().dispatch(impl_->absoluteName(), inputs)[0];

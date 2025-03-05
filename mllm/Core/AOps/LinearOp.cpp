@@ -9,20 +9,24 @@
  */
 #include "mllm/Core/AOps/LinearOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
 #include "mllm/Utils/Common.hpp"
 
 namespace mllm {
 
 LinearOp::LinearOp(const LinearOpCargo& cargo) : BaseOp(OpType::kLinear), cargo_(cargo) {}
 
-void LinearOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void LinearOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   weight_ = Tensor(ploader->operator[](name() + ".weight"));
   if (cargo_.bias) { bias_ = Tensor(ploader->operator[](name() + ".bias")); }
 }
 
-void LinearOp::trace(void* trace_context, std::vector<Tensor>& inputs,
+void LinearOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                      std::vector<Tensor>& outputs) {
-  NYI("LinearOp::trace is not implemented");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::LinearOp>(this, i_irs, o_irs);
 }
 
 void LinearOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

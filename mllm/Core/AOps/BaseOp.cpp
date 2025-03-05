@@ -17,4 +17,8 @@ std::string BaseOp::name() const { return name_; }
 
 void BaseOp::setName(const std::string& name) { name_ = name; }
 
+DeviceTypes BaseOp::device() const { return device_type_; }
+
+void BaseOp::setDeviceType(DeviceTypes device_type) { device_type_ = device_type; }
+
 }  // namespace mllm

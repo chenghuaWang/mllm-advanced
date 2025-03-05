@@ -17,7 +17,7 @@ namespace mllm::arm {
 
 ArmRoPEOp::ArmRoPEOp(const RoPEOpCargo& cargo) : RoPEOp(cargo) {}
 
-void ArmRoPEOp::load(std::shared_ptr<ParameterLoader>& ploader) {
+void ArmRoPEOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   auto& ctx = MllmEngineCtx::instance();
   if (ctx.mem()->hasGlobalTensor("__global_rope_sin")
       && ctx.mem()->hasGlobalTensor("__global_rope_cos")) {
