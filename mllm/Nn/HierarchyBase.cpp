@@ -35,4 +35,8 @@ HierarchyTypes HierarchyBase::type() const { return type_; }
 
 DeviceTypes HierarchyBase::device() const { return device_type_; }
 
+void HierarchyBase::setCompiledAsObj(bool flag) { compiled_as_obj_ = flag; }
+
+bool HierarchyBase::isCompiledAsObj() const { return compiled_as_obj_; }
+
 }  // namespace mllm

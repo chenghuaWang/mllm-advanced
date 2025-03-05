@@ -9,13 +9,19 @@
  */
 #pragma once
 
+#include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Engine/Context.hpp"
 #include "mllm/Engine/ParameterReader.hpp"
+#include "mllm/IR/Builtin/Op.hpp"
+#include "mllm/IR/Tensor/Value.hpp"
 #include "mllm/Nn/HierarchyBase.hpp"
 #include "mllm/Nn/Layer.hpp"
 #include "mllm/Utils/Common.hpp"
 #include "mllm/Utils/DumpPrinter.hpp"
+#include "mllm/IR/Node.hpp"
+#include "mllm/IR/Graph/Op.hpp"
+#include "mllm/IR/CF/Op.hpp"
 #include <memory>
 #include <vector>
 #include <string>
@@ -36,6 +42,8 @@ class ModuleImpl : public HierarchyBase {
 
   std::shared_ptr<ParameterLoader> params() const;
 
+  void to(DeviceTypes device_type);
+
  private:
   std::shared_ptr<ParameterLoader> param_loader_;
   std::vector<std::shared_ptr<HierarchyBase>> reg_hierarchies_;
@@ -51,6 +59,8 @@ class Module {
   void selfAssignName(const std::string& name);
 
   std::shared_ptr<ModuleImpl> impl();
+
+  Module& to(DeviceTypes device_type);
 
   template<typename T, typename... Args>
   auto reg(const std::string& name, Args&&... args) {
@@ -90,6 +100,63 @@ class Module {
     }
 
     return forward(inputs);
+  }
+
+  template<typename... Args>
+  std::vector<Tensor> trace(std::shared_ptr<ir::IRContext> ir_ctx, Args&&... args) {
+    // create call graph.
+    auto call_op = ir_ctx->create<ir::graph::CallGraphOp>(
+        ir_ctx->create<ir::SymbolAttr>(impl_->absoluteName()));
+
+    // create subgraph under ModuleOp
+    std::shared_ptr<ir::graph::SubGraphOp> this_graph_ir = nullptr;
+    {
+      auto guard =
+          ir::IRWriterGuard(ir_ctx, ir_ctx->topLevelOp()->cast_<ir::ModuleOp>()->getTopRegion());
+      this_graph_ir = ir_ctx->create<ir::graph::SubGraphOp>(
+          ir_ctx->create<ir::SymbolAttr>(impl_->absoluteName()));
+    }
+
+    // to tensor vector
+    std::vector<Tensor> inputs = {std::forward<Args>(args)...};
+
+    // wrap the inputs to tensor ir.
+    std::vector<std::shared_ptr<ir::tensor::TensorValue>> inputs_ir;
+    for (auto& t : inputs) { inputs_ir.emplace_back(ir_ctx->create<ir::tensor::TensorValue>(t)); }
+
+    // link inputs to subgraph.
+    for (size_t i = 0; i < inputs_ir.size(); ++i) {
+      auto input_ir = inputs_ir[i];
+      (*input_ir)-- > this_graph_ir;
+    }
+
+    // forward
+    std::vector<Tensor> outputs;
+    {
+      auto guard = ir::IRWriterGuard(ir_ctx, this_graph_ir->getTopRegion());
+      outputs = forward(inputs);
+    }
+
+    // wrap the outputs to tensor ir.
+    std::vector<std::shared_ptr<ir::tensor::TensorValue>> outputs_ir;
+    for (auto& t : outputs) { outputs_ir.emplace_back(ir_ctx->create<ir::tensor::TensorValue>(t)); }
+
+    // link outputs to subgraph.
+    for (size_t i = 0; i < outputs_ir.size(); ++i) {
+      auto output_ir = outputs_ir[i];
+      (*this_graph_ir)-- > output_ir;
+    }
+
+    // create return op
+    {
+      auto guard = ir::IRWriterGuard(ir_ctx, this_graph_ir->getTopRegion());
+      std::vector<ir::val_ptr_t> vals;
+      for (auto& o : outputs_ir) vals.push_back(o);
+      ir_ctx->create<ir::cf::ReturnOp>(vals);
+    }
+
+    // return the outputs.
+    return outputs;
   }
 
   void print();

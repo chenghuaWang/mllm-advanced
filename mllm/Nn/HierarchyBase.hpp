@@ -45,7 +45,12 @@ class HierarchyBase : public std::enable_shared_from_this<HierarchyBase> {
 
   [[nodiscard]] DeviceTypes device() const;
 
- private:
+  void setCompiledAsObj(bool flag);
+
+  [[nodiscard]] bool isCompiledAsObj() const;
+
+ protected:
+  bool compiled_as_obj_ = false;
   HierarchyTypes type_;
   int32_t depth_ = 0;
   DeviceTypes device_type_ = kCPU;

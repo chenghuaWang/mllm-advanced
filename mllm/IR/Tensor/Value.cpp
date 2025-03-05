@@ -1,0 +1,62 @@
+/**
+ * @file Value.cpp
+ * @author chenghua Wang (chenghua.wang.edu@gmail.com)
+ * @version 0.1
+ * @date 2025-03-05
+ *
+ * @copyright Copyright (c) 2025
+ *
+ */
+#include "mllm/IR/Tensor/Value.hpp"
+#include "mllm/Core/DataTypes.hpp"
+
+namespace mllm::ir::tensor {
+
+TensorIRValue::~TensorIRValue() = default;
+
+TensorIRValue::TensorIRValue() : Val(RK_Val_TensorIRVal) {}
+
+TensorIRValue::TensorIRValue(NodeKind kind) : Val(kind) {}
+
+TensorValue::~TensorValue() = default;
+
+TensorValue::TensorValue() : TensorIRValue(RK_Val_TensorIRVal_TensorVal) {}
+
+TensorValue::self_ptr_t TensorValue::build(IRContext* ctx, const Tensor& tensor) {
+  auto ret = std::make_shared<TensorValue>();
+  ret->tensor_ = tensor;
+  return ret;
+}
+
+void TensorValue::dump(IRPrinter& p) {
+  Val::dump(p);
+
+  p.print("tensor");
+  IRPrinter::langle();
+
+  // shape
+  {
+    IRPrinter::lsbracket();
+    auto size = tensor_.shape().size();
+    for (int i = 0; i < size; ++i) {
+      p.print("{}", tensor_.shape()[i]);
+      if (i < size - 1) IRPrinter::comma();
+    }
+    IRPrinter::rsbracket();
+  }
+
+  IRPrinter::comma();
+
+  // dtype
+  p.print("{}", dataTypes2Str(tensor_.dtype()));
+
+  IRPrinter::rangle();
+
+  if (hasSymbolAttr()) {
+    IRPrinter::lsbracket();
+    p.print("@{}", getSymbolAttr()->str());
+    IRPrinter::rsbracket();
+  }
+}
+
+}  // namespace mllm::ir::tensor

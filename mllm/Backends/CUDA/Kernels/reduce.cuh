@@ -53,6 +53,7 @@ struct WarpReduceMaxOp {
 
 template<typename ReduceOp, typename T, int WARP_SIZE = 32>
 __forceinline__ __device__ T warp_reduce(T val) {
+  // loop from WARP_SIZE >> 1 to 1 instead of 1 to WARP_SIZE >> 1 for avoid bank conflict.
 #pragma unroll
   for (int lane_mask = WARP_SIZE >> 1; lane_mask >= 1; lane_mask >>= 1) {
     val = ReduceOp::reduce(val, lane_mask);

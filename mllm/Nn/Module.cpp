@@ -49,6 +49,19 @@ void ModuleImpl::load(std::shared_ptr<ParameterLoader>& ploader) {
 
 std::shared_ptr<ParameterLoader> ModuleImpl::params() const { return param_loader_; }
 
+void ModuleImpl::to(DeviceTypes device_type) {
+  auto& h = hierarchies();
+  for (auto& hb : h) {
+    switch (hb->type()) {
+      case HierarchyTypes::kModule:
+        std::static_pointer_cast<ModuleImpl>(hb)->to(device_type);
+        break;
+      case HierarchyTypes::kLayer: break;
+    }
+  }
+  device_type_ = device_type;
+}
+
 Module::Module() { impl_ = std::make_shared<ModuleImpl>(); }
 
 void Module::selfAssignName(const std::string& name) {
@@ -62,6 +75,11 @@ void Module::selfAssignName(const std::string& name) {
 }
 
 std::shared_ptr<ModuleImpl> Module::impl() { return impl_; }
+
+Module& Module::to(DeviceTypes device_type) {
+  impl()->to(device_type);
+  return *this;
+}
 
 void Module::print() {
   DumpPrinter p;
