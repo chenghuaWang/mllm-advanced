@@ -7,4 +7,5 @@ CMakeFormatTask:
     - "py-build-out"
     - "mllm/Backends/OpenCL/Vendors"
     - "mllm/Backends/Arm/Vendors"
+    - "mllm/Backends/X86/Vendors"
     - "mllm/Backends/CUDA/Vendors/cutlass"

@@ -88,7 +88,8 @@ void ParameterLoader::validateDescriptor(const ParameterDescriptor& desc, size_t
 std::shared_ptr<TensorImpl> ParameterLoader::createTensor(const ParameterDescriptor& desc) {
   const void* data_ptr = static_cast<const char*>(mapped_file_->data()) + desc.parameter_offset;
 
-  std::vector<size_t> shape(desc.shape, desc.shape + desc.shape_len);
+  std::vector<size_t> shape;
+  for (int i = 0; i < desc.shape_len; ++i) { shape.emplace_back(desc.shape[i]); }
 
   auto t = std::make_shared<TensorImpl>(shape);
   t->_setRawPtr(const_cast<void*>(data_ptr));

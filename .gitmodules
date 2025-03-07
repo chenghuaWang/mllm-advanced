@@ -19,3 +19,6 @@
 [submodule "mllm/Backends/CUDA/Vendors/cutlass"]
 	path = mllm/Backends/CUDA/Vendors/cutlass
 	url = https://github.com/NVIDIA/cutlass.git
+[submodule "mllm/Backends/X86/Vendors/highway"]
+	path = mllm/Backends/X86/Vendors/highway
+	url = https://github.com/google/highway
