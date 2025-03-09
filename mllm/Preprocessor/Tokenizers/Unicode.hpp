@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <string>
 #include <locale>
+#include <cwctype>
 #include "mllm/Utils/Common.hpp"
 
 namespace mllm::preprocessor {

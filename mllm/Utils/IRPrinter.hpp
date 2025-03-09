@@ -9,6 +9,7 @@
  */
 #pragma once
 
+#include "fmt/base.h"
 #include "fmt/core.h"
 
 namespace mllm {

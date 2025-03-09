@@ -46,7 +46,7 @@ struct WarpReduceMinOp {
 template<typename T>
 struct WarpReduceMaxOp {
   static __forceinline__ __device__ T reduce(T val, int lane_mask) {
-    val = mllm_math::min(max, __shfl_xor_sync(0xffffffff, val, lane_mask, 32));
+    val = mllm_math::max(val, __shfl_xor_sync(0xffffffff, val, lane_mask, 32));
     return val;
   }
 };
@@ -64,7 +64,10 @@ __forceinline__ __device__ T warp_reduce(T val) {
 // ============================================================================================
 // Block level reduce operation.
 // ============================================================================================
+// N_TILE actually is the threads num in a block.
 template<int N_TILE = 256>
 __global__ void block_all_reduce_sum_fp32(float* z, float* x, int N);
 
+template<int N_TILE = 256 / 8>
+__global__ void block_all_reduce_sum_bf16x8_bf16(__nv_bfloat16* z, __nv_bfloat16* x, int N);
 }  // namespace mllm::cuda

@@ -34,6 +34,11 @@ class Pass {
     return (T*)external_data_;
   }
 
+  template<typename T>
+  void setExternalData(T* data) {
+    external_data_ = (void*)data;
+  }
+
   // the ret should be PassReturnState's binary expression's value
   // E.g.: PASS_RET_SUCCESS | PASS_RET_CONTINUE
   virtual uint8_t run(const node_ptr_t& op);
