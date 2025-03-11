@@ -4,6 +4,8 @@ add_subdirectory(IR)
 
 if(MLLM_BUILD_ARM_BACKEND)
   add_subdirectory(Arm)
+else()
+  add_subdirectory(X86)
 endif()
 
 if(MLLM_BUILD_CUDA_BACKEND)

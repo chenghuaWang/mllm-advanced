@@ -4,3 +4,8 @@ CMakeConfigTask:
   cmake_extra_args:
     - "-DMLLM_BUILD_CUDA_BACKEND=ON"
     - "-DCMAKE_CUDA_ARCHITECTURES=89"
+    - "-DHWY_ENABLE_TESTS=OFF"
+    - "-DHWY_ENABLE_EXAMPLES=OFF"
+    - "-DHWY_ENABLE_CONTRIB=OFF"
+    # optional
+    - "-DMLLM_X86_BACKEND_COMPILE_OPTIONS=\"-march=native\""
