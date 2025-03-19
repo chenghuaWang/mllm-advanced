@@ -40,7 +40,7 @@ __global__ void _warp_level_safe_softmax_fp32(float* __restrict__ z, const float
 #pragma unroll
     for (int row_id = 0; row_id < ROWS_PER_THREAD; ++row_id) {
       local_max[row_id] = mllm_math::numeric_limits_min<float>();
-      float4* row_rX_ptr = rX + row_id * num_packs;
+      float4* row_rX_ptr = rX[row_id];
 
       // pass 1: max
 #pragma unroll
@@ -78,7 +78,7 @@ __global__ void _warp_level_safe_softmax_fp32(float* __restrict__ z, const float
 #pragma unroll
     for (int row_id = 0; row_id < ROWS_PER_THREAD; ++row_id) {
       local_sum[row_id] = mllm_math::numeric_limits_pos_zero<float>();
-      float4* row_rX_ptr = rX + row_id * num_packs;
+      float4* row_rX_ptr = rX[row_id];
 
 #pragma unroll
       for (int pack_id = 0; pack_id < num_packs; ++pack_id) {
@@ -102,7 +102,7 @@ __global__ void _warp_level_safe_softmax_fp32(float* __restrict__ z, const float
 // pass 3: rescale and store.
 #pragma unroll
     for (int row_id = 0; row_id < ROWS_PER_THREAD; ++row_id) {
-      float4* row_rX_ptr = rX + row_id * num_packs;
+      float4* row_rX_ptr = rX[row_id];
 
 #pragma unroll
       for (int pack_id = 0; pack_id < num_packs; ++pack_id) {
@@ -121,5 +121,14 @@ __global__ void _warp_level_safe_softmax_fp32(float* __restrict__ z, const float
     }
   }
 }
-
+// instance
+template __global__ void _warp_level_safe_softmax_fp32<32, 1, 32>(float* __restrict__ z,
+                                                                  const float* __restrict__ x,
+                                                                  int rows, int cols);
+template __global__ void _warp_level_safe_softmax_fp32<16, 2, 32>(float* __restrict__ z,
+                                                                  const float* __restrict__ x,
+                                                                  int rows, int cols);
+template __global__ void _warp_level_safe_softmax_fp32<8, 2, 32>(float* __restrict__ z,
+                                                                 const float* __restrict__ x,
+                                                                 int rows, int cols);
 }  // namespace mllm::cuda

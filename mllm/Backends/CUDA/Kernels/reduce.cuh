@@ -21,32 +21,32 @@ namespace mllm::cuda {
 // ============================================================================================
 template<typename T>
 struct WarpReduceAddOp {
-  static __forceinline__ __device__ T reduce(T val, int lane_mask) {
-    val += __shfl_xor_sync(0xffffffff, val, lane_mask, 32);
+  static __forceinline__ __device__ T reduce(T val, int lane_mask, int width) {
+    val += __shfl_xor_sync(0xffffffff, val, lane_mask, width);
     return val;
   }
 };
 
 template<typename T>
 struct WarpReduceMulOp {
-  static __forceinline__ __device__ T reduce(T val, int lane_mask) {
-    val *= __shfl_xor_sync(0xffffffff, val, lane_mask, 32);
+  static __forceinline__ __device__ T reduce(T val, int lane_mask, int width) {
+    val *= __shfl_xor_sync(0xffffffff, val, lane_mask, width);
     return val;
   }
 };
 
 template<typename T>
 struct WarpReduceMinOp {
-  static __forceinline__ __device__ T reduce(T val, int lane_mask) {
-    val = mllm_math::min(val, __shfl_xor_sync(0xffffffff, val, lane_mask, 32));
+  static __forceinline__ __device__ T reduce(T val, int lane_mask, int width) {
+    val = mllm_math::min(val, __shfl_xor_sync(0xffffffff, val, lane_mask, width));
     return val;
   }
 };
 
 template<typename T>
 struct WarpReduceMaxOp {
-  static __forceinline__ __device__ T reduce(T val, int lane_mask) {
-    val = mllm_math::max(val, __shfl_xor_sync(0xffffffff, val, lane_mask, 32));
+  static __forceinline__ __device__ T reduce(T val, int lane_mask, int width) {
+    val = mllm_math::max(val, __shfl_xor_sync(0xffffffff, val, lane_mask, width));
     return val;
   }
 };
@@ -56,7 +56,7 @@ __forceinline__ __device__ T warp_reduce(T val) {
   // loop from WARP_SIZE >> 1 to 1 instead of 1 to WARP_SIZE >> 1 for avoid bank conflict.
 #pragma unroll
   for (int lane_mask = WARP_SIZE >> 1; lane_mask >= 1; lane_mask >>= 1) {
-    val = ReduceOp::reduce(val, lane_mask);
+    val = ReduceOp::reduce(val, lane_mask, WARP_SIZE);
   }
   return val;
 };

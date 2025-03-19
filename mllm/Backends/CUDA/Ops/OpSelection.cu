@@ -10,15 +10,9 @@
 #include <cstdio>
 #include "mllm/Backends/CUDA/Ops/OpSelection.hpp"
 #include "mllm/Backends/CUDA/Kernels/elewise.cuh"
+#include "mllm/Backends/CUDA/Kernels/softmax.cuh"
 
 namespace mllm::cuda {
-
-// see:
-// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#features-and-technical-specifications
-constexpr int MLLM_CUDA_WARP_NUM = 32;
-constexpr int MLLM_CUDA_PER_BLOCK_MAX_THREAD_NUM = 1024;
-constexpr int MLLM_CUDA_PER_SM_32BIT_REGISTER_NUM = 64 * 1024;
-constexpr int MLLM_CUDA_PER_THREAD_32BIT_REGISTER_NUM = 255;
 
 void vector_add_bf16_v0_call(void* Z, void* const X, void* const Y, int size, float a, float b,
                              float c) {
@@ -35,6 +29,42 @@ void vector_add_bf16_v0_call(void* Z, void* const X, void* const Y, int size, fl
   cudaError_t syncError = cudaGetLastError();
   if (syncError != cudaSuccess) {
     printf("Kernel launch error: %s\n", cudaGetErrorString(syncError));
+  }
+}
+
+void safe_softmax_fp32(void* __restrict__ Z, const void* __restrict__ X, int rows, int cols) {
+  // CASE 1:
+  // When cols < 1024. use one warp(32 threads) to calculate one/two row.
+  if (cols <= 1024) {
+    // FIXME: padding to multiple of warp size.
+
+    // CASE 1.1:
+    // 512 < cols <= 1024. One row per thread
+    if (cols > 512) {
+      dim3 block_dims(32, 8);              // 256 threads per block
+      dim3 grid_dims((rows + 8 - 1) / 8);  // ceil_div(rows, 8)
+      _warp_level_safe_softmax_fp32<32, 1, 32>
+          <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+      return;
+    }
+
+    // CASE 1.2:
+    // 256 < cols <= 512. Two row per threads.
+    if (cols > 256) {
+      dim3 block_dims(16, 8);              // 256 threads per block
+      dim3 grid_dims((rows + 8 - 1) / 8);  // ceil_div(rows, 8)
+      _warp_level_safe_softmax_fp32<16, 2, 32>
+          <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+      return;
+    }
+
+    // CASE 1.3:
+    // cols <= 256
+    dim3 block_dims(8, 8);               // 64 threads per block
+    dim3 grid_dims((rows + 8 - 1) / 8);  // ceil_div(rows, 8)
+    _warp_level_safe_softmax_fp32<8, 2, 32>
+        <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+    return;
   }
 }
 
