@@ -10,6 +10,8 @@
  * 1. https://zhuanlan.zhihu.com/p/341059988 (oneflow's impl)
  * 2. https://arxiv.org/pdf/1805.02867 (Online normalizer calculation for softmax)
  *
+ * This softmax impl is highly inspired by oneflow's blog.
+ *
  */
 #pragma once
 
@@ -18,9 +20,10 @@
 
 namespace mllm::cuda {
 
-// see:
-// https://arxiv.org/pdf/1805.02867 (Online normalizer calculation for softmax)
-template<int M_TILE, int N_TILE, int VEC_SIZE>
-__global__ void online_safe_softmax_bf16(nv_bfloat16* z, const nv_bfloat16* x, int M, int N);
+// One warp to process one line, packed 4 float
+// for cols <= 1024
+template<int THREAD_GROUP_NUM, int ROWS_PER_THREAD, int COLS_PER_THREAD>
+__global__ void _warp_level_safe_softmax_fp32(float* __restrict__ z, const float* __restrict__ x,
+                                              int rows, int cols);
 
 }  // namespace mllm::cuda

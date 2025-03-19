@@ -1,0 +1,9 @@
+fastapi
+pydantic
+sphinx
+furo
+sphinx-tabs
+sphinx-toolbox
+sphinxcontrib-napoleon
+uvicorn
+myst-parser

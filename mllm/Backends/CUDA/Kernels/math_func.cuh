@@ -9,11 +9,14 @@
  */
 #pragma once
 
-#include <cmath>
+#include <cutlass/fast_math.h>
 #include <math_constants.h>
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
 #include <cuda_fp8.h>
+
+#define MLLM_LDG128(DST, SRC) *(uint4*)(DST) = *(uint4*)(SRC)
+#define MLLM_STG128(DST, SRC) *(uint4*)(DST) = *(uint4*)(SRC)
 
 namespace mllm::cuda::mllm_math {
 
@@ -271,18 +274,20 @@ struct MaxImpl {
 // specialization
 template<>
 struct MaxImpl<float> {
-  static __forceinline__ __device__ float apply(float a, float b) { return fmaxf(a, b); }
+  static __forceinline__ __device__ float apply(float a, float b) {
+    return cutlass::fast_max(a, b);
+  }
 };
 
 template<>
 struct MaxImpl<half> {
-  static __forceinline__ __device__ half apply(half a, half b) { return __hmax(a, b); }
+  static __forceinline__ __device__ half apply(half a, half b) { return cutlass::fast_max(a, b); }
 };
 
 template<>
 struct MaxImpl<nv_bfloat16> {
   static __forceinline__ __device__ nv_bfloat16 apply(nv_bfloat16 a, nv_bfloat16 b) {
-    return __hmax(a, b);
+    return cutlass::fast_max(a, b);
   }
 };
 
@@ -319,18 +324,20 @@ struct MinImpl {
 // specialization
 template<>
 struct MinImpl<float> {
-  static __forceinline__ __device__ float apply(float a, float b) { return fminf(a, b); }
+  static __forceinline__ __device__ float apply(float a, float b) {
+    return cutlass::fast_min(a, b);
+  }
 };
 
 template<>
 struct MinImpl<half> {
-  static __forceinline__ __device__ half apply(half a, half b) { return __hmin(a, b); }
+  static __forceinline__ __device__ half apply(half a, half b) { return cutlass::fast_min(a, b); }
 };
 
 template<>
 struct MinImpl<nv_bfloat16> {
   static __forceinline__ __device__ nv_bfloat16 apply(nv_bfloat16 a, nv_bfloat16 b) {
-    return __hmin(a, b);
+    return cutlass::fast_min(a, b);
   }
 };
 
@@ -383,9 +390,18 @@ __forceinline__ __device__ T min(T a, T b) {
 // ============================================================================================
 // exp
 // ============================================================================================
+template<typename T>
+__forceinline__ __device__ T fast_exp(T a) {
+  return cutlass::fast_exp(a);
+}
 
 // ============================================================================================
 // pow
 // ============================================================================================
+
+// ============================================================================================
+// others
+// ============================================================================================
+__device__ __forceinline__ int ceil_div(int a, int b) { return (a + b - 1) / b; }
 
 }  // namespace mllm::cuda::mllm_math

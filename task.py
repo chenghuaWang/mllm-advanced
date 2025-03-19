@@ -284,7 +284,14 @@ class ArmKernelBenchmarkTask(Task):
                 markdown += "| " + " | ".join(map(str, row)) + " |\n"
 
             with open(
-                os.path.join(PROJECT_ROOT_PATH / Path("docs"), file_name + ".md"), "w"
+                os.path.join(
+                    PROJECT_ROOT_PATH
+                    / Path("docs")
+                    / Path("ArmBackend")
+                    / Path("Benchmark"),
+                    file_name + ".md",
+                ),
+                "w",
             ) as file:
                 file.write(f"# {file_name} Benchmark Results\n\n")
                 file.writelines(
@@ -333,6 +340,23 @@ class GenPybind11StubsTask(Task):
                 shutil.copy(src_file, dest_file)
 
 
+class BuildDocTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def run(self):
+        COMMANDS = [
+            "python -m sphinx",
+            (PROJECT_ROOT_PATH / "docs").as_posix(),
+            (PROJECT_ROOT_PATH / "docs" / "build").as_posix(),
+        ]
+        os.system(self.make_command_str(COMMANDS))
+        logging.info(self.make_command_str(COMMANDS))
+        logging.info(
+            f"Run `cd {PROJECT_ROOT_PATH / "docs" / "build"} && python -m http.server` to view the change."
+        )
+
+
 TASKS = {
     "CMakeConfigTask": CMakeConfigTask,
     "CMakeFormatTask": CMakeFormatTask,
@@ -340,6 +364,7 @@ TASKS = {
     "AdbPushTask": AdbPushTask,
     "ArmKernelBenchmarkTask": ArmKernelBenchmarkTask,
     "GenPybind11StubsTask": GenPybind11StubsTask,
+    "BuildDocTask": BuildDocTask,
 }
 
 

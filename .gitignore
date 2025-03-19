@@ -8,3 +8,4 @@ pymllm.egg-info/
 py-build-out/
 stubs/
 ncu-report/
+docs/build/
