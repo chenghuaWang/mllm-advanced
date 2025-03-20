@@ -41,9 +41,14 @@ class IRPrinter {
   static void lsbracket() { fmt::print("["); }
   static void rsbracket() { fmt::print("]"); }
 
-  template<typename... Args>
-  inline void print(Args&&... args) {
-    fmt::print(std::forward<Args>(args)...);
+  template<typename FirstArg>
+  inline void print(FirstArg&& first_arg) {
+    fmt::print(fmt::runtime(std::forward<FirstArg>(first_arg)));
+  }
+
+  template<typename FirstArg, typename... Args>
+  inline void print(FirstArg&& first_arg, Args&&... args) {
+    fmt::print(fmt::runtime(std::forward<FirstArg>(first_arg)), std::forward<Args>(args)...);
   }
 
   template<typename... Args>

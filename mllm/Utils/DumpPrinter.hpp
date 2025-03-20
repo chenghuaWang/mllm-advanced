@@ -23,10 +23,10 @@ class DumpPrinter {
 
   void dec();
 
-  template<typename... Args>
-  inline void print(Args&&... args) {
+  template<typename FirstArg, typename... Args>
+  inline void print(FirstArg&& first_arg, Args&&... args) {
     for (int i = 0; i < depth_ * indent_; ++i) fmt::print(" ");
-    fmt::println(std::forward<Args>(args)...);
+    fmt::println(fmt::runtime(std::forward<FirstArg>(first_arg)), std::forward<Args>(args)...);
   }
 
  private:
