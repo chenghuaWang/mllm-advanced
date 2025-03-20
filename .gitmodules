@@ -22,3 +22,6 @@
 [submodule "mllm/Backends/X86/Vendors/highway"]
 	path = mllm/Backends/X86/Vendors/highway
 	url = https://github.com/google/highway
+[submodule "mllm/Backends/CUDA/Vendors/cccl"]
+	path = mllm/Backends/CUDA/Vendors/cccl
+	url = https://github.com/NVIDIA/cccl.git
