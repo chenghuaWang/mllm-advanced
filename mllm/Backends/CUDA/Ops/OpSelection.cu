@@ -53,8 +53,13 @@ void safe_softmax_fp32(void* __restrict__ Z, const void* __restrict__ X, int row
     if (cols > 256) {
       dim3 block_dims(16, 8);              // 256 threads per block
       dim3 grid_dims((rows + 8 - 1) / 8);  // ceil_div(rows, 8)
-      _warp_level_safe_softmax_fp32<16, 2, 32>
-          <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+      if (rows % 2 == 0) {
+        _warp_level_safe_softmax_fp32<16, 2, 32>
+            <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+      } else {
+        _warp_level_safe_softmax_fp32<16, 1, 32>
+            <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+      }
       return;
     }
 
@@ -62,10 +67,22 @@ void safe_softmax_fp32(void* __restrict__ Z, const void* __restrict__ X, int row
     // cols <= 256
     dim3 block_dims(8, 8);               // 64 threads per block
     dim3 grid_dims((rows + 8 - 1) / 8);  // ceil_div(rows, 8)
-    _warp_level_safe_softmax_fp32<8, 2, 32>
-        <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+    if (rows % 2 == 0) {
+      _warp_level_safe_softmax_fp32<8, 2, 32>
+          <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+    } else {
+      _warp_level_safe_softmax_fp32<8, 1, 32>
+          <<<grid_dims, block_dims>>>((float*)Z, (float*)X, rows, cols);
+    }
     return;
   }
+
+  // CASE 2:
+  // cols > 1024
+  dim3 block_dims(1024);  // 1024 threads per block
+  dim3 grid_dims(32);
+  _block_level_uncached_safe_softmax_fp32<1024>
+      <<<grid_dims, block_dims, 0>>>((float*)Z, (float*)X, rows, cols);
 }
 
 }  // namespace mllm::cuda
