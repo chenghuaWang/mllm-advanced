@@ -43,7 +43,7 @@ class _BasicExtension(Extension):
         src_files = list(cmake_cache_dir.glob(src_pattern))
         if len(src_files) != 1:
             raise ValueError(
-                f"Expected one file matching '{src_pattern}'; found {src_files}"
+                f"Expected one file matching '{src_pattern}'; found {src_files} in dir: {cmake_cache_dir}"
             )
         return src_files[0]
 
@@ -97,8 +97,10 @@ class CustomBuild(build):
             f"-DCMAKE_BUILD_TYPE={build_type}",
             "-DMLLM_ENABLE_PY_MLLM=ON",
             "-D_GLIBCXX_USE_CXX11_ABI=1",
-            "-DCMAKE_C_COMPILER=clang",
-            "-DCMAKE_CXX_COMPILER=clang++",
+            "-DHWY_ENABLE_TESTS=OFF",
+            "-DHWY_ENABLE_EXAMPLES=OFF",
+            "-DHWY_ENABLE_CONTRIB=OFF",
+            '-DMLLM_X86_BACKEND_COMPILE_OPTIONS="-march=native"',
         ] + [arg for arg in self.cmake_args.split(" ") if arg]
 
         # Build arguments
@@ -128,7 +130,7 @@ def get_ext_modules() -> List[Extension]:
 setup(
     version="0.0.1",
     package_dir={
-        "pymllm": "pymllm/src",
+        "pymllm": "pymllm",
         "pymllm._C": "pymllm/_C",
     },
     cmdclass={

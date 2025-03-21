@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import time
 import json
 import yaml
@@ -320,8 +321,8 @@ class GenPybind11StubsTask(Task):
         ]
         os.system(self.make_command_str(COMMANDS))
         logging.info(self.make_command_str(COMMANDS))
-        tmp_C_path = PROJECT_ROOT_PATH / "stubs" / "pymllm" / "_C"
-        _C_path = PROJECT_ROOT_PATH / "pymllm" / "_C"
+        tmp_C_path = PROJECT_ROOT_PATH / "stubs" / "pymllm" 
+        _C_path = PROJECT_ROOT_PATH / "pymllm"
         self.copy_files(tmp_C_path, _C_path)
 
     def copy_files(self, src_dir, dst_dir):
@@ -357,6 +358,85 @@ class BuildDocTask(Task):
         )
 
 
+class BuildPythonCLibTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def run(self):
+        repo_root = os.path.abspath(os.getcwd())
+
+        base_cmake_root = os.path.join(repo_root, "py-build-out")
+        if not os.path.exists(base_cmake_root):
+            os.mkdir(base_cmake_root)
+
+        CMAKE_CFG_ARGS = [
+            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DCMAKE_BUILD_TYPE=Release",
+            "-DMLLM_ENABLE_PY_MLLM=ON",
+            "-D_GLIBCXX_USE_CXX11_ABI=1",
+            "-DCMAKE_C_COMPILER=clang",
+            "-DCMAKE_CXX_COMPILER=clang++",
+            "-DHWY_ENABLE_TESTS=OFF",
+            "-DHWY_ENABLE_EXAMPLES=OFF",
+            "-DHWY_ENABLE_CONTRIB=OFF",
+            '-DMLLM_X86_BACKEND_COMPILE_OPTIONS="-march=native"',
+        ]
+
+        BUILD_ARGS = [
+            "--config",
+            "Release",
+            f"-j{max(1, int(os.cpu_count() / 2))}",
+            "--target",
+            "_C",
+        ]
+        cmake_cache_dir = os.path.join(base_cmake_root, "cmake-out")
+        if not os.path.exists(cmake_cache_dir):
+            os.mkdir(cmake_cache_dir)
+
+        # run cmake cfg
+        os.system(
+            self.make_command_str(
+                ["cmake", "-S", repo_root, "-B", cmake_cache_dir] + CMAKE_CFG_ARGS
+            )
+        )
+
+        # build/compile
+        os.system(
+            self.make_command_str(["cmake", "--build", cmake_cache_dir] + BUILD_ARGS)
+        )
+
+
+class PymllmInstallTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def run(self):
+        type = self.config["type"]
+        assert type in ["editable", "release"]
+        if type == "editable":
+            os.system(
+                self.make_command_str(
+                    [
+                        "pip",
+                        "install",
+                        "-e",
+                        ".",
+                        "-v",
+                    ]
+                )
+            )
+        else:
+            os.system(
+                self.make_command_str(
+                    [
+                        "pip",
+                        "install",
+                        ".",
+                    ]
+                )
+            )
+
+
 TASKS = {
     "CMakeConfigTask": CMakeConfigTask,
     "CMakeFormatTask": CMakeFormatTask,
@@ -365,6 +445,8 @@ TASKS = {
     "ArmKernelBenchmarkTask": ArmKernelBenchmarkTask,
     "GenPybind11StubsTask": GenPybind11StubsTask,
     "BuildDocTask": BuildDocTask,
+    "BuildPythonCLibTask": BuildPythonCLibTask,
+    "PymllmInstallTask": PymllmInstallTask,
 }
 
 

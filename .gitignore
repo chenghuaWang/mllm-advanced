@@ -9,3 +9,5 @@ py-build-out/
 stubs/
 ncu-report/
 docs/build/
+_C.cpython-312-x86_64-linux-gnu.so
+__pycache__/

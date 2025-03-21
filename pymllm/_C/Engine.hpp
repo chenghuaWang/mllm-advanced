@@ -12,4 +12,8 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
+void registerBaseBackend(py::module_& m);
+
+void registerX86Backend(py::module_& m);
+
 void registerEngineBinding(py::module_& m);

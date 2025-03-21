@@ -8,3 +8,9 @@
  * @copyright Copyright (c) 2025
  *
  */
+#pragma once
+
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+
+void registerCoreBinding(py::module_& m);
