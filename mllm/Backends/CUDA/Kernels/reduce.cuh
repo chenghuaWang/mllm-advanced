@@ -9,6 +9,7 @@
  */
 #pragma once
 
+#include "mllm/Backends/CUDA/Kernels/gpu_info.cuh"
 #include "mllm/Backends/CUDA/Kernels/math_func.cuh"
 
 namespace mllm::cuda {
@@ -25,6 +26,12 @@ struct WarpReduceAddOp {
     val += __shfl_xor_sync(0xffffffff, val, lane_mask, width);
     return val;
   }
+
+  static __forceinline__ __device__ T default_v() {
+    return mllm_math::numeric_limits_pos_zero<T>();
+  }
+
+  static __forceinline__ __device__ T reduce_two(T a, T b) { return a + b; }
 };
 
 template<typename T>
@@ -33,6 +40,10 @@ struct WarpReduceMulOp {
     val *= __shfl_xor_sync(0xffffffff, val, lane_mask, width);
     return val;
   }
+
+  static __forceinline__ __device__ T default_v() { return 1; }
+
+  static __forceinline__ __device__ T reduce_two(T a, T b) { return a * b; }
 };
 
 template<typename T>
@@ -41,6 +52,10 @@ struct WarpReduceMinOp {
     val = mllm_math::min(val, __shfl_xor_sync(0xffffffff, val, lane_mask, width));
     return val;
   }
+
+  static __forceinline__ __device__ T default_v() { return mllm_math::numeric_limits_max<T>(); }
+
+  static __forceinline__ __device__ T reduce_two(T a, T b) { return mllm_math::min(a, b); }
 };
 
 template<typename T>
@@ -49,6 +64,10 @@ struct WarpReduceMaxOp {
     val = mllm_math::max(val, __shfl_xor_sync(0xffffffff, val, lane_mask, width));
     return val;
   }
+
+  static __forceinline__ __device__ T default_v() { return mllm_math::numeric_limits_min<T>(); }
+
+  static __forceinline__ __device__ T reduce_two(T a, T b) { return mllm_math::max(a, b); }
 };
 
 template<typename ReduceOp, typename T, int WARP_SIZE = 32>
@@ -64,89 +83,132 @@ __forceinline__ __device__ T warp_reduce(T val) {
 // ============================================================================================
 // Block level reduce operation.
 // ============================================================================================
-// N_TILE actually is the threads num in a block.
-template<int N_TILE = 256>
-__device__ void block_all_reduce_sum_fp32(float* z, float* x, int N) {
-  int tid = threadIdx.x;
-  int idx = blockIdx.x * N_TILE + tid;
 
-  // warp size is always 32.
-  constexpr int NUM_WARPS = (N_TILE + 32 - 1) / 32;
+// Reduce all `value` gave in this thread from one block. This function cannot handle multi block
+// reduction. Which means this function do not need atomicAdd or atomicMax.
+template<typename T, typename ReduceOp, int BLOCK_DIM_X, bool PADDING = true, int BLOCK_DIM_Y = 1,
+         int BLOCK_DIM_Z = 1>
+__device__ T block_reduce(T v, int num = -1) {
+  constexpr int threads_num = BLOCK_DIM_X * BLOCK_DIM_Y * BLOCK_DIM_Z;
 
-  // shared memory to store the sum of each warp.
-  __shared__ float smem_reduce[NUM_WARPS];
+  constexpr int warps = (threads_num + MLLM_CUDA_WARP_SIZE - 1) / MLLM_CUDA_WARP_SIZE;
 
-  int warp_id = tid / 32;
-  int lane_id = tid % 32;
+  // flatten threads to 1D
+  int tid = threadIdx.x + threadIdx.y * BLOCK_DIM_X + threadIdx.z * BLOCK_DIM_X * BLOCK_DIM_Y;
+  int warp_id = tid / MLLM_CUDA_WARP_SIZE;
+  int lane_id = tid % MLLM_CUDA_WARP_SIZE;
 
-  float sum = (idx < N) ? x[idx] : 0.f;
-  sum = warp_reduce<WarpReduceAddOp<float>>(sum);
-  if (lane_id == 0) smem_reduce[warp_id] = sum;
+  // alloc shared memory for communication
+  __shared__ T s_reduced_in_each_warp[warps];
 
-  // sync to make sure all warps have finished its reduce work.
+  // reduce in warp and store to block shared mem.
+  if constexpr (PADDING) {
+    T r_v = warp_reduce<ReduceOp, T, MLLM_CUDA_WARP_SIZE>(v);
+    if (lane_id == 0) { s_reduced_in_each_warp[warp_id] = r_v; }
+  } else {
+    T _r_v = tid < num ? v : ReduceOp::default_v();
+    T r_v = warp_reduce<ReduceOp, T, MLLM_CUDA_WARP_SIZE>(_r_v);
+    if (lane_id == 0) { s_reduced_in_each_warp[warp_id] = r_v; }
+  }
+
+  // wait for s_reduced_in_each_warp filled.
   __syncthreads();
 
-  // use the first warp to final reduce the sum of all warps.
-  sum = (lane_id < NUM_WARPS) ? smem_reduce[lane_id] : 0.f;
-  if (warp_id == 0) sum = warp_reduce<WarpReduceAddOp<float>>(sum);
-  if (tid == 0) atomicAdd(z, sum);
+  __shared__ T result_global;
+
+  // reduce in this block. the max threads in a block is 1024. which means warps<=32.
+  if (warp_id == 0) {
+    T tmp = lane_id < warps ? s_reduced_in_each_warp[lane_id] : ReduceOp::default_v();
+    T r_r_v = warp_reduce<ReduceOp, T, MLLM_CUDA_WARP_SIZE>(tmp);
+    if (lane_id == 0) result_global = r_r_v;
+  }
+
+  // sync for values store into result_global
+  __syncthreads();
+  return result_global;
 }
 
-template<int N_TILE = 256>
-__device__ void block_all_reduce_max_fp32(float* z, float* x, int N) {
-  int tid = threadIdx.x;
-  int idx = blockIdx.x * N_TILE + tid;
+// ============================================================================================
+// Reduce operation for an array.
+// ============================================================================================
+template<typename ReduceOp, typename T, int VEC_SIZE>
+struct _1DArrayReduceImpl {
+  static __device__ void _warp_level(T* z, T* x, int num) {}
 
-  // warp size is always 32.
-  constexpr int NUM_WARPS = (N_TILE + 32 - 1) / 32;
+  template<int BLOCK_SIZE>
+  static __device__ void _block_level(T* z, T* x, int num) {}
 
-  // shared memory to store the max of each warp.
-  __shared__ float smem_reduce[NUM_WARPS];
+  template<int BLOCK_SIZE>
+  static __device__ void _grid_level(T* z, T* x, int num) {}
+};
 
-  int warp_id = tid / 32;
-  int lane_id = tid % 32;
+template<typename ReduceOp>
+struct _1DArrayReduceImpl<ReduceOp, float, 4> {
+  static __device__ void _warp_level(float* z, float* x, int num) {
+    int tid = threadIdx.x;
+    int index = tid * 4;
+    float4 tmp;
 
-  float max_v = (idx < N) ? x[idx] : mllm_math::numeric_limits_min<float>();
-  max_v = warp_reduce<WarpReduceMaxOp<float>>(max_v);
-  if (lane_id == 0) smem_reduce[warp_id] = max_v;
+    if (index + 3 < num) {
+      MLLM_LDG128(&tmp, x + index);
+    } else if (index < num) {
+      tmp.x = (index + 0 < num) ? x[index + 0] : ReduceOp::default_v();
+      tmp.y = (index + 1 < num) ? x[index + 1] : ReduceOp::default_v();
+      tmp.z = (index + 2 < num) ? x[index + 2] : ReduceOp::default_v();
+      tmp.w = (index + 3 < num) ? x[index + 3] : ReduceOp::default_v();
+    } else {
+      tmp.x = tmp.y = tmp.z = tmp.w = ReduceOp::default_v();
+    }
 
-  // sync to make sure all warps have finished its reduce work.
-  __syncthreads();
+    float v = ReduceOp::reduce_two(ReduceOp::reduce_two(tmp.x, tmp.y),
+                                   ReduceOp::reduce_two(tmp.z, tmp.w));
 
-  // use the first warp to final reduce the sum of all warps.
-  max_v = (lane_id < NUM_WARPS) ? smem_reduce[lane_id] : mllm_math::numeric_limits_min<float>();
-  if (warp_id == 0) max_v = warp_reduce<WarpReduceMaxOp<float>>(max_v);
-  if (tid == 0) mllm_math::atomicMax(z, max_v);
+    float r_v = warp_reduce<ReduceOp, float, MLLM_CUDA_WARP_SIZE>(v);
+    if (tid == 0) *z = r_v;
+  }
+
+  template<int BLOCK_SIZE>
+  static __device__ void _block_level(float* z, float* x, int num) {
+    // TODO
+  }
+
+  template<int BLOCK_SIZE>
+  static __device__ void _grid_level(float* z, float* x, int num) {
+    // TODO
+  }
+};
+
+// Use one block with < 32 threads to reduce an array < 128 elements. Which means we can use warp
+// level reduce.
+//
+// launch this kernel:
+// _1d_array_reduce_warp_level<ReduceOp, T, VEC_SIZE><<<1, 32>>>(z, x, num);
+template<typename ReduceOp, typename T, int VEC_SIZE>
+__global__ void _1d_array_reduce_warp_level(T* z, T* x, int num) {
+  _1DArrayReduceImpl<ReduceOp, T, VEC_SIZE>::_warp_level(z, x, num);
 }
 
-template<int N_TILE = 256 / 8>
-__device__ void block_all_reduce_sum_bf16x8_bf16(__nv_bfloat16* z, __nv_bfloat16* x, int N) {
-  int tid = threadIdx.x;
-  int idx = (blockIdx.x * N_TILE + tid) * 8;
-  constexpr int NUM_WARPS = (N_TILE + 32 - 1) / 32;
+// Use one block with < 1024 threads to reduce an array < 4096 elements. Which means we can use
+// block level reduce
+//
+// launch this kernel:
+// _1d_array_reduce_block_level<ReduceOp, T, VEC_SIZE, 1024><<<1, 1024>>>(z, x, num);
+// 32 < blockDim.x <= 1024
+template<typename ReduceOp, typename T, int VEC_SIZE, int BLOCK_SIZE>
+__global__ void _1d_array_reduce_block_level(T* z, T* x, int num) {
+  _1DArrayReduceImpl<ReduceOp, T, VEC_SIZE>::_block_level<BLOCK_SIZE>(z, x, num);
+}
 
-  __shared__ __nv_bfloat16 smem_reduce[NUM_WARPS];
-
-  int warp = tid / 32;
-  int lane = tid % 32;
-
-  // load 128 bits
-  __nv_bfloat16 pack[8];
-  reinterpret_cast<float4*>(pack)[0] = reinterpret_cast<float4*>(x + idx)[0];
-
-  const __nv_bfloat16 _0 = mllm_math::numeric_limits_pos_zero<__nv_bfloat16>();
-
-  __nv_bfloat16 acc = _0;
-#pragma unroll
-  for (int i = 0; i < 8; ++i) { acc += (((idx + i) < N) ? pack[i] : _0); }
-
-  acc = warp_reduce<WarpReduceAddOp<__nv_bfloat16>>(acc);
-  if (lane == 0) smem_reduce[warp] = acc;
-  __syncthreads();
-
-  __nv_bfloat16 sum = (lane < NUM_WARPS) ? smem_reduce[lane] : _0;
-  if (warp == 0) sum = warp_reduce<WarpReduceAddOp<__nv_bfloat16>>(sum);
-  if (tid == 0) atomicAdd(z, __bfloat162float(sum));
+// Use MULTI-block with < 1024 threads to reduce an array > 4096.
+//
+// launch this kernel:
+// _1d_array_reduce_grid_level<ReduceOp, T, VEC_SIZE, 256><<<min(num/(256*4), sm), 256>>>(z, x,
+// num);
+//
+// There has communication between blocks. And ATOMIC primitives is used
+template<typename ReduceOp, typename T, int VEC_SIZE, int BLOCK_SIZE>
+__global__ void _1d_array_reduce_grid_level(T* z, T* x, int num) {
+  _1DArrayReduceImpl<ReduceOp, T, VEC_SIZE>::_grid_level<BLOCK_SIZE>(z, x, num);
 }
 
 }  // namespace mllm::cuda

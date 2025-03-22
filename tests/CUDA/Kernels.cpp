@@ -1,4 +1,5 @@
 #include "SoftmaxTest.hpp"
+#include "ReductionTest.hpp"
 #include <gtest/gtest.h>
 
 TEST_F(SoftmaxTest, _4096x4096) {
@@ -35,6 +36,18 @@ TEST_F(SoftmaxTest, _17x128) {
   SetShapeAndAlloc(17, 128);
   CalculateRef();
   EXPECT_EQ(CalculateFp32AndCompare(), true);
+}
+
+TEST_F(Reduce1D, _128) {
+  SetShapeAndAlloc(128);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
+}
+
+TEST_F(Reduce1D, _126) {
+  SetShapeAndAlloc(126);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
 }
 
 int main(int argc, char** argv) {

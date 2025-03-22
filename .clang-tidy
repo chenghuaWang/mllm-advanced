@@ -17,6 +17,7 @@ Checks: >
     -readability-named-parameter,
     -google-readability-casting,
     -modernize-use-auto,
+    -google-readability-avoid-underscore-in-googletest-name,
 
 CheckOptions:
   - key: IndentWidth

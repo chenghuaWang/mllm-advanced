@@ -9,6 +9,7 @@
  */
 #include <cstdio>
 #include "mllm/Backends/CUDA/Ops/OpSelection.hpp"
+#include "mllm/Backends/CUDA/Kernels/reduce.cuh"
 #include "mllm/Backends/CUDA/Kernels/elewise.cuh"
 #include "mllm/Backends/CUDA/Kernels/softmax.cuh"
 
@@ -83,6 +84,14 @@ void safe_softmax_fp32(void* __restrict__ Z, const void* __restrict__ X, int row
   dim3 grid_dims(32);
   _block_level_uncached_safe_softmax_fp32<1024>
       <<<grid_dims, block_dims, 0>>>((float*)Z, (float*)X, rows, cols);
+}
+
+void array_reduce_sum_fp32(void* __restrict__ Z, const void* __restrict__ X, int num) {
+  // num <= 128, one block with 32 threads is enough
+  if (num <= 128) {
+    _1d_array_reduce_warp_level<WarpReduceAddOp<float>, float, 4>
+        <<<1, 32>>>((float*)Z, (float*)X, num);
+  }
 }
 
 }  // namespace mllm::cuda

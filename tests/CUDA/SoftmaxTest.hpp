@@ -37,10 +37,7 @@ class SoftmaxTest : public testing::Test {
     std::uniform_real_distribution<float> dist(-66.f, 66.f);
 
     auto rx_ptr = reinterpret_cast<float*>(hX);
-    for (int i = 0; i < M_ * N_; ++i) {
-      rx_ptr[i] = 1.f;
-      // dist(gen);
-    }
+    for (int i = 0; i < M_ * N_; ++i) { rx_ptr[i] = dist(gen); }
   }
 
   void CalculateRef() {

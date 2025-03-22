@@ -16,4 +16,6 @@ void vector_add_bf16_v0_call(void* Z, void* const X, void* const Y, int size, fl
 
 void safe_softmax_fp32(void* __restrict__ Z, const void* __restrict__ X, int rows, int cols);
 
+void array_reduce_sum_fp32(void* __restrict__ Z, const void* __restrict__ X, int num);
+
 }  // namespace mllm::cuda
