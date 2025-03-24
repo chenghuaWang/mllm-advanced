@@ -10,10 +10,12 @@
 #include <pybind11/pybind11.h>
 #include "pymllm/_C/Core.hpp"
 #include "pymllm/_C/Engine.hpp"
+#include "pymllm/_C/Nn.hpp"
 
 PYBIND11_MODULE(_C, m) {
   registerCoreBinding(m);
   registerBaseBackend(m);
   registerX86Backend(m);
   registerEngineBinding(m);
+  registerNn(m);
 }

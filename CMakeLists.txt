@@ -61,6 +61,7 @@ if(MLLM_ENABLE_PY_MLLM)
   # pybind portable lib _C
   pybind11_add_module(
     _C SHARED ${PROJECT_SOURCE_DIR}/pymllm/_C/PyWarp.cpp
+    ${PROJECT_SOURCE_DIR}/pymllm/_C/Nn.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Core.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Engine.cpp)
   target_compile_options(_C PUBLIC ${_py_compile_opts})

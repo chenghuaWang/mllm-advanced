@@ -91,7 +91,34 @@ void array_reduce_sum_fp32(void* __restrict__ Z, const void* __restrict__ X, int
   if (num <= 128) {
     _1d_array_reduce_warp_level<WarpReduceAddOp<float>, float, 4>
         <<<1, 32>>>((float*)Z, (float*)X, num);
+    return;
   }
+  if (num <= 4096) {
+    dim3 block_dims((num + 4 - 1) / 4);
+    dim3 grid_dims(1);
+#define DEF_OP_SELECT_CONDITION_WHEN(condition, sizes)                    \
+  if ((condition)) {                                                      \
+    _1d_array_reduce_block_level<WarpReduceAddOp<float>, float, 4, sizes> \
+        <<<grid_dims, block_dims>>>((float*)Z, (float*)X, num);           \
+    return;                                                               \
+  }
+
+    DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 64, 64)
+    DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 128, 128)
+    DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 256, 256)
+    DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 512, 512)
+    DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 1024, 1024)
+
+#undef DEF_OP_SELECT_SUB_CONDITION_WHEN
+    return;
+  }
+
+  // num > 4096
+  dim3 block_dims(1024);
+  dim3 grid_dims((num + 4096 - 1) / 4096);  // FIXME: consider sm count
+  _1d_array_reduce_grid_level<WarpReduceAddOp<float>, float, 4, 1024>
+      <<<grid_dims, block_dims>>>((float*)Z, (float*)X, num);
+  return;
 }
 
 }  // namespace mllm::cuda

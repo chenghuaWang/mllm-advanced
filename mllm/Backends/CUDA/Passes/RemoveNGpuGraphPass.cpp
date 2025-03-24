@@ -14,18 +14,19 @@
 
 namespace mllm::cuda {
 
-uint8_t RemoveNonGpuGraphPass::run(const node_ptr_t& op) {
+uint8_t RemoveNonGpuGraphPass::run(const ir::node_ptr_t& op) {
   // the top op should be ModuleOp
-  MLLM_RT_ASSERT(op->isa_<ModuleOp>());
+  MLLM_RT_ASSERT(op->isa_<ir::ModuleOp>());
 
-  auto r = IRWriter(getCtx(), op->cast_<ModuleOp>()->getTopRegion());
-  r.walk<graph::SubGraphOp>(
-      [&](IRWriter& remover, const std::shared_ptr<graph::SubGraphOp>& op) -> IRWriter::WalkResult {
+  auto r = ir::IRWriter(getCtx(), op->cast_<ir::ModuleOp>()->getTopRegion());
+  r.walk<ir::graph::SubGraphOp>(
+      [&](ir::IRWriter& remover,
+          const std::shared_ptr<ir::graph::SubGraphOp>& op) -> ir::IRWriter::WalkResult {
         if (op->hierarchy_base_->device() != kCUDA) { remover.removeOp(op); }
-        return IRWriter::WalkResult::WALK_CONTINUE;
+        return ir::IRWriter::WalkResult::WALK_CONTINUE;
       });
 
-  return PASS_RET_SUCCESS;
+  return ir::PASS_RET_SUCCESS;
 }
 
 }  // namespace mllm::cuda

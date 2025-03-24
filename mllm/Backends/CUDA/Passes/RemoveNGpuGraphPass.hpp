@@ -11,16 +11,14 @@
 
 #include "mllm/IR/Passes/Pass.hpp"
 
-using namespace mllm::ir;
-
 namespace mllm::cuda {
 
-class RemoveNonGpuGraphPass : public Pass {
+class RemoveNonGpuGraphPass : public ir::Pass {
  public:
   RemoveNonGpuGraphPass() = default;
   ~RemoveNonGpuGraphPass() override = default;
 
-  uint8_t run(const node_ptr_t& op) override;
+  uint8_t run(const ir::node_ptr_t& op) override;
 };
 
 static inline std::shared_ptr<RemoveNonGpuGraphPass> createRemoveNonGpuGraphPass() {

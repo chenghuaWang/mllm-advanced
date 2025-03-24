@@ -91,8 +91,9 @@ class Reduce1D : public testing::Test {
 
     const auto imp_value = rz_ptr[0];
     const auto ref_value = z_ptr[0];
-    const auto rel_error = std::fabs((imp_value - ref_value));
-    if (rel_error > 0.001F) {
+    const auto rel_error =
+        ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+    if (rel_error > 0.0001F) {
       Dbg(rel_error, imp_value, ref_value);
       flag = false;
     }

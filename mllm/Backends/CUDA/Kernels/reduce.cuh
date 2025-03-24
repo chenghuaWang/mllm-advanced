@@ -32,6 +32,8 @@ struct WarpReduceAddOp {
   }
 
   static __forceinline__ __device__ T reduce_two(T a, T b) { return a + b; }
+
+  static __forceinline__ __device__ void atomic_reduce_two(T* a, T b) { atomicAdd(a, b); }
 };
 
 template<typename T>
@@ -169,12 +171,57 @@ struct _1DArrayReduceImpl<ReduceOp, float, 4> {
 
   template<int BLOCK_SIZE>
   static __device__ void _block_level(float* z, float* x, int num) {
-    // TODO
+    // assume BLOCK_SIZE * 4 >= num.
+    int tid = threadIdx.x;
+    int index = tid * 4;
+    float4 tmp;
+
+    if (index + 3 < num) {
+      MLLM_LDG128(&tmp, x + index);
+    } else if (index < num) {
+      tmp.x = (index + 0 < num) ? x[index + 0] : ReduceOp::default_v();
+      tmp.y = (index + 1 < num) ? x[index + 1] : ReduceOp::default_v();
+      tmp.z = (index + 2 < num) ? x[index + 2] : ReduceOp::default_v();
+      tmp.w = (index + 3 < num) ? x[index + 3] : ReduceOp::default_v();
+    } else {
+      tmp.x = tmp.y = tmp.z = tmp.w = ReduceOp::default_v();
+    }
+
+    float v = ReduceOp::reduce_two(ReduceOp::reduce_two(tmp.x, tmp.y),
+                                   ReduceOp::reduce_two(tmp.z, tmp.w));
+
+    // block_reduce it self will broad cast for us. There is no need to sync and broadcast again.
+    float r_v = block_reduce<float, ReduceOp, BLOCK_SIZE>(v);
+
+    if (tid == 0) *z = r_v;
   }
 
   template<int BLOCK_SIZE>
   static __device__ void _grid_level(float* z, float* x, int num) {
-    // TODO
+    int tid = threadIdx.x;
+    int index = (blockIdx.x * BLOCK_SIZE + tid) * 4;
+
+    float4 tmp;
+
+    if (index + 3 < num) {
+      MLLM_LDG128(&tmp, x + index);
+    } else if (index < num) {
+      tmp.x = (index + 0 < num) ? x[index + 0] : ReduceOp::default_v();
+      tmp.y = (index + 1 < num) ? x[index + 1] : ReduceOp::default_v();
+      tmp.z = (index + 2 < num) ? x[index + 2] : ReduceOp::default_v();
+      tmp.w = (index + 3 < num) ? x[index + 3] : ReduceOp::default_v();
+    } else {
+      tmp.x = tmp.y = tmp.z = tmp.w = ReduceOp::default_v();
+    }
+
+    float v = ReduceOp::reduce_two(ReduceOp::reduce_two(tmp.x, tmp.y),
+                                   ReduceOp::reduce_two(tmp.z, tmp.w));
+
+    // reduce in all blocks. block_reduce already has sync.
+    float r_v = block_reduce<float, ReduceOp, BLOCK_SIZE>(v);
+
+    // L1 cache will be used?
+    if (tid == 0) ReduceOp::atomic_reduce_two(z, r_v);
   }
 };
 

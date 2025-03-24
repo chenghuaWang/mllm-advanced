@@ -11,7 +11,7 @@
 #include "mllm/Core/DeviceTypes.hpp"
 
 void registerCoreBinding(py::module_& m) {
-  pybind11::enum_<mllm::DeviceTypes>(m, "DeviceTypes")
+  py::enum_<mllm::DeviceTypes>(m, "DeviceTypes")
       .value("CPU", mllm::DeviceTypes::kCPU)
       .value("CUDA", mllm::DeviceTypes::kCUDA)
       .value("OpenCL", mllm::DeviceTypes::kOpenCL);

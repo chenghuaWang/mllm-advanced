@@ -50,6 +50,36 @@ TEST_F(Reduce1D, _126) {
   EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
 }
 
+TEST_F(Reduce1D, _256) {
+  SetShapeAndAlloc(256);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
+}
+
+TEST_F(Reduce1D, _512) {
+  SetShapeAndAlloc(512);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
+}
+
+TEST_F(Reduce1D, _519) {
+  SetShapeAndAlloc(519);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
+}
+
+TEST_F(Reduce1D, _4096) {
+  SetShapeAndAlloc(4096);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
+}
+
+TEST_F(Reduce1D, _8192) {
+  SetShapeAndAlloc(8192);
+  CalculateRef(Reduce1D::kAdd);
+  EXPECT_EQ(CalculateFp32AndCompare(Reduce1D::kAdd), true);
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
