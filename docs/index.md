@@ -3,6 +3,15 @@
 ## Contents
 
 :::{toctree}
+:maxdepth: 2
+:caption: Core Components
+:glob:
+:numbered:
+
+CoreComponents/index
+:::
+
+:::{toctree}
 :maxdepth: 3
 :caption: ARM Backend
 :glob:
@@ -29,7 +38,7 @@ CudaBackend/Kernels/index
 :numbered:
 
 Contribute/CodeConventions
-Contribute/TodoList
+Contribute/Roadmap
 :::
 
 ## Translation
