@@ -14,15 +14,16 @@
 namespace mllm::cuda {
 
 class CUDAAllocator final : public Allocator {
-  bool alloc(const std::shared_ptr<TensorImpl>& tensor) override;
-  void free(const std::shared_ptr<TensorImpl>& tensor) override;
-  void free(TensorImpl* tensor) override;
+  bool alloc(const std::shared_ptr<Storage>& storage) override;
+  void free(const std::shared_ptr<Storage>& storage) override;
+  void free(Storage* storage) override;
 
   bool generalAlloc(void** ptr, size_t cap, size_t align) override;
   void generalFree(void* ptr) override;
 
-  size_t allocSize(const std::shared_ptr<TensorImpl>& tensor) override;
-  size_t allocSize(TensorImpl* tensor) override;
+  size_t allocSize(Storage* storage) override;
+  size_t allocSize(const std::shared_ptr<Storage>& storage) override;
+
   [[nodiscard]] size_t alignSize() const override;
 };
 

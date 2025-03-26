@@ -45,8 +45,8 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
       // to alloc bias. we should not use this.
       auto bias = new float[N];
       std::fill(bias, bias + N, 0);
-      for (size_t d0 = 0; d0 < DIM_0; d0++) {
-        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+      for (int d0 = 0; d0 < DIM_0; d0++) {
+        for (int d1 = 0; d1 < DIM_1; d1++) {
           sgemm_mk_kn_mn_V1(i_a.offsettedPtr<float>({d0, d1, 0, 0}),
                             i_b.offsettedPtr<float>({d0, d1, 0, 0}),
                             o.offsettedPtr<float>({d0, d1, 0, 0}), M, K, N, bias, cargo_.thread());
@@ -90,8 +90,8 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
       // to alloc bias. we should not use this.
       auto bias = new float16_t[N];
       std::fill(bias, bias + N, 0);
-      for (size_t d0 = 0; d0 < DIM_0; d0++) {
-        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+      for (int d0 = 0; d0 < DIM_0; d0++) {
+        for (int d1 = 0; d1 < DIM_1; d1++) {
           hgemm_mk_kn_mn_V1(i_a.offsettedPtr<float16_t>({d0, d1, 0, 0}),
                             i_b.offsettedPtr<float16_t>({d0, d1, 0, 0}),
                             o.offsettedPtr<float16_t>({d0, d1, 0, 0}), M, K, N, bias,
@@ -138,8 +138,8 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         && i_b.dtype() == kFp32 && o.dtype() == kFp32) {
       auto DIM_0 = i_a_shape[0];
       auto DIM_1 = i_a_shape[1];
-      for (size_t d0 = 0; d0 < DIM_0; d0++) {
-        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+      for (int d0 = 0; d0 < DIM_0; d0++) {
+        for (int d1 = 0; d1 < DIM_1; d1++) {
           sgemm_mk_nk_mn_V1(
               i_a.offsettedPtr<float>({d0, d1, 0, 0}), i_b.offsettedPtr<float>({d0, d1, 0, 0}),
               o.offsettedPtr<float>({d0, d1, 0, 0}), M, K, N, nullptr, cargo_.thread());
@@ -171,8 +171,8 @@ void ArmMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         && i_b.dtype() == kFp16 && o.dtype() == kFp16) {
       auto DIM_0 = i_a_shape[0];
       auto DIM_1 = i_a_shape[1];
-      for (size_t d0 = 0; d0 < DIM_0; d0++) {
-        for (size_t d1 = 0; d1 < DIM_1; d1++) {
+      for (int d0 = 0; d0 < DIM_0; d0++) {
+        for (int d1 = 0; d1 < DIM_1; d1++) {
           hgemm_mk_nk_mn_V1(i_a.offsettedPtr<float16_t>({d0, d1, 0, 0}),
                             i_b.offsettedPtr<float16_t>({d0, d1, 0, 0}),
                             o.offsettedPtr<float16_t>({d0, d1, 0, 0}), M, K, N, nullptr,

@@ -1,5 +1,12 @@
 # Tensor
 
+```{figure} ../_static/img/tensor-storage.png
+:width: 80%
+:alt: Overview
+:align: center
+
+Figure 1: Tensor Storage and Tensor View.
+```
 
 ## Memory Layout
 

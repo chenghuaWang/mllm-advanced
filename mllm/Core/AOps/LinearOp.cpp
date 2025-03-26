@@ -34,7 +34,7 @@ void LinearOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
 }
 
 void LinearOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  auto i = inputs[0];
+  const auto& i = inputs[0];
   auto i_shape = i.shape();
 
   MLLM_RT_ASSERT_EQ(i_shape[i_shape.size() - 1], cargo_.in_channels);

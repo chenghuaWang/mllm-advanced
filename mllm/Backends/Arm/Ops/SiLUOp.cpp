@@ -17,7 +17,7 @@ namespace mllm::arm {
 ArmSiLUOp::ArmSiLUOp(const SiLUOpCargo& cargo) : SiLUOp(cargo) {}
 
 void ArmSiLUOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  auto X = inputs[0];
+  const auto& X = inputs[0];
   auto Y = outputs[0];
 
   switch (X.dtype()) {

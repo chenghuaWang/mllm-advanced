@@ -16,12 +16,12 @@
 namespace mllm {
 
 struct KVCacheOpCargo : public BaseOpCargo<KVCacheOpCargo> {
-  size_t heads_num = 1;
-  size_t dim_per_head = 0;
-  size_t head_repeat_times = 1;
+  int32_t heads_num = 1;
+  int32_t dim_per_head = 0;
+  int32_t head_repeat_times = 1;
   DataTypes cached_elements_dtype = kFp32;
-  size_t pre_alloc_seq_len = 1024;
-  size_t re_alloc_multiplier = 2;
+  int32_t pre_alloc_seq_len = 1024;
+  int32_t re_alloc_multiplier = 2;
 };
 
 class KVCacheOp : public BaseOp {

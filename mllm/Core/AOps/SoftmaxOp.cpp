@@ -32,8 +32,9 @@ void SoftmaxOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
 }
 
 void SoftmaxOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs.emplace_back(Tensor(
-      std::make_shared<TensorImpl>(inputs[0].shape(), inputs[0].dtype(), inputs[0].device())));
+  auto empty_s = TensorStorage::create(inputs[0].shape(), inputs[0].dtype(), inputs[0].device());
+  auto empty_impl = TensorViewImpl::create(inputs[0].shape(), empty_s);
+  outputs.emplace_back(empty_impl);
 }
 
 void SoftmaxOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

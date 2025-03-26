@@ -17,7 +17,7 @@ namespace mllm::arm {
 ArmLinearOp::ArmLinearOp(const LinearOpCargo& cargo) : LinearOp(cargo) {}
 
 void ArmLinearOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  auto i = inputs[0];
+  const auto& i = inputs[0];
   auto o = outputs[0];
 
   // MxK @ NxK

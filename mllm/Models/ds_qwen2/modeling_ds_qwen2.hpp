@@ -23,6 +23,8 @@
 #include "mllm/Nn/Module.hpp"
 #include "mllm/Models/ds_qwen2/configuration_ds_qwen2.hpp"
 
+#include "mllm/Utils/Dbg.hpp"
+
 namespace mllm::models {
 
 class QWenMLP final : public nn::Module {
@@ -188,7 +190,7 @@ class QWenForCausalLM final : public nn::Module {
  public:
   QWenForCausalLM() = default;
 
-  QWenForCausalLM(const QWenConfig& cfg) {
+  explicit QWenForCausalLM(const QWenConfig& cfg) {
     selfAssignName(cfg.top_module_name);
     decode_blocks_ =
         reg<nn::ModuleList<QWenDecoder>>(cfg.layers_base_name, cfg.num_hidden_layers, cfg);

@@ -16,7 +16,7 @@ void LayerImpl::dump(DumpPrinter& printer) {
   printer.print("{}, device={}", absoluteName(), deviceTypes2Str(device()));
 }
 
-std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& LayerImpl::refParams() {
+std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>>& LayerImpl::refParams() {
   return parameter_loader_->params();
 }
 

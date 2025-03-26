@@ -12,19 +12,17 @@
 
 namespace mllm::arm {
 
-bool ArmAllocator::alloc(const std::shared_ptr<TensorImpl>& tensor) {
+bool ArmAllocator::alloc(const std::shared_ptr<Storage>& storage) {
   void* ptr;
-  arm_align_alloc(&ptr, tensor->size(), alignSize());
+  arm_align_alloc(&ptr, storage->size_, alignSize());
   if (!ptr) return false;
-  tensor->_setRawPtr(ptr);
+  storage->ptr_ = ptr;
   return true;
 }
 
-void ArmAllocator::free(const std::shared_ptr<TensorImpl>& tensor) {
-  arm_align_free(tensor->rptr());
-}
+void ArmAllocator::free(const std::shared_ptr<Storage>& storage) { arm_align_free(storage->ptr_); }
 
-void ArmAllocator::free(TensorImpl* tensor) { arm_align_free(tensor->rptr()); }
+void ArmAllocator::free(Storage* storage) { arm_align_free(storage->ptr_); }
 
 bool ArmAllocator::generalAlloc(void** ptr, size_t cap, size_t align) {
   arm_align_alloc(ptr, cap, align);
@@ -36,18 +34,18 @@ void ArmAllocator::generalFree(void* ptr) {
   arm_align_free(ptr);
 }
 
-size_t ArmAllocator::allocSize(const std::shared_ptr<TensorImpl>& tensor) {
+size_t ArmAllocator::allocSize(Storage* storage) {
   // remember that alloc size should be aligned
   size_t align_size = alignSize();
-  size_t required_size = tensor->size();
+  size_t required_size = storage->size_;
   size_t aligned_size = (required_size + align_size - 1) & ~(align_size - 1);
   return aligned_size;
 }
 
-size_t ArmAllocator::allocSize(TensorImpl* tensor) {
+size_t ArmAllocator::allocSize(const std::shared_ptr<Storage>& storage) {
   // remember that alloc size should be aligned
   size_t align_size = alignSize();
-  size_t required_size = tensor->size();
+  size_t required_size = storage->size_;
   size_t aligned_size = (required_size + align_size - 1) & ~(align_size - 1);
   return aligned_size;
 }

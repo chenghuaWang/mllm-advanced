@@ -20,9 +20,9 @@ class KVCache : public Layer {
  public:
   KVCache();
 
-  KVCache(size_t heads_num, size_t dim_per_head, size_t head_repeat_times,
-          DataTypes cached_elements_dtype, size_t pre_alloc_seq_len,
-          size_t re_alloc_multiplier = 2);
+  KVCache(int32_t heads_num, int32_t dim_per_head, int32_t head_repeat_times,
+          DataTypes cached_elements_dtype, int32_t pre_alloc_seq_len,
+          int32_t re_alloc_multiplier = 2);
 
   explicit KVCache(const KVCacheOpCargo& cargo);
 };

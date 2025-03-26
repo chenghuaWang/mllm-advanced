@@ -33,10 +33,10 @@ void LLMEmbeddingTokenOp::forward(const std::vector<Tensor>& inputs, std::vector
 }
 
 void LLMEmbeddingTokenOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  auto i = inputs[0];
+  const auto& i = inputs[0];
   auto shape = i.shape();
-  std::vector<size_t> o_shape{/*batch*/ shape[0], /*seq*/ shape[1],
-                              /*feat dim*/ (size_t)cargo_.hidden_size};
+  std::vector<int32_t> o_shape{/*batch*/ shape[0], /*seq*/ shape[1],
+                               /*feat dim*/ cargo_.hidden_size};
   outputs.emplace_back(Tensor::empty(o_shape, weight_.dtype(), i.device()));
 }
 

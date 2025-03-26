@@ -36,11 +36,12 @@ void MatMulOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   auto shape_a = inputs[0].shape();
   auto shape_b = inputs[1].shape();
 
-  std::vector<size_t> shape_c;
+  std::vector<int32_t> shape_c;
 
   // check.
   auto size_a = shape_a.size();
   auto size_b = shape_b.size();
+  shape_c.reserve(size_a - 2);
   for (int i = 0; i < size_a - 2; ++i) { shape_c.push_back(shape_a[i]); }
 
   // transform shape.

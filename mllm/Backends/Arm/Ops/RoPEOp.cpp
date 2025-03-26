@@ -29,17 +29,15 @@ void ArmRoPEOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   // init sin and cos
   switch (cargo_.type) {
     case RoPETypes::kLlama2: {
-      sin_ =
-          Tensor::empty({(size_t)cargo_.max_position_embeddings, (size_t)cargo_.dims}, kFp32, kCPU)
-              .setMemType(kGlobal)
-              .setName("__global_rope_sin")
-              .alloc();
+      sin_ = Tensor::empty({cargo_.max_position_embeddings, cargo_.dims}, kFp32, kCPU)
+                 .setMemType(kGlobal)
+                 .setName("__global_rope_sin")
+                 .alloc();
       ctx.mem()->regGlobalTensor(sin_);
-      cos_ =
-          Tensor::empty({(size_t)cargo_.max_position_embeddings, (size_t)cargo_.dims}, kFp32, kCPU)
-              .setMemType(kGlobal)
-              .setName("__global_rope_cos")
-              .alloc();
+      cos_ = Tensor::empty({cargo_.max_position_embeddings, cargo_.dims}, kFp32, kCPU)
+                 .setMemType(kGlobal)
+                 .setName("__global_rope_cos")
+                 .alloc();
       ctx.mem()->regGlobalTensor(cos_);
       precompute_normal_hf_sin_cos(cargo_.max_position_embeddings, cargo_.dims, cargo_.theta,
                                    sin_.ptr<float>(), cos_.ptr<float>());
@@ -65,8 +63,8 @@ void ArmRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       auto D = shape[3];
       switch (X.dtype()) {
         case kFp32: {
-          for (size_t b = 0; b < B; ++b) {
-            for (size_t h = 0; h < H; ++h) {
+          for (int b = 0; b < B; ++b) {
+            for (int h = 0; h < H; ++h) {
               normal_hf_rope(X.offsettedPtr<float>({b, h, 0, 0}),
                              Y.offsettedPtr<float>({b, h, 0, 0}), sin_.ptr<float>(),
                              cos_.ptr<float>(), cur_seq_cnt_, S, D);
@@ -75,8 +73,8 @@ void ArmRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
           break;
         }
         case kFp16: {
-          for (size_t b = 0; b < B; ++b) {
-            for (size_t h = 0; h < H; ++h) {
+          for (int b = 0; b < B; ++b) {
+            for (int h = 0; h < H; ++h) {
               normal_hf_rope_fp16(X.offsettedPtr<float16_t>({b, h, 0, 0}),
                                   Y.offsettedPtr<float16_t>({b, h, 0, 0}), sin_.ptr<float>(),
                                   cos_.ptr<float>(), cur_seq_cnt_, S, D);

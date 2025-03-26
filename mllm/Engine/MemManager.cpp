@@ -37,52 +37,57 @@ MemManager::~MemManager() {
 
 MemManager::MemManager(MemManagerCargo cargo) : cargo_(std::move(cargo)) {}
 
-void MemManager::alloc(const std::shared_ptr<TensorImpl>& t) {
-  auto allocator = allocators_st_[t->device()];
-  auto try_to_alloc_size = allocator->allocSize(t);
+void MemManager::alloc(const std::shared_ptr<Storage>& s) {
+  auto allocator = allocators_st_[s->device_];
+  auto try_to_alloc_size = allocator->allocSize(s);
 
-  // large tensor
+  // large storage
   if (try_to_alloc_size >= cargo_.really_large_tensor_threshold) {
-    MLLM_WARN("Trying to alloc a really large tensor, whose tensor size is {}B. The mllm memory "
-              "manager will alloc a memory for this tensor from OS directly instead of "
+    MLLM_WARN("Trying to alloc a really large storage, whose storage size is {}B. The mllm memory "
+              "manager will alloc a memory for this storage from OS directly instead of "
               "allocating one from ObjectCachePool/BuddyMemoryPool. If your scenario need to "
-              "handle large tensors frequently, you can modify the `buddy_first_segment_cap` in "
+              "handle large storage frequently, you can modify the `buddy_first_segment_cap` in "
               "`MemManagerCargo`.",
               try_to_alloc_size);
-    _alloc_really_large(t);
+    _alloc_really_large(s);
     return;
   }
 
   // object cache
   ObjMemBlock* omb = nullptr;
-  if (_is_in_oc(try_to_alloc_size)) { omb = _alloc_oc(t->device(), try_to_alloc_size); }
+  if (_is_in_oc(try_to_alloc_size)) { omb = _alloc_oc(s->device_, try_to_alloc_size); }
 
   // buddy
-  if (!omb) { omb = _alloc_buddy(t->device(), try_to_alloc_size); }
+  if (!omb) { omb = _alloc_buddy(s->device_, try_to_alloc_size); }
 
-  t->_setRawPtr(omb->ptr);
+  s->ptr_ = omb->ptr;
 
-  st_.reg(t->uuid(), omb);
-  if (!t->name().empty()) { named_tensor_st_.reg(t->name(), omb); }
+  st_.reg(s->custom_32bit_uuid_, omb);
+
+  if (s->type_ == Storage::kTensor && !std::static_pointer_cast<TensorStorage>(s)->name_.empty()) {
+    named_tensor_st_.reg(std::static_pointer_cast<TensorStorage>(s)->name_, omb);
+  }
 }
 
-void MemManager::free(TensorImpl* t) {
-  auto allocator = allocators_st_[t->device()];
-  auto try_to_alloc_size = allocator->allocSize(t);
+void MemManager::free(Storage* s) {
+  auto allocator = allocators_st_[s->device_];
+  auto try_to_alloc_size = allocator->allocSize(s);
 
   if (try_to_alloc_size >= cargo_.really_large_tensor_threshold) {
-    _free_really_large(t);
+    _free_really_large(s);
     return;
   }
 
   if (_is_in_oc(try_to_alloc_size)) {
-    _free_oc(t->device(), st_[t->uuid()]);
+    _free_oc(s->device_, st_[s->custom_32bit_uuid_]);
   } else {
-    _free_buddy(t->device(), st_[t->uuid()]);
+    _free_buddy(s->device_, st_[s->custom_32bit_uuid_]);
   }
 
-  st_.remove(t->uuid());
-  if (!t->name().empty()) { named_tensor_st_.remove(t->name()); }
+  st_.remove(s->custom_32bit_uuid_);
+  if (s->type_ == Storage::kTensor && !((TensorStorage*)(s))->name_.empty()) {
+    named_tensor_st_.remove(((TensorStorage*)(s))->name_);
+  }
 }
 
 void MemManager::regAllocator(DeviceTypes device, const std::shared_ptr<Allocator>& allocator) {
@@ -357,30 +362,35 @@ bool MemManager::_is_in_oc(size_t omb_size) {
   return cargo_.cache_size_set.count(omb_size);
 }
 
-void MemManager::_alloc_really_large(const std::shared_ptr<TensorImpl>& t) {
-  auto allocator = allocators_st_[t->device()];
-  allocator->alloc(t);
+void MemManager::_alloc_really_large(const std::shared_ptr<Storage>& s) {
+  auto allocator = allocators_st_[s->device_];
+  allocator->alloc(s);
 
   // register to memory manager
   auto obj_mem_block = new ObjMemBlock{
-      .ptr = (char*)t->rptr(),
+      .ptr = (char*)s->ptr_,
       .offset = 0,
       .size = 0,
       .segment = nullptr,
       .buddy_order = 0,
       .allocated = true,
   };
-  if (!t->name().empty()) { named_tensor_st_.reg(t->name(), obj_mem_block); }
-  st_.reg(t->uuid(), obj_mem_block);
+  if (s->type_ == Storage::kTensor && !std::static_pointer_cast<TensorStorage>(s)->name_.empty()) {
+    named_tensor_st_.reg(std::static_pointer_cast<TensorStorage>(s)->name_, obj_mem_block);
+  }
+
+  st_.reg(s->custom_32bit_uuid_, obj_mem_block);
 }
 
-void MemManager::_free_really_large(TensorImpl* t) {
-  auto allocator = allocators_st_[t->device()];
-  allocator->free(t);
+void MemManager::_free_really_large(Storage* s) {
+  auto allocator = allocators_st_[s->device_];
+  allocator->free(s);
 
-  auto obj_mem_block = st_[t->uuid()];
-  st_.remove(t->uuid());
-  if (!t->name().empty()) { named_tensor_st_.remove(t->name()); }
+  auto obj_mem_block = st_[s->custom_32bit_uuid_];
+  st_.remove(s->custom_32bit_uuid_);
+  if (s->type_ == Storage::kTensor && !((TensorStorage*)(s))->name_.empty()) {
+    named_tensor_st_.remove(((TensorStorage*)(s))->name_);
+  }
   delete obj_mem_block;
 }
 

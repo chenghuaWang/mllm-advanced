@@ -203,11 +203,11 @@ std::vector<std::wstring> DeepSeekQwen2Tokenizer::tokenize(const std::string& st
   return all_tokens;
 }
 
-std::wstring DeepSeekQwen2Tokenizer::_detokenize(long pos_idx) {
+std::wstring DeepSeekQwen2Tokenizer::_detokenize(int64_t pos_idx) {
   return bpe_._lookup_inverse_vocab(pos_idx);
 }
 
-std::wstring DeepSeekQwen2Tokenizer::detokenize(long pos_idx) {
+std::wstring DeepSeekQwen2Tokenizer::detokenize(int64_t pos_idx) {
   auto str = _detokenize(pos_idx);
   std::string utf_8_str;
   for (wchar_t c : str) { utf_8_str.push_back((unsigned char)(bytes_2_unicode_dict_inverse_[c])); }
@@ -215,11 +215,11 @@ std::wstring DeepSeekQwen2Tokenizer::detokenize(long pos_idx) {
 }
 
 Tensor DeepSeekQwen2Tokenizer::convert2Ids(const std::vector<std::wstring>& strs) {
-  std::vector<long> ids;
+  std::vector<int64_t> ids;
   ids.reserve(strs.size() + 1);
   ids.emplace_back(bpe_._lookup_vocab(L"<｜begin▁of▁sentence｜>"));
   for (const auto& str : strs) { ids.emplace_back(bpe_._lookup_vocab(str)); }
-  Tensor ret = Tensor::empty({/*batch*/ 1, /*seq*/ ids.size()}, kInt64, kCPU)
+  Tensor ret = Tensor::empty({/*batch*/ 1, /*seq*/ (int32_t)ids.size()}, kInt64, kCPU)
                    .setMemType(kExtraInput)
                    .setName("qwen2-tokenizer-i0")
                    .alloc();

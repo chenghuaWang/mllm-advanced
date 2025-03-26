@@ -16,7 +16,7 @@ namespace mllm::arm {
 ArmTransposeOp::ArmTransposeOp(const TransposeOpCargo& cargo) : TransposeOp(cargo) {}
 
 void ArmTransposeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  auto i = inputs[0];
+  const auto& i = inputs[0];
   auto o = outputs[0];
 
   MLLM_RT_ASSERT(i.isContiguous());

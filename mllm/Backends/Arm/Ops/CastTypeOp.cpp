@@ -58,9 +58,9 @@ void ArmCastTypeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tenso
     auto H = ins.shape()[1];
     auto S = ins.shape()[2];
     auto D = ins.shape()[3];
-    for (size_t b = 0; b < B; ++b) {
-      for (size_t h = 0; h < H; ++h) {
-        for (size_t s = 0; s < S; ++s) {
+    for (int b = 0; b < B; ++b) {
+      for (int h = 0; h < H; ++h) {
+        for (int s = 0; s < S; ++s) {
           auto ins_ptr = ins.offsettedPtr<float>({b, h, s, 0});
           auto ous_ptr = ous.offsettedPtr<__fp16>({b, h, s, 0});
 
@@ -125,9 +125,9 @@ void ArmCastTypeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tenso
     auto H = ins.shape()[1];
     auto S = ins.shape()[2];
     auto D = ins.shape()[3];
-    for (size_t b = 0; b < B; ++b) {
-      for (size_t h = 0; h < H; ++h) {
-        for (size_t s = 0; s < S; ++s) {
+    for (int b = 0; b < B; ++b) {
+      for (int h = 0; h < H; ++h) {
+        for (int s = 0; s < S; ++s) {
           auto ins_ptr = ins.offsettedPtr<__fp16>({b, h, s, 0});
           auto ous_ptr = ous.offsettedPtr<float>({b, h, s, 0});
 

@@ -32,9 +32,9 @@ class DeepSeekQwen2Tokenizer final : public mllm::preprocessor::AutoTokenizer {
 
   std::vector<std::wstring> tokenize(const std::string& str) override;
 
-  std::wstring _detokenize(long pos_idx) override;
+  std::wstring _detokenize(int64_t pos_idx) override;
 
-  std::wstring detokenize(long pos_idx) override;
+  std::wstring detokenize(int64_t pos_idx) override;
 
   Tensor convert2Ids(const std::vector<std::wstring>& strs) override;
 

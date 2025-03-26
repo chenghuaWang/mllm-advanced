@@ -42,10 +42,10 @@ void ArmKVCacheOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
 
   // Parallel Copy has no speedup on current big.LITTLE Arch(8 Gen1, Gen3, ...).
   // copy data from inputs[0] to cache_
-  for (size_t b = 0; b < B; ++b) {
-    for (size_t h = 0; h < cargo_.heads_num; ++h) {
-      for (size_t s = 0; s < S; ++s) {
-        for (size_t h_rep = 0; h_rep < cargo_.head_repeat_times; ++h_rep) {
+  for (int b = 0; b < B; ++b) {
+    for (int h = 0; h < cargo_.heads_num; ++h) {
+      for (int s = 0; s < S; ++s) {
+        for (int h_rep = 0; h_rep < cargo_.head_repeat_times; ++h_rep) {
           std::memcpy(cache_.offsettedRawPtr(
                           {b, h * cargo_.head_repeat_times + h_rep, cur_kv_cache_seq_len_ + s, 0}),
                       t.offsettedRawPtr({b, h, s, 0}), D * dataTypeSize(t.dtype()));
@@ -90,9 +90,9 @@ void ArmKVCacheOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor
     auto old_cache_D = old_cache_shape[3];
 
     // Parallel Copy has no speedup on current big.LITTLE Arch(8 Gen1, Gen3, ...).
-    for (size_t b = 0; b < old_cache_B; ++B) {
-      for (size_t h = 0; h < old_cache_H; ++h) {
-        for (size_t s = 0; s < old_cache_S; ++s) {
+    for (int b = 0; b < old_cache_B; ++B) {
+      for (int h = 0; h < old_cache_H; ++h) {
+        for (int s = 0; s < old_cache_S; ++s) {
           std::memcpy(new_cache_.offsettedRawPtr({b, h, s, 0}),
                       cache_.offsettedRawPtr({b, h, s, 0}),
                       old_cache_D * dataTypeSize(cache_.dtype()));
@@ -109,7 +109,7 @@ void ArmKVCacheOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>&
   // We assumed the inputs[0] is [B, H, S, D]
   auto s = inputs[0].shape()[2];
   // B, H, S, D
-  auto o1 = cache_.refFrom({{}, {}, {kAll, (int32_t)(cur_kv_cache_seq_len_ + s)}, {}});
+  auto o1 = cache_[{{}, {}, {kAll, (int32_t)(cur_kv_cache_seq_len_ + s)}, {}}];
   outputs.emplace_back(o1);
 }
 

@@ -35,8 +35,8 @@ void ArmCausalMaskOp::forward(const std::vector<Tensor>& inputs, std::vector<Ten
       const float32x4_t mask_val = vdupq_n_f32(-1e10f);
 
       if (S == 1) {
-        for (size_t b = 0; b < B; ++b) {
-          for (size_t h = 0; h < H; ++h) {
+        for (int b = 0; b < B; ++b) {
+          for (int h = 0; h < H; ++h) {
             auto* i_ptr = ins.offsettedPtr<float>({b, h, 0, 0});
             auto* o_ptr = ous.offsettedPtr<float>({b, h, 0, 0});
             memcpy(o_ptr, i_ptr, D * sizeof(float));
@@ -45,8 +45,8 @@ void ArmCausalMaskOp::forward(const std::vector<Tensor>& inputs, std::vector<Ten
         return;
       }
 
-      for (size_t b = 0; b < B; ++b) {
-        for (size_t h = 0; h < H; ++h) {
+      for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < H; ++h) {
           auto* i_ptr = ins.offsettedPtr<float>({b, h, 0, 0});
           auto* o_ptr = ous.offsettedPtr<float>({b, h, 0, 0});
 
@@ -74,8 +74,8 @@ void ArmCausalMaskOp::forward(const std::vector<Tensor>& inputs, std::vector<Ten
       const float16x8_t mask_val = vdupq_n_f16(-65500.f);
 
       if (S == 1) {
-        for (size_t b = 0; b < B; ++b) {
-          for (size_t h = 0; h < H; ++h) {
+        for (int b = 0; b < B; ++b) {
+          for (int h = 0; h < H; ++h) {
             auto* i_ptr = ins.offsettedPtr<float16_t>({b, h, 0, 0});
             auto* o_ptr = ous.offsettedPtr<float16_t>({b, h, 0, 0});
             memcpy(o_ptr, i_ptr, D * sizeof(float16_t));
@@ -84,8 +84,8 @@ void ArmCausalMaskOp::forward(const std::vector<Tensor>& inputs, std::vector<Ten
         return;
       }
 
-      for (size_t b = 0; b < B; ++b) {
-        for (size_t h = 0; h < H; ++h) {
+      for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < H; ++h) {
           auto* i_ptr = ins.offsettedPtr<float16_t>({b, h, 0, 0});
           auto* o_ptr = ous.offsettedPtr<float16_t>({b, h, 0, 0});
 

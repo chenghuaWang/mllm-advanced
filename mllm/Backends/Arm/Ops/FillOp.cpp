@@ -17,7 +17,7 @@ namespace mllm::arm {
 
 namespace {
 void __iteration_copy_tensor(Tensor& dst, Tensor& src, size_t ele_size,
-                             std::vector<size_t>& indices, std::vector<size_t>& shape,
+                             std::vector<int32_t>& indices, std::vector<int32_t>& shape,
                              size_t dim = 0) {
   if (dim == indices.size()) {
     std::memcpy(dst.offsettedRawPtr(indices), src.offsettedRawPtr(indices), ele_size);
@@ -75,7 +75,7 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       auto t = inputs[0];
       auto o = outputs[0];
       auto shape = t.shape();
-      auto indicies = std::vector<size_t>(shape.size(), 0);
+      auto indicies = std::vector<int32_t>(shape.size(), 0);
       __iteration_copy_tensor(o, t, dataTypeSize(t.dtype()), indicies, shape, 0);
       break;
     }

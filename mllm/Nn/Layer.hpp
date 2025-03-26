@@ -32,7 +32,7 @@ class LayerImpl : public HierarchyBase {
 
   void dump(DumpPrinter& printer);
 
-  std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& refParams();
+  std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>>& refParams();
 
   void load(const std::shared_ptr<ParameterLoader>& ploader);
 

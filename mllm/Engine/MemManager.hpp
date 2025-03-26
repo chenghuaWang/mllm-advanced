@@ -18,6 +18,7 @@
 #include <unordered_set>
 #include <vector>
 #include "mllm/Core/DeviceTypes.hpp"
+#include "mllm/Core/Storage.hpp"
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/TensorImpl.hpp"
 #include "mllm/Engine/Allocator.hpp"
@@ -70,9 +71,9 @@ class MemManager {
   ~MemManager();
   explicit MemManager(MemManagerCargo cargo);
 
-  void alloc(const std::shared_ptr<TensorImpl>&);
+  void alloc(const std::shared_ptr<Storage>&);
 
-  void free(TensorImpl* t);
+  void free(Storage* t);
 
   void regAllocator(DeviceTypes device, const std::shared_ptr<Allocator>& allocator);
 
@@ -102,8 +103,8 @@ class MemManager {
   void _free_oc(DeviceTypes device, ObjMemBlock* omb);
   bool _is_in_oc(size_t omb_size);
 
-  void _alloc_really_large(const std::shared_ptr<TensorImpl>&);
-  void _free_really_large(TensorImpl* t);
+  void _alloc_really_large(const std::shared_ptr<Storage>&);
+  void _free_really_large(Storage* t);
 
   // this function is not thread safe, should be called in a thread safe context.
   ObjMemSegment* _locate_segment(DeviceTypes device, char* ptr);

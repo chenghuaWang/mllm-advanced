@@ -28,7 +28,7 @@ enum SliceIndexPlaceHolder : int32_t {
 
 struct SliceIndicesPair {
   SliceIndicesPair() = default;
-  SliceIndicesPair(int32_t v);
+  SliceIndicesPair(int32_t v);  // NOLINT(google-explicit-constructor)
   SliceIndicesPair(int32_t start, int32_t end, int32_t step = 1);
 
   int32_t start_ = kAll;
@@ -42,22 +42,26 @@ class Tensor {
  public:
   Tensor() = default;
 
-  explicit Tensor(const std::shared_ptr<TensorImpl>& impl);
+  explicit Tensor(const std::shared_ptr<TensorViewImpl>& impl);
 
-  static Tensor empty(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
+  static Tensor empty(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                       DeviceTypes device = kCPU);
 
   Tensor& alloc();
 
-  static Tensor zeros(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
+  static Tensor zeros(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                       DeviceTypes device = kCPU);
 
-  static Tensor ones(const std::vector<size_t>& shape, DataTypes dtype = kFp32,
+  static Tensor ones(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                      DeviceTypes device = kCPU);
 
-  // Make a slice of the tensor. Using deep copy.
-  // deep copy
+  // Make a slice of the tensor.
+  // If step is 1, this slice will always trying to use shallow copy.
   Tensor operator[](const SliceIndices& slice_index);
+
+  // Make a slice of the tensor.
+  // ALWAYS Deep Copy.
+  Tensor operator()(const SliceIndices& slice_index);
 
   Tensor operator+(const Tensor& rhs);
 
@@ -97,33 +101,11 @@ class Tensor {
 
   [[nodiscard]] DeviceTypes device() const;
 
-  [[nodiscard]] std::vector<size_t> shape() const;
+  [[nodiscard]] std::vector<int32_t> shape() const;
 
   [[nodiscard]] size_t numel() const;
 
   [[nodiscard]] uint32_t uuid() const;
-
-  // For Tensor Reference we just support contiguous reference.
-  // NOTE: It is quite same with shallow copy !!! After the original Tensor is freed, the ref Tensor
-  // is invalid !!!
-  //
-  // E.g.:
-  // Tensor t = Tensor::ones({1024, 1024, 1024, 1024});
-  // Tensor sub_t = t.contiguousRefFrom({10, 0, 0, 0}); // memory is continuous
-  // Tensor sub_t = t.contiguousRefFrom({0, 10, 0, 5}); // memory is not continuous
-  //
-  // Goode Cases:
-  // 1. Tensor t = Tensor::ones({1024, 1024, 1024, 1024}).contiguousRefFrom({10, 0, 0, 0});
-  // 2. Tensor t = Tensor::ones({1, 1024, 1024, 1024}).contiguousRefFrom({0, 10, 0, 0});
-  // 3. Tensor t = Tensor::ones({1, 1, 1024, 1024}).contiguousRefFrom({0, 0, 10, 0});
-  // 4. Tensor t = Tensor::ones({1, 1, 1, 1024}).contiguousRefFrom({0, 0, 0, 10});
-  //
-  // Bad Cases & Not Supports:
-  // 1. Tensor t = Tensor::ones({1024, 1024, 1024, 1024}).contiguousRefFrom({0, 0, 10, 0});
-  // 2. Tensor t = Tensor::ones({1024, 1024, 1024, 1024}).contiguousRefFrom({0, 0, 0, 10});
-  Tensor contiguousRefFrom(const std::vector<size_t>& offsets);
-
-  Tensor refFrom(const SliceIndices& slice_indices);
 
   [[nodiscard]] bool isContiguous() const;
 
@@ -132,19 +114,19 @@ class Tensor {
   Tensor reshape(const std::vector<int>& shape);
 
   // FIXME: This function is in an early age.
-  Tensor& view(const std::vector<int>& indicies);
+  Tensor view(const std::vector<int>& indicies);
+
+  char* offsettedRawPtr(const std::vector<int32_t>& offsets);
+
+  template<typename T>
+  T* offsettedPtr(const std::vector<int32_t>& offsets) {
+    return impl_->offsettedPtr<T>(offsets);
+  }
 
   template<typename T>
   T* ptr() const {
     return impl_->ptr<T>();
   }
-
-  template<typename T>
-  T* offsettedPtr(const std::vector<size_t>& offsets) {
-    return impl_->offsettedPtr<T>(offsets);
-  }
-
-  char* offsettedRawPtr(const std::vector<size_t>& offsets);
 
   template<typename T>
   void print() {
@@ -170,14 +152,15 @@ class Tensor {
   }
 
   template<typename T>
-  void printRecursive(const std::vector<size_t>& shape, size_t dim, std::vector<size_t> indices,
+  void printRecursive(const std::vector<int32_t>& shape, size_t dim,
+                      std::vector<int32_t> indices,  // NOLINT(performance-unnecessary-value-param)
                       const std::string& indent) {
     size_t dim_size = shape[dim];
     bool is_last_dim = (dim == shape.size() - 1);
     const size_t threshold = 32;
     bool truncated = dim_size > threshold;
 
-    std::vector<long long> display_indices;
+    std::vector<int64_t> display_indices;
     if (truncated) {
       for (size_t i = 0; i < 6; ++i) display_indices.push_back(i);
       display_indices.push_back(-1);
@@ -192,10 +175,11 @@ class Tensor {
 
     for (auto idx : display_indices) {
       if (!first) {
-        if (is_last_dim)
+        if (is_last_dim) {
           fmt::print(", ");
-        else
+        } else {
           fmt::print("\n{}", new_indent);
+        }
       }
       first = false;
 
@@ -219,7 +203,7 @@ class Tensor {
     if (dim == 0) fmt::println("");
   }
 
-  std::shared_ptr<TensorImpl> impl_ = nullptr;
+  std::shared_ptr<TensorViewImpl> impl_ = nullptr;
 };
 
 }  // namespace mllm

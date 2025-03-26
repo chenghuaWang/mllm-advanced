@@ -14,133 +14,85 @@
 
 namespace mllm {
 
-TensorImpl::TensorImpl(const std::vector<size_t>& shape, DataTypes dtype, DeviceTypes device)
-    : dtype_(dtype), device_type_(device) {
-  shape_len_ = (int32_t)shape.size();
-  int _cnt = 0;
-  for (unsigned int it : shape) {
-    shape_[_cnt] = (int32_t)it;
-    stride_offsets_[_cnt++] = 0;
-  }
-  int _acc = 1;
-  stride_[shape_len_ - 1] = 1;
-  for (int i = shape_len_ - 1; i > 0; i--) {
-    stride_[i - 1] = _acc * shape_[i];
-    _acc *= shape_[i];
-  }
-
-  custom_32bit_uuid_ = MllmEngineCtx::instance().getUUID();
-}
-
-TensorImpl::TensorImpl(const std::vector<size_t>& shape, const std::vector<size_t>& stride,
-                       const std::vector<size_t>& stride_offsets, DataTypes dtype,
-                       DeviceTypes device)
-    : dtype_(dtype), device_type_(device) {
-  shape_len_ = (int32_t)shape.size();
-  for (int i = 0; i < shape_len_; ++i) {
-    shape_[i] = (int32_t)shape[i];
-    stride_[i] = (int32_t)stride[i];
-    stride_offsets_[i] = (int32_t)stride_offsets[i];
-  }
-
-  custom_32bit_uuid_ = MllmEngineCtx::instance().getUUID();
-}
-
-TensorImpl::~TensorImpl() {
+TensorStorage::~TensorStorage() {
   switch (mem_type_) {
     case kNormal:
     case kGlobal: MllmEngineCtx::instance().mem()->free(this); break;
     case kExtraInput:
     case kExtraOutput:
     case kParams:
-    case kManual:
-    case kReference: break;
+    case kManual: break;
+    case kReference: MLLM_WARN("mem_type_ kReference is not used anymore."); break;
     default:
-      MLLM_WARN("When trying to free TensorImpl, found invalid mem_type_. Mllm will still trying "
-                "to free this tensor, but may lead to memory error.");
+      MLLM_WARN(
+          "When trying to free TensorStorage, found invalid mem_type_. Mllm will still trying "
+          "to free this TensorStorage, but may lead to memory error.");
       MllmEngineCtx::instance().mem()->free(this);
       break;
   };
 }
 
-DataTypes TensorImpl::dtype() const { return dtype_; }
+std::shared_ptr<TensorStorage> TensorStorage::create(const std::vector<int32_t>& shape,
+                                                     DataTypes dtype, DeviceTypes device) {
+  auto ret = std::make_shared<TensorStorage>();
 
-DeviceTypes TensorImpl::device() const { return device_type_; }
+  ret->dtype_ = dtype;
+  ret->device_ = device;
 
-void TensorImpl::setDtype(DataTypes dtype) { dtype_ = dtype; }
+  size_t cnt = 1;
+  for (auto i : shape) { cnt *= i; }
 
-std::string TensorImpl::name() const { return name_; }
+  ret->size_ = cnt * dataTypeSize(dtype);
+  ret->type_ = Storage::kTensor;
+  ret->custom_32bit_uuid_ = MllmEngineCtx::instance().getUUID();
 
-[[nodiscard]] TensorMemTypes TensorImpl::memType() const { return mem_type_; }
-
-void TensorImpl::setName(const std::string& name) { name_ = name; }
-
-void TensorImpl::setMemType(TensorMemTypes mem_type) { mem_type_ = mem_type; }
-
-uint32_t TensorImpl::uuid() const { return custom_32bit_uuid_; }
-
-void TensorImpl::setUUID(uint32_t uuid) { custom_32bit_uuid_ = uuid; }
-
-std::shared_ptr<QuantizePayload> TensorImpl::quantizePayload() { return quantize_payload_; }
-
-void TensorImpl::setQuantizePayload(const std::shared_ptr<QuantizePayload>& payload) {
-  quantize_payload_ = payload;
+  return ret;
 }
 
-void* TensorImpl::rptr() const { return data_; }
+DataTypes TensorViewImpl::dtype() const { return storage_->dtype_; }
 
-char* TensorImpl::offsettedRawPtr(const std::vector<size_t>& offsets) {
+DeviceTypes TensorViewImpl::device() const { return storage_->device_; }
+
+TensorViewImpl::storage_t TensorViewImpl::storage() const { return storage_; }
+
+std::string TensorViewImpl::name() const { return storage_->name_; }
+
+TensorMemTypes TensorViewImpl::memType() const { return storage_->mem_type_; }
+
+uint32_t TensorViewImpl::uuid() const { return storage_->custom_32bit_uuid_; }
+
+uint64_t TensorViewImpl::address() const { return (uint64_t)(storage_->ptr_); }
+
+void* TensorViewImpl::rptr() const {
+  return (void*)(((char*)storage_->ptr_)
+                 + (size_t)(storage_offset_ * dataTypeSize(storage_->dtype_)));
+}
+
+char* TensorViewImpl::offsettedRawPtr(const std::vector<int32_t>& offsets) {
   MLLM_RT_ASSERT_EQ(offsets.size(), shape_len_);
 
   size_t _offset = 0;
-  for (int i = 0; i < shape_len_; ++i) {
-    _offset += (offsets[i] + stride_offsets_[i]) * stride_[i];
-  }
+  for (int i = 0; i < shape_len_; ++i) { _offset += offsets[i] * stride_[i]; }
 
-  return ptr<char>() + (size_t)((float)_offset * dataTypeSize(dtype_));
+  return ptr<char>() + (size_t)(_offset * dataTypeSize(storage_->dtype_));
 }
 
-void TensorImpl::_setRawPtr(void* ptr) { data_ = ptr; }
+size_t TensorViewImpl::size() const { return storage_->size_; }
 
-size_t TensorImpl::size() const {
-  size_t acc = 1;
-  for (int i = 0; i < shape_len_; i++) { acc *= shape_[i]; }
-
-  acc = (size_t)((float)acc * dataTypeSize(dtype_));
-
-  return acc;
+size_t TensorViewImpl::numel() const {
+  size_t cnt = 1;
+  for (int i = 0; i < shape_len_; ++i) cnt *= shape_[i];
+  return cnt;
 }
 
-size_t TensorImpl::numel() const {
-  size_t acc = 1;
-  for (int i = 0; i < shape_len_; i++) { acc *= shape_[i]; }
-  return acc;
-}
+std::vector<int32_t> TensorViewImpl::shape() const { return {shape_, shape_ + shape_len_}; }
 
-std::vector<size_t> TensorImpl::shape() const { return {shape_, shape_ + shape_len_}; }
+std::vector<int32_t> TensorViewImpl::stride() const { return {stride_, stride_ + shape_len_}; }
 
-std::vector<size_t> TensorImpl::stride() const { return {stride_, stride_ + shape_len_}; }
-
-void TensorImpl::setShape(const std::vector<int32_t>& shape) {
-  shape_len_ = (int32_t)shape.size();
-
-  for (int i = 0; i < shape_len_; ++i) { shape_[i] = shape[i]; }
-
-  int _acc = 1;
-  stride_[shape_len_ - 1] = 1;
-  for (int i = shape_len_ - 1; i > 0; i--) {
-    stride_[i - 1] = _acc * shape_[i];
-    _acc *= shape_[i];
-  }
-}
-
-bool TensorImpl::isContiguous() const {
+bool TensorViewImpl::isContiguous() const {
   if (shape_len_ == 0) return true;
 
-  for (int i = 0; i < shape_len_; ++i) {
-    if (stride_offsets_[i] != 0) { return false; }
-  }
-
+  // check stride
   int expected_stride = 1;
   for (int i = shape_len_ - 1; i >= 0; --i) {
     if (stride_[i] != expected_stride) { return false; }
@@ -148,6 +100,83 @@ bool TensorImpl::isContiguous() const {
   }
 
   return true;
+}
+
+std::shared_ptr<TensorViewImpl> TensorViewImpl::clone() const {
+  auto ret = TensorViewImpl::create();
+
+  ret->shape_len_ = shape_len_;
+  for (int i = 0; i < shape_len_; ++i) {
+    ret->shape_[i] = shape_[i];
+    ret->stride_[i] = stride_[i];
+  }
+  ret->storage_offset_ = storage_offset_;
+  ret->storage_ = storage_;
+
+  return ret;
+}
+
+int32_t TensorViewImpl::storageOffset() const { return storage_offset_; }
+
+// create empty TensorViewImpl
+std::shared_ptr<TensorViewImpl> TensorViewImpl::create() {
+  return std::make_shared<TensorViewImpl>();
+}
+
+// Will automatic calculate stride for you.
+std::shared_ptr<TensorViewImpl> TensorViewImpl::create(
+    const std::vector<int32_t>& shape, const std::shared_ptr<TensorStorage>& storage) {
+  auto ret = std::make_shared<TensorViewImpl>();
+  ret->shape_len_ = shape.size();
+  ret->storage_offset_ = 0;
+
+  int _cnt = 0;
+  for (unsigned int it : shape) { ret->shape_[_cnt++] = (int32_t)it; }
+  int _acc = 1;
+  ret->stride_[ret->shape_len_ - 1] = 1;
+  for (int i = ret->shape_len_ - 1; i > 0; i--) {
+    ret->stride_[i - 1] = _acc * ret->shape_[i];
+    _acc *= ret->shape_[i];
+  }
+  ret->storage_ = storage;
+
+  return ret;
+}
+
+std::shared_ptr<TensorViewImpl> TensorViewImpl::create(
+    int32_t storage_offset, const std::vector<int32_t>& shape,
+    const std::shared_ptr<TensorStorage>& storage) {
+  auto ret = std::make_shared<TensorViewImpl>();
+  ret->shape_len_ = shape.size();
+  ret->storage_offset_ = storage_offset;
+
+  int _cnt = 0;
+  for (unsigned int it : shape) { ret->shape_[_cnt++] = (int32_t)it; }
+  int _acc = 1;
+  ret->stride_[ret->shape_len_ - 1] = 1;
+  for (int i = ret->shape_len_ - 1; i > 0; i--) {
+    ret->stride_[i - 1] = _acc * ret->shape_[i];
+    _acc *= ret->shape_[i];
+  }
+  ret->storage_ = storage;
+
+  return ret;
+}
+
+std::shared_ptr<TensorViewImpl> TensorViewImpl::create(
+    int32_t storage_offset, const std::vector<int32_t>& shape, const std::vector<int32_t>& stride,
+    const std::shared_ptr<TensorStorage>& storage) {
+  auto ret = std::make_shared<TensorViewImpl>();
+  ret->shape_len_ = shape.size();
+  ret->storage_offset_ = storage_offset;
+
+  int _cnt = 0;
+  for (unsigned int it : shape) { ret->shape_[_cnt++] = (int32_t)it; }
+  _cnt = 0;
+  for (unsigned int it : stride) { ret->stride_[_cnt++] = (int32_t)it; }
+  ret->storage_ = storage;
+
+  return ret;
 }
 
 }  // namespace mllm

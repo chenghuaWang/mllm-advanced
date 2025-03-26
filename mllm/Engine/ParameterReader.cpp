@@ -56,12 +56,12 @@ void ParameterLoader::load(const std::string& filename) {
   }
 }
 
-std::shared_ptr<TensorImpl> ParameterLoader::operator[](const std::string& name) {
+std::shared_ptr<TensorViewImpl> ParameterLoader::operator[](const std::string& name) {
   if (!params_.count(name)) { MLLM_ERROR_EXIT(kError, "Parameter {} not found.", name); }
   return params_.at(name);
 }
 
-std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& ParameterLoader::params() {
+std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>>& ParameterLoader::params() {
   return params_;
 }
 
@@ -85,17 +85,19 @@ void ParameterLoader::validateDescriptor(const ParameterDescriptor& desc, size_t
   }
 }
 
-std::shared_ptr<TensorImpl> ParameterLoader::createTensor(const ParameterDescriptor& desc) {
+std::shared_ptr<TensorViewImpl> ParameterLoader::createTensor(const ParameterDescriptor& desc) {
   const void* data_ptr = static_cast<const char*>(mapped_file_->data()) + desc.parameter_offset;
 
-  std::vector<size_t> shape;
+  std::vector<int32_t> shape;
+  shape.reserve(desc.shape_len);
   for (int i = 0; i < desc.shape_len; ++i) { shape.emplace_back(desc.shape[i]); }
 
-  auto t = std::make_shared<TensorImpl>(shape);
-  t->_setRawPtr(const_cast<void*>(data_ptr));
-  t->setName(std::string(desc._param_name_view()));
-  t->setMemType(kParams);
-  t->setDtype(static_cast<DataTypes>(desc.parameter_type));
+  auto s = TensorStorage::create(shape, static_cast<DataTypes>(desc.parameter_type), kCPU);
+  auto t = TensorViewImpl::create(shape, s);
+
+  s->name_ = std::string(desc._param_name_view());
+  s->ptr_ = const_cast<void*>(data_ptr);
+  s->mem_type_ = kParams;
 
   return t;
 }

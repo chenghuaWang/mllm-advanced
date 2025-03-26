@@ -32,8 +32,8 @@ void SiLUOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& out
 }
 
 void SiLUOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  auto i = inputs[0];
-  outputs.emplace_back(Tensor(std::make_shared<TensorImpl>(i.shape(), i.dtype(), i.device())));
+  const auto& i = inputs[0];
+  outputs.emplace_back(Tensor::empty(i.shape(), i.dtype(), i.device()));
 }
 
 void SiLUOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

@@ -26,9 +26,9 @@ void ArmSoftmaxOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
   auto D = X.shape()[3];
   switch (X.dtype()) {
     case kFp32:
-      for (size_t b = 0; b < B; ++b) {
-        for (size_t h = 0; h < H; ++h) {
-          for (size_t s = 0; s < S; ++s) {
+      for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < H; ++h) {
+          for (int s = 0; s < S; ++s) {
             softmax_V1(X.offsettedPtr<float>({b, h, s, 0}), Y.offsettedPtr<float>({b, h, s, 0}), D,
                        1);
           }
@@ -36,9 +36,9 @@ void ArmSoftmaxOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor
       }
       break;
     case kFp16:
-      for (size_t b = 0; b < B; ++b) {
-        for (size_t h = 0; h < H; ++h) {
-          for (size_t s = 0; s < S; ++s) {
+      for (int b = 0; b < B; ++b) {
+        for (int h = 0; h < H; ++h) {
+          for (int s = 0; s < S; ++s) {
             hsoftmax_V1(X.offsettedPtr<float16_t>({b, h, s, 0}),
                         Y.offsettedPtr<float16_t>({b, h, s, 0}), D, 1);
           }

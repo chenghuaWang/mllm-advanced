@@ -84,13 +84,13 @@ class ParameterLoader {
  public:
   explicit ParameterLoader(const std::string& file_name);
 
-  std::shared_ptr<TensorImpl> operator[](const std::string& name);
+  std::shared_ptr<TensorViewImpl> operator[](const std::string& name);
 
-  std::unordered_map<std::string, std::shared_ptr<TensorImpl>>& params();
+  std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>>& params();
 
  private:
   std::shared_ptr<MappedFile> mapped_file_;
-  std::unordered_map<std::string, std::shared_ptr<TensorImpl>> params_;
+  std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>> params_;
 
   void load(const std::string& filename);
 
@@ -98,7 +98,7 @@ class ParameterLoader {
 
   void validateDescriptor(const ParameterDescriptor& desc, size_t file_size);
 
-  std::shared_ptr<TensorImpl> createTensor(const ParameterDescriptor& desc);
+  std::shared_ptr<TensorViewImpl> createTensor(const ParameterDescriptor& desc);
 };
 
 std::shared_ptr<ParameterLoader> load(const std::string& file_path);

@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
                           .meta("FILE")
                           .positional();
   auto& se_json_fp = Argparse::add<std::string>("-j|--json").help("SentencePiece json file path.");
-  auto& pref = Argparse::add<bool>("-p|--prefix").help("Prefix for the prompt.");
+  auto& perf = Argparse::add<bool>("-p|--perf").help("perf this example.");
 
   Argparse::parse(argc, argv);
 
@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
                                        });
 
   // perf or not.
-  ctx.perf_ = pref.isSet();
+  ctx.perf_ = perf.isSet();
 
   {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(se_json_fp.get());
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
         tokenizer.tokenize("<｜begin▁of▁sentence｜>You are a helpful assistant.<｜User｜>hello, "
                            "what's u name?<｜Assistant｜>"));
 
-    auto_llm.generate(input, 1024, cfg.eos_token_id, [&](long pos) -> void {
+    auto_llm.generate(input, 1024, cfg.eos_token_id, [&](int64_t pos) -> void {
       std::wcout << tokenizer.detokenize(pos) << std::flush;
     });
   }

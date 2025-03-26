@@ -28,8 +28,8 @@ class ArmKVCacheOp final : public KVCacheOp {
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
  private:
-  size_t cur_kv_cache_limits_ = 0;
-  size_t cur_kv_cache_seq_len_ = 0;
+  int32_t cur_kv_cache_limits_ = 0;
+  int32_t cur_kv_cache_seq_len_ = 0;
 };
 
 class ArmKVCacheOpFactory : public TypedOpFactory<OpType::kKVCache, KVCacheOpCargo> {

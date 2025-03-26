@@ -18,7 +18,7 @@
 using namespace mllm;
 
 static void printLoaderMetaData(std::shared_ptr<ParameterLoader>& p) {
-  std::vector<std::shared_ptr<TensorImpl>> _p{p->params().size(), nullptr};
+  std::vector<std::shared_ptr<TensorViewImpl>> _p{p->params().size(), nullptr};
   for (auto& item : p->params()) { _p[item.second->uuid()] = item.second; }
   for (auto& param : _p) {
     fmt::println("id: {}, name: {}, type: {}, shape: {}", param->uuid(), param->name(),

@@ -30,8 +30,8 @@ void ArmLLMEmbeddingTokenOp::forward(const std::vector<Tensor>& inputs,
 
   auto weight_dtype = weight_.dtype();
 
-  for (size_t b = 0; b < B; ++b) {
-    for (size_t s = 0; s < S; ++s) {
+  for (int b = 0; b < B; ++b) {
+    for (int s = 0; s < S; ++s) {
       switch (weight_dtype) {
         case kFp32:
           std::memcpy(
