@@ -12,11 +12,15 @@
 
 #include "fmt/base.h"
 #include "fmt/ranges.h"
+#include <stack>
 #include <memory>
 #include <cstdint>
+#include <functional>
+#include <unordered_map>
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Core/TensorImpl.hpp"
+#include "mllm/Utils/SymExpr/Eval.hpp"
 
 namespace mllm {
 
@@ -118,6 +122,8 @@ class Tensor {
 
   char* offsettedRawPtr(const std::vector<int32_t>& offsets);
 
+  [[nodiscard]] inline std::shared_ptr<TensorViewImpl> impl() const { return impl_; }
+
   template<typename T>
   T* offsettedPtr(const std::vector<int32_t>& offsets) {
     return impl_->offsettedPtr<T>(offsets);
@@ -131,11 +137,11 @@ class Tensor {
   template<typename T>
   void print() {
     fmt::println("Tensor Meta Info");
-    fmt::println("address:  {:#010x}", (uintptr_t)(impl_->rptr()));
-    fmt::println("name:     {}", name().empty() ? "<empty>" : name());
-    fmt::println("shape:    {}", fmt::join(shape(), "x"));
-    fmt::println("device:   {}", deviceTypes2Str(device()));
-    fmt::println("dtype:    {}", dataTypes2Str(dtype()));
+    fmt::println("address   :{:#010x}", (uintptr_t)(impl_->address()));
+    fmt::println("name      :{}", name().empty() ? "<empty>" : name());
+    fmt::println("shape     :{}", fmt::join(shape(), "x"));
+    fmt::println("device    :{}", deviceTypes2Str(device()));
+    fmt::println("dtype     :{}", dataTypes2Str(dtype()));
 
     printData<T>();
   }
@@ -204,6 +210,53 @@ class Tensor {
   }
 
   std::shared_ptr<TensorViewImpl> impl_ = nullptr;
+};
+
+class TiledTensor {
+ public:
+  explicit TiledTensor(Tensor& t) : t_(t) {}
+
+  // This `complexLoops` methods is single threads. Do not use this function for things that needs
+  // highly paralleled. Use `parallelLoops` instead.
+  template<typename T>
+  void complexLoops(const std::vector<std::string>& symbol_str,
+                    const std::function<void(T* ptr, const std::vector<int32_t>&)>& callback,
+                    int32_t top_loop_parallel = 0) {
+    std::vector<SymExpr> symbols;
+    symbols.reserve(symbol_str.size());
+    for (const auto& s : symbol_str) { symbols.emplace_back(s); }
+
+    int loops = symbols.size();
+    std::unordered_map<std::string, float> loop_symbols_v;
+    std::vector<int32_t> offsets(t_.shape().size(), 0);
+
+    for (int i = 0; i < loops; ++i) loop_symbols_v["_" + std::to_string(i)] = 0.f;
+
+    const auto& shape = t_.impl()->shape();
+
+    const int symbol_cnt = symbols.size();
+    while (true) {
+      callback(t_.offsettedPtr<T>(offsets), offsets);
+      int dim = symbol_cnt - 1;
+      bool carry = true;
+      while (carry && dim >= 0) {
+        offsets[dim] += 1;
+        if (offsets[dim] < shape[dim]) {
+          carry = false;
+        } else {
+          offsets[dim] = 0;
+          --dim;
+        }
+      }
+      if (carry) break;
+    }
+  }
+
+  template<typename T>
+  void parallelLoops() {}
+
+ private:
+  Tensor& t_;
 };
 
 }  // namespace mllm

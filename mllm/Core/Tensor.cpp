@@ -13,6 +13,7 @@
 #include "mllm/Core/AOps/ElewiseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
 #include "mllm/Core/AOps/TransposeOp.hpp"
+#include "mllm/Core/AOps/ViewOp.hpp"
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Core/TensorImpl.hpp"
@@ -245,24 +246,8 @@ Tensor Tensor::reshape(const std::vector<int>& shape) {
 }
 
 Tensor Tensor::view(const std::vector<int>& indicies) {
-  if (!isContiguous()) {
-    MLLM_ERROR_EXIT(kError, "Can not view on non-contiguous tensor. Pls use reshape instead.");
-  }
-
-  std::vector<int32_t> new_shape;
-
-  int acc = 1;
-  for (auto idx : indicies) {
-    new_shape.emplace_back(idx);
-    acc *= idx;
-  }
-
-  MLLM_RT_ASSERT_EQ(acc, impl_->numel());
-
-  // reset shape and stride
-  auto impl = TensorViewImpl::create(impl_->storageOffset(), new_shape, impl_->storage());
-
-  return Tensor(impl);
+  return MllmEngineCtx::instance().dispatch(OpType::kView, ViewOpCargo{.to_shape_ = indicies},
+                                            {*this})[0];
 }
 
 char* Tensor::offsettedRawPtr(const std::vector<int32_t>& offsets) {

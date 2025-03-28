@@ -10,6 +10,7 @@ AdbPushTask:
     - "build-android-arm64-v8a/benchmarks/Backend/Arm/MllmArmKernels-ComplexOps"
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-ModuleCreateTest"
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-OpCallTest"
+    - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-ComplexIndexTest"
     - "build-android-arm64-v8a/tests/Arm/Mllm-ArmTest"
     - "build-android-arm64-v8a/examples/Models/demo_ds_qwen2"
     - "build-android-arm64-v8a/tests/IR/Mllm-IR-LlmIRTest"

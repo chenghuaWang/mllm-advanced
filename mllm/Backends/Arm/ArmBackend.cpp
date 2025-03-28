@@ -21,7 +21,9 @@
 #include "mllm/Backends/Arm/Ops/RoPEOp.hpp"
 #include "mllm/Backends/Arm/Ops/SiLUOp.hpp"
 #include "mllm/Backends/Arm/Ops/SoftmaxOp.hpp"
+#include "mllm/Backends/Arm/Ops/SplitOp.hpp"
 #include "mllm/Backends/Arm/Ops/TransposeOp.hpp"
+#include "mllm/Backends/Arm/Ops/ViewOp.hpp"
 
 namespace mllm::arm {
 
@@ -30,7 +32,8 @@ ArmBackend::ArmBackend() : BackendBase(kCPU) {
   regOpFactory<ArmAddOpFactory, ArmSubOpFactory, ArmMulOpFactory, ArmDivOpFactory, ArmFillOpFactory,
                ArmKVCacheOpFactory, ArmRMSNormOpFactory, ArmTransposeOpFactory, ArmRoPEOpFactory,
                ArmSoftmaxOpFactory, ArmMatMulOpFactory, ArmCausalMaskOpFactory, ArmLinearOpFactory,
-               ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory, ArmCastTypeOpFactory>();
+               ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory, ArmCastTypeOpFactory,
+               ArmViewOpFactory, ArmSplitOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

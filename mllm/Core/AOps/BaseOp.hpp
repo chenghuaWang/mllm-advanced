@@ -46,6 +46,9 @@ enum class OpType : int32_t {
   kD2H,
   kH2D,
 
+  kSplit,
+  kView,
+
   kOpType_End,
 };
 
@@ -70,6 +73,8 @@ inline const char* opType2Str(OpType type) {
     case OpType::kCastType: return "kCastType";
     case OpType::kD2H: return "kD2H";
     case OpType::kH2D: return "kH2D";
+    case OpType::kSplit: return "kSplit";
+    case OpType::kView: return "kView";
     case OpType::kOpType_End: return "kOpType_End";
     default: return "Unknown";
   }
@@ -95,7 +100,7 @@ class BaseOpCargo {
     return *static_cast<DerivedT*>(this);
   }
 
-  int thread() const { return threads_; }
+  [[nodiscard]] int thread() const { return threads_; }
 
   void setThreads(int threads) { threads_ = threads; }
 
@@ -110,11 +115,12 @@ class BaseOpCargoBase {
  public:
   // do not mark this explicit
   template<typename T>
-  BaseOpCargoBase(const T& cargo) : inner_(std::make_unique<Model<T>>(cargo)) {}
+  BaseOpCargoBase(const T& cargo)  // NOLINT(google-explicit-constructor)
+      : inner_(std::make_unique<Model<T>>(cargo)) {}
 
   // do not mark this explicit
   template<typename T>
-  BaseOpCargoBase(T&& cargo)
+  BaseOpCargoBase(T&& cargo)  // NOLINT(google-explicit-constructor)
       : inner_(std::make_unique<Model<std::decay_t<T>>>(std::forward<T>(cargo))) {}
 
   template<typename T>
@@ -130,7 +136,7 @@ class BaseOpCargoBase {
 
   template<typename T>
   struct Model : Concept {
-    Model(const T& data) : data_(data) {}
+    Model(const T& data) : data_(data) {}  // NOLINT(google-explicit-constructor)
     T data_;
   };
 
@@ -143,7 +149,6 @@ class BaseOp {
 
   virtual void load(const std::shared_ptr<ParameterLoader>& ploader) {};
 
-  // TODO
   virtual void trace(void* trace_context, const std::vector<Tensor>& inputs,
                      std::vector<Tensor>& outputs) {};
 
@@ -153,11 +158,11 @@ class BaseOp {
 
   virtual void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
 
-  std::string name() const;
+  [[nodiscard]] std::string name() const;
 
   void setName(const std::string& name);
 
-  DeviceTypes device() const;
+  [[nodiscard]] DeviceTypes device() const;
 
   void setDeviceType(DeviceTypes device_type);
 
