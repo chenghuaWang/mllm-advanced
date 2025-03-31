@@ -254,6 +254,11 @@ char* Tensor::offsettedRawPtr(const std::vector<int32_t>& offsets) {
   return impl_->offsettedRawPtr(offsets);
 }
 
+Affine::Affine(const std::string& sym_exp_str, std::unordered_map<std::string, float>& co)
+    : expr_(sym_exp_str), co_(co) {}
+
+Affine AffinePrimitives::create(const std::string& sym_exp_str) { return {sym_exp_str, co_}; }
+
 // extern template class TiledTensor to reduce binary size and compile time.
 EXTERN_TEMPLATE_TILED_TENSOR_IMPL(float)
 EXTERN_TEMPLATE_TILED_TENSOR_IMPL(half_float::half)

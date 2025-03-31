@@ -212,6 +212,28 @@ class Tensor {
   std::shared_ptr<TensorViewImpl> impl_ = nullptr;
 };
 
+class Affine {
+ public:
+  Affine() = delete;
+  Affine(const std::string& sym_exp_str, std::unordered_map<std::string, float>& co);
+
+  inline int operator()() { return expr_.evalAsInt(co_); }
+
+ private:
+  SymExpr expr_;
+  std::unordered_map<std::string, float>& co_;
+};
+
+class AffinePrimitives {
+ public:
+  Affine create(const std::string& sym_exp_str);
+
+  inline float& operator[](const std::string& key) { return co_[key]; }
+
+ private:
+  std::unordered_map<std::string, float> co_;
+};
+
 class TiledTensor {
  public:
   explicit TiledTensor(Tensor& t) : t_(t) {}

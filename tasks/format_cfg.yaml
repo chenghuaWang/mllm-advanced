@@ -9,3 +9,4 @@ CMakeFormatTask:
     - "mllm/Backends/Arm/Vendors"
     - "mllm/Backends/X86/Vendors"
     - "mllm/Backends/CUDA/Vendors/cutlass"
+    - "mllm/Backends/CUDA/Vendors/cccl"
