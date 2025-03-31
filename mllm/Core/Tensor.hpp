@@ -10,9 +10,9 @@
  */
 #pragma once
 
-#include "fmt/base.h"
-#include "fmt/ranges.h"
-#include <stack>
+#include <fmt/base.h>
+#include <fmt/ranges.h>
+#include <half/half.hpp>
 #include <memory>
 #include <cstdint>
 #include <functional>
@@ -226,25 +226,35 @@ class TiledTensor {
     symbols.reserve(symbol_str.size());
     for (const auto& s : symbol_str) { symbols.emplace_back(s); }
 
-    int loops = symbols.size();
+    const int loops = symbols.size();
+    const int t_shape_size = t_.shape().size();
     std::unordered_map<std::string, float> loop_symbols_v;
     std::vector<int32_t> offsets(t_.shape().size(), 0);
+    std::vector<int32_t> co(t_.shape().size(), 0);
 
-    for (int i = 0; i < loops; ++i) loop_symbols_v["_" + std::to_string(i)] = 0.f;
+    for (int i = 0; i < t_shape_size; ++i) loop_symbols_v["_" + std::to_string(i)] = 0.f;
 
     const auto& shape = t_.impl()->shape();
 
     const int symbol_cnt = symbols.size();
     while (true) {
+      // feed back to loop_symbols_v
+      for (int i = 0; i < t_shape_size; ++i) {
+        loop_symbols_v["_" + std::to_string(i)] = (float)(co[i]);
+      }
+      for (int i = 0; i < loops; ++i) { offsets[i] = symbols[i].evalAsInt(loop_symbols_v); }
+
       callback(t_.offsettedPtr<T>(offsets), offsets);
+
+      // package offsets
       int dim = symbol_cnt - 1;
       bool carry = true;
       while (carry && dim >= 0) {
-        offsets[dim] += 1;
-        if (offsets[dim] < shape[dim]) {
+        co[dim] += 1;
+        if (co[dim] < shape[dim]) {
           carry = false;
         } else {
-          offsets[dim] = 0;
+          co[dim] = 0;
           --dim;
         }
       }
@@ -253,10 +263,60 @@ class TiledTensor {
   }
 
   template<typename T>
-  void parallelLoops() {}
+  void parallelLoops(int last_dim,
+                     const std::function<void(T* ptr, int b_stride,
+                                              const std::vector<int32_t>& left_dims)>& callback,
+                     int32_t top_loop_parallel = 0) {
+    // check if last dim is contigious. using stride and shape to check
+    const int loops = t_.shape().size();
+    MLLM_RT_ASSERT(last_dim < loops)
+    const auto& this_stride = t_.impl()->stride();
+    const auto& this_shape = t_.impl()->shape();
+    int contigious_cnt_stride = 1;
+    bool contigious_last_dim = true;
+    for (int i = loops - 1; i > last_dim; --i) {
+      if (contigious_cnt_stride != this_stride[i]) contigious_last_dim = false;
+      contigious_cnt_stride *= this_shape[i - 1];
+    }
+    MLLM_RT_ASSERT(contigious_last_dim);
+
+    std::vector<int32_t> callback_left_dims;
+    for (int i = last_dim + 1; i < loops; ++i) { callback_left_dims.emplace_back(this_shape[i]); }
+
+    int parallel_for_loops = this_shape[last_dim];
+    std::vector<int32_t> parallel_for_offsets(loops, 0);
+
+#pragma omp parallel for num_threads(top_loop_parallel) schedule(auto) if (top_loop_parallel > 0)
+    for (int pl = 0; pl < parallel_for_loops; ++pl) {
+      parallel_for_offsets[last_dim] = pl;
+      callback(t_.offsettedPtr<T>(parallel_for_offsets), this_stride[last_dim], callback_left_dims);
+    }
+  }
 
  private:
   Tensor& t_;
 };
+
+// extern template instance. reduce compile time and binary size.
+#define EXTERN_TEMPLATE_TILED_TENSOR_DEF(__mllm_type)                                  \
+  extern template void TiledTensor::complexLoops<__mllm_type>(                         \
+      const std::vector<std::string>&,                                                 \
+      const std::function<void(__mllm_type*, const std::vector<int32_t>&)>&, int32_t); \
+  extern template void TiledTensor::parallelLoops<__mllm_type>(                        \
+      int, const std::function<void(__mllm_type*, int, const std::vector<int32_t>&)>&, int32_t);
+
+EXTERN_TEMPLATE_TILED_TENSOR_DEF(float)
+EXTERN_TEMPLATE_TILED_TENSOR_DEF(half_float::half)
+EXTERN_TEMPLATE_TILED_TENSOR_DEF(int8_t)
+EXTERN_TEMPLATE_TILED_TENSOR_DEF(int16_t)
+
+#define EXTERN_TEMPLATE_TILED_TENSOR_IMPL(__mllm_type)                                 \
+  template void TiledTensor::complexLoops<__mllm_type>(                                \
+      const std::vector<std::string>&,                                                 \
+      const std::function<void(__mllm_type*, const std::vector<int32_t>&)>&, int32_t); \
+  template void TiledTensor::parallelLoops<__mllm_type>(                               \
+      int, const std::function<void(__mllm_type*, int, const std::vector<int32_t>&)>&, int32_t);
+
+#undef EXTERN_TEMPLATE_TILED_TENSOR_DEF
 
 }  // namespace mllm

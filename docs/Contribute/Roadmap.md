@@ -13,6 +13,7 @@
 - [ ] **Examples:** Port all examples from the mllm main repository.
 - [ ] **Tool:** Implement GGML Quantization method.
 - [ ] **Core:** Check the index correctness of `view`, `split`, and `complexLoop`.
+- [ ] **Core:** MoE support.
 
 ## P1
 

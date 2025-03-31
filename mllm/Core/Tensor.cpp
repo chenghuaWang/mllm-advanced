@@ -254,4 +254,10 @@ char* Tensor::offsettedRawPtr(const std::vector<int32_t>& offsets) {
   return impl_->offsettedRawPtr(offsets);
 }
 
+// extern template class TiledTensor to reduce binary size and compile time.
+EXTERN_TEMPLATE_TILED_TENSOR_IMPL(float)
+EXTERN_TEMPLATE_TILED_TENSOR_IMPL(half_float::half)
+EXTERN_TEMPLATE_TILED_TENSOR_IMPL(int8_t)
+EXTERN_TEMPLATE_TILED_TENSOR_IMPL(int16_t)
+
 }  // namespace mllm

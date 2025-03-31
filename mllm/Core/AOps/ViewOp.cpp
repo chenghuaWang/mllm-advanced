@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include "mllm/IR/Linalg/Op.hpp"
 #include "mllm/Core/AOps/ViewOp.hpp"
 
 namespace mllm {
@@ -19,7 +20,10 @@ void ViewOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
 
 void ViewOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                    std::vector<Tensor>& outputs) {
-  NYI("ViewOp::trace");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::ViewOp>(this, i_irs, o_irs);
 }
 
 void ViewOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

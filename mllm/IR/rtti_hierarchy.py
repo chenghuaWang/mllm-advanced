@@ -233,6 +233,8 @@ def define_lianlg_ir(ir: dict):
     op.derive(Cls("CastTypeOp"))
     op.derive(Cls("D2HOp"))
     op.derive(Cls("H2DOp"))
+    op.derive(Cls("ViewOp"))
+    op.derive(Cls("SplitOp"))
 
     # value
 

@@ -35,6 +35,8 @@ class CausalMaskOp;
 class CastTypeOp;
 class D2HOp;
 class H2DOp;
+class ViewOp;
+class SplitOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
@@ -117,5 +119,8 @@ LINALG_AOPS_DEFINE(SiLUOp, SILUOP);
 LINALG_AOPS_DEFINE(CastTypeOp, CASTTYPEOP);
 
 LINALG_AOPS_DEFINE(D2HOp, D2HOP);
+
+LINALG_AOPS_DEFINE(ViewOp, VIEWOP);
+LINALG_AOPS_DEFINE(SplitOp, SPLITOP);
 
 }  // namespace mllm::ir::linalg

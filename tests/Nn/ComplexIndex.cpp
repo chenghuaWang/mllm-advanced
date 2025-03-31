@@ -48,6 +48,12 @@ TEST(MllmNN, AddOpCall) {
         [&](float* ptr, const std::vector<int32_t>& offsets) -> void { *ptr = cnt++; });
     x0.print<float>();
     x.print<float>();
+    TiledTensor(x0).parallelLoops<float>(
+        3, [](float* ptr, int b_stride, const std::vector<int32_t>& left_dims) -> void {
+          *ptr = 666.F;
+        });
+    x0.print<float>();
+    x.print<float>();
   }
 
   ctx.mem()->report();

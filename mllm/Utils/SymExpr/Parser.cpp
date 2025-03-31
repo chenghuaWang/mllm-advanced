@@ -209,7 +209,7 @@ void SymbolExprLexer::handleIdentifierState() {
   // get nextchar
   getNextChar();
 
-  while (std::isalpha(cur_char_) || cur_char_ == '_') {
+  while (std::isalpha(cur_char_) || std::isdigit(cur_char_) || cur_char_ == '_') {
     addToCharBuffer(cur_char_);
     getNextChar();
   }

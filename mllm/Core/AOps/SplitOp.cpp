@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include "mllm/IR/Linalg/Op.hpp"
 #include "mllm/Core/AOps/SplitOp.hpp"
 
 namespace mllm {
@@ -19,7 +20,10 @@ void SplitOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
 
 void SplitOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
                     std::vector<Tensor>& outputs) {
-  NYI("SplitOp::trace");
+  auto ctx = (ir::IRContext*)trace_context;
+  auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
+  auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
+  ctx->create<ir::linalg::SplitOp>(this, i_irs, o_irs);
 }
 
 void SplitOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
