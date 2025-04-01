@@ -63,9 +63,10 @@ class Tensor {
   // If step is 1, this slice will always trying to use shallow copy.
   Tensor operator[](const SliceIndices& slice_index);
 
-  // Make a slice of the tensor.
-  // ALWAYS Deep Copy.
-  Tensor operator()(const SliceIndices& slice_index);
+  template<typename T>
+  T& at(const std::vector<int32_t>& offsets) {
+    return *(offsettedPtr<T>(offsets));
+  }
 
   Tensor operator+(const Tensor& rhs);
 

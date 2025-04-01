@@ -133,10 +133,6 @@ Tensor Tensor::operator[](const SliceIndices& slice_index) {
   return Tensor(new_impl);
 }
 
-Tensor Tensor::operator()(const SliceIndices& slice_index) {
-  return operator[](slice_index).contiguous();
-}
-
 Tensor Tensor::operator+(const Tensor& rhs) {
   return MllmEngineCtx::instance().dispatch(OpType::kAdd, AddOpCargo{}, {*this, rhs})[0];
 }
