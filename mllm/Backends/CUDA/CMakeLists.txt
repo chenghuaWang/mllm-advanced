@@ -29,7 +29,8 @@ target_include_directories(MllmCUDABackendCudaOps PUBLIC ${MLLM_INCLUDE_DIR})
 # handle cutlass stuff
 target_include_directories(
   MllmCUDABackendCudaOps
-  PUBLIC ${CMAKE_CURRENT_LIST_DIR}/Vendors/cutlass/include ${CMAKE_CURRENT_LIST_DIR}/Vendors/cccl/include)
+  PUBLIC ${CMAKE_CURRENT_LIST_DIR}/Vendors/cutlass/include
+         ${CMAKE_CURRENT_LIST_DIR}/Vendors/cccl/include)
 target_compile_options(MllmCUDABackendCudaOps PRIVATE --expt-relaxed-constexpr)
 
 add_library(

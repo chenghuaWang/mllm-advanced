@@ -6,4 +6,7 @@
 Tensor
 Utils
 SymExpr
+MoE
+Heterogeneous
+Dispatch
 :::

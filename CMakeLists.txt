@@ -16,8 +16,9 @@ option(MLLM_ENABLE_PY_MLLM "Enable mllm python binding" OFF)
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
-set(MLLM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include/)
+set(MLLM_INCLUDE_DIR
+    ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include/)
 set(MLLM_JSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/json/)
 
 add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)
@@ -60,7 +61,9 @@ if(MLLM_ENABLE_PY_MLLM)
 
   # pybind portable lib _C
   pybind11_add_module(
-    _C SHARED ${PROJECT_SOURCE_DIR}/pymllm/_C/PyWarp.cpp
+    _C
+    SHARED
+    ${PROJECT_SOURCE_DIR}/pymllm/_C/PyWarp.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Nn.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Core.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Engine.cpp)

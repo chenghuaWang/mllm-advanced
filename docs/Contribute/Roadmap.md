@@ -14,6 +14,7 @@
 - [ ] **Tool:** Implement GGML Quantization method.
 - [ ] **Core:** Check the index correctness of `view`, `split`, and `complexLoop`.
 - [ ] **Core:** MoE support.
+- [ ] **Core:** Refactor `DeviceTypes` and `DataTypes` to make it compatible with dlpack.
 
 ## P1
 
