@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <half/half.hpp>
+#include <tuple>
 #include "mllm/Utils/Common.hpp"
 
 namespace mllm {
@@ -65,36 +66,36 @@ enum DataTypes : uint32_t {
 
 inline const char* dataTypes2Str(DataTypes type) {
   switch (type) {
-    case DataTypes::kInt4: return "kInt4";
-    case DataTypes::kInt8: return "kInt8";
-    case DataTypes::kInt16: return "kInt16";
-    case DataTypes::kInt32: return "kInt32";
-    case DataTypes::kInt64: return "kInt64";
-    case DataTypes::kFp4: return "kFp4";
-    case DataTypes::kFp8: return "kFp8";
-    case DataTypes::kFp16: return "kFp16";
-    case DataTypes::kFp32: return "kFp32";
-    case DataTypes::kPT_Start: return "kPT_Start";
-    case DataTypes::kPTInt4_Sym: return "kPTInt4_Sym";
-    case DataTypes::KPTInt4_Asy: return "KPTInt4_Asy";
-    case DataTypes::kPTInt8_Sym: return "kPTInt8_Sym";
-    case DataTypes::kPTInt8_Asy: return "kPTInt8_Asy";
-    case DataTypes::kPT_End: return "kPT_End";
-    case DataTypes::kPC_Start: return "kPC_Start";
-    case DataTypes::kPCInt4_Sym: return "kPCInt4_Sym";
-    case DataTypes::kPCInt4_Asy: return "kPCInt4_Asy";
-    case DataTypes::kPCInt8_Sym: return "kPCInt8_Sym";
-    case DataTypes::kPCInt8_Asy: return "kPCInt8_Asy";
-    case DataTypes::kPC_End: return "kPC_End";
-    case DataTypes::kPG_Start: return "kPG_Start";
-    case DataTypes::kPG_End: return "kPG_End";
-    case DataTypes::kGGML_Start: return "kGGML_Start";
-    case DataTypes::kGGML_Q4_0: return "kGGML_Q4_0";
-    case DataTypes::kGGML_Q4_K: return "kGGML_Q4_K";
-    case DataTypes::kGGML_Q8_0: return "kGGML_Q8_0";
-    case DataTypes::kGGML_Q8_K: return "kGGML_Q8_K";
-    case DataTypes::kGGML_End: return "kGGML_End";
-    case DataTypes::kBF16: return "kBF16";
+    case DataTypes::kInt4: return "Int4";
+    case DataTypes::kInt8: return "Int8";
+    case DataTypes::kInt16: return "Int16";
+    case DataTypes::kInt32: return "Int32";
+    case DataTypes::kInt64: return "Int64";
+    case DataTypes::kFp4: return "Fp4";
+    case DataTypes::kFp8: return "Fp8";
+    case DataTypes::kFp16: return "Fp16";
+    case DataTypes::kFp32: return "Fp32";
+    case DataTypes::kPT_Start: return "PT_Start";
+    case DataTypes::kPTInt4_Sym: return "PTInt4_Sym";
+    case DataTypes::KPTInt4_Asy: return "PTInt4_Asy";
+    case DataTypes::kPTInt8_Sym: return "PTInt8_Sym";
+    case DataTypes::kPTInt8_Asy: return "PTInt8_Asy";
+    case DataTypes::kPT_End: return "PT_End";
+    case DataTypes::kPC_Start: return "PC_Start";
+    case DataTypes::kPCInt4_Sym: return "PCInt4_Sym";
+    case DataTypes::kPCInt4_Asy: return "PCInt4_Asy";
+    case DataTypes::kPCInt8_Sym: return "PCInt8_Sym";
+    case DataTypes::kPCInt8_Asy: return "PCInt8_Asy";
+    case DataTypes::kPC_End: return "PC_End";
+    case DataTypes::kPG_Start: return "PG_Start";
+    case DataTypes::kPG_End: return "PG_End";
+    case DataTypes::kGGML_Start: return "GGML_Start";
+    case DataTypes::kGGML_Q4_0: return "GGML_Q4_0";
+    case DataTypes::kGGML_Q4_K: return "GGML_Q4_K";
+    case DataTypes::kGGML_Q8_0: return "GGML_Q8_0";
+    case DataTypes::kGGML_Q8_K: return "GGML_Q8_K";
+    case DataTypes::kGGML_End: return "GGML_End";
+    case DataTypes::kBF16: return "BF16";
     default: return "Unknown";
   }
 }
@@ -127,14 +128,14 @@ inline const char* dataTypes2Str(DataTypes type) {
  */
 // using pack(1) instead of __attribute__ for compatibility with MSVC
 #pragma pack(push, 1)
-typedef struct {
+using __block_q4_0 = struct {
   half_float::half d;  // delta
   uint8_t qs[16];      // nibbles / quants
-} __block_q4_0;
+};
 #pragma pack(pop)
 // 4-bit round-to-nearest quantization (q). Each block has 32 weights. Weight formula: w = q *
 // block_scale. Legacy quantization method (not used widely as of today).
-typedef __block_q4_0 block_q4_0_t;
+using block_q4_0_t = __block_q4_0;
 static_assert(sizeof(block_q4_0_t) == 16 + 2);  // 16B(32x4bits) + 2B(delta)
 
 #pragma pack(push, 1)
@@ -147,23 +148,23 @@ struct __block_q4_k {
 #pragma pack(pop)
 // 4-bit quantization (q). Super-blocks with 8 blocks, each block has 32 weights. Weight formula: w
 // = q * block_scale(6-bit) + block_min(6-bit), resulting in 4.5 bits-per-weight.
-typedef __block_q4_k block_q4_k_t;
+using block_q4_k_t = __block_q4_k;
 static_assert(sizeof(block_q4_k_t)
               == 128 + 2 + 2
                      + 12);  // 128B(256x4bits) + 2B(scale) + 2B(min) + 12B((6bits + 6bits) x 8)
 
 #pragma pack(push, 1)
-typedef struct {
+using __block_q8_k = struct {
   float d;            // delta
   int8_t qs[256];     // quants
   int16_t bsums[16];  // sum of quants in groups of 16
-} __block_q8_k;
+};
 #pragma pack(pop)
 
 //  8-bit quantization (q). Each block has 256 weights. Only used for quantizing intermediate
 //  results. All 2-6 bit dot products are implemented for this quantization type. Weight formula: w
 //  = q * block_scale.
-typedef __block_q8_k block_q8_k_t;
+using block_q8_k_t = __block_q8_k;
 static_assert(sizeof(block_q8_k_t) == 256 + 4 + 32);
 
 inline float dataTypeSize(DataTypes type) {
@@ -185,5 +186,43 @@ inline float dataTypeSize(DataTypes type) {
   }
   return 4.f;
 }
+
+inline std::tuple<uint32_t, uint32_t> dataTypesBitsAndLanes(DataTypes type) {
+  switch (type) {
+    case DataTypes::kInt4: return {4, 1};
+    case DataTypes::kInt8: return {8, 1};
+    case DataTypes::kInt16: return {16, 1};
+    case DataTypes::kInt32: return {32, 1};
+    case DataTypes::kInt64: return {64, 1};
+    case DataTypes::kFp4: return {4, 1};
+    case DataTypes::kFp8: return {8, 1};
+    case DataTypes::kFp16: return {16, 1};
+    case DataTypes::kFp32: return {32, 1};
+    case DataTypes::kBF16: return {16, 1};
+    case DataTypes::kGGML_Q4_0: return {sizeof(block_q4_0_t) * 8, 32};
+    case DataTypes::kGGML_Q4_K: return {sizeof(block_q4_k_t) * 8, 256};
+    case DataTypes::kGGML_Q8_0: return {sizeof(block_q8_k_t) * 8, 256};
+    default:
+      MLLM_ERROR_EXIT(kError, "dtypesBitsAndLanes of {} is not defined yet.", dataTypes2Str(type));
+  }
+}
+
+// FIXME: Impl this struct. compatible with dlpack's definition
+struct DataType {
+  DataType(DataTypes data_type_code)  // NOLINT: google-explicit-constructor
+      : data_type_code_(data_type_code) {
+    auto [bits, lanes] = dataTypesBitsAndLanes(data_type_code);
+    bits_ = bits;
+    lanes_ = lanes;
+  }
+
+  float everyLanesBytes() { return ((float)bits_ / 8.f) / (float)lanes_; }
+
+  float everyLanesBits() { return (float)bits_ / (float)lanes_; }
+
+  DataTypes data_type_code_ = DataTypes::kFp32;
+  uint32_t bits_ = 32;
+  uint32_t lanes_ = 1;
+};
 
 }  // namespace mllm
