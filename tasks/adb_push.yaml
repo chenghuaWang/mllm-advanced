@@ -14,5 +14,6 @@ AdbPushTask:
     - "build-android-arm64-v8a/tests/Arm/Mllm-ArmTest"
     - "build-android-arm64-v8a/examples/Models/demo_ds_qwen2"
     - "build-android-arm64-v8a/tests/IR/Mllm-IR-LlmIRTest"
+    - "build-android-arm64-v8a/tools/PowerCounter/mllm-power-counter"
 
   to_path: "/data/local/tmp/mllm-advanced/bin/"
