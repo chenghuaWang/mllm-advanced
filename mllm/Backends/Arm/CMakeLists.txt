@@ -42,7 +42,6 @@ add_library(
   ${MLLM_ARM_BACKEND_SRC_OP} ${MLLM_ARM_BACKEND_SRC_KERNELS} ${KAI_SOURCES}
   ${KAI_HEADERS} ArmAllocator.cpp ArmBackend.cpp)
 target_include_directories(MllmArmBackend PRIVATE ${MLLM_KAI_INCLUDE_DIRS})
-target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp)
-target_link_libraries(MllmArmBackend INTERFACE mafa2)
+target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp mafa2)
 target_compile_options(MllmArmBackend PUBLIC ${MLLM_ARM_BACKEND_COMPILE_OPTIONS}
                                              -fopenmp)

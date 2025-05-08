@@ -17,8 +17,13 @@ namespace mllm::nn {
 class RoPE : public Layer {
  public:
   RoPE();
+
   explicit RoPE(const RoPEOpCargo& cargo);
+
   RoPE(RoPETypes type, float theta, int max_position_embeddings, int dims);
+
+  RoPE(RoPETypes type, float theta, int max_position_embeddings, int dims,
+       RoPEOpCargo::RoPELayoutType layout_type);
 };
 
 }  // namespace mllm::nn

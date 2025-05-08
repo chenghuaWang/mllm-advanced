@@ -24,4 +24,12 @@ RoPE::RoPE(RoPETypes type, float theta, int max_position_embeddings, int dims)
                                        .max_position_embeddings = max_position_embeddings,
                                        .dims = dims}) {}
 
+RoPE::RoPE(RoPETypes type, float theta, int max_position_embeddings, int dims,
+           RoPEOpCargo::RoPELayoutType layout_type)
+    : Layer(OpType::kRoPE, RoPEOpCargo{.type = type,
+                                       .theta = theta,
+                                       .max_position_embeddings = max_position_embeddings,
+                                       .dims = dims,
+                                       .layout_type = layout_type}) {}
+
 }  // namespace mllm::nn
