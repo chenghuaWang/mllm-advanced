@@ -42,6 +42,7 @@ endif()
 
 add_subdirectory(tools/Quantizer)
 add_subdirectory(tools/TokenizeChecker)
+add_subdirectory(tools/PowerCounter)
 
 if(MLLM_ENABLE_PY_MLLM)
   target_compile_options(MllmRT PRIVATE -fPIC)

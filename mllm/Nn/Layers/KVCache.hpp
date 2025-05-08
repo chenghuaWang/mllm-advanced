@@ -24,6 +24,10 @@ class KVCache : public Layer {
           DataTypes cached_elements_dtype, int32_t pre_alloc_seq_len,
           int32_t re_alloc_multiplier = 2);
 
+  KVCache(int32_t heads_num, int32_t dim_per_head, int32_t head_repeat_times,
+          DataTypes cached_elements_dtype, int32_t pre_alloc_seq_len,
+          KVCacheOpCargo::KVCacheLayoutType layout_type, int32_t re_alloc_multiplier = 2);
+
   explicit KVCache(const KVCacheOpCargo& cargo);
 };
 }  // namespace mllm::nn

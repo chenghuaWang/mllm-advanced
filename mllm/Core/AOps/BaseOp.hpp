@@ -49,6 +49,8 @@ enum class OpType : int32_t {
   kSplit,
   kView,
 
+  kFlashAttention_2,
+
   kOpType_End,
 };
 

@@ -61,7 +61,7 @@ class AutoLLM {
       // update inputs
       tmp = Tensor::empty({/*batch*/ 1, /*sequence*/ 1}, kInt64, tmp.device()).alloc();
       tmp.ptr<int64_t>()[0] = pass_to_func;
-    } while (cur_length < max_length || pass_to_func != eos_token);
+    } while (cur_length < max_length && pass_to_func != eos_token);
   }
 
   std::shared_ptr<T> model() { return llm_; }

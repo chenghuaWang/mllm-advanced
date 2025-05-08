@@ -5,6 +5,7 @@
 
 ## P0
 
+- [ ] **Backend:** Arm, we used the `kleidiai` in an wrong way.
 - [x] **Core:** Refactor the current `TensorImpl` into `TensorViewImpl` and `StorageImpl`. @chenghuaWang
     - Replace `stride_offsets` with `storage_offsets`.
     - Enable `Tensor` to support `operator[]` slicing based on `TensorViewImpl`.

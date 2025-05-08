@@ -25,3 +25,6 @@
 [submodule "mllm/Backends/CUDA/Vendors/cccl"]
 	path = mllm/Backends/CUDA/Vendors/cccl
 	url = https://github.com/NVIDIA/cccl.git
+[submodule "mllm/Backends/Arm/Vendors/MobiAttn"]
+	path = mllm/Backends/Arm/Vendors/MobiAttn
+	url = https://github.com/chenghuaWang/MobiAttn

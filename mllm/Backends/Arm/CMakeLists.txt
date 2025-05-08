@@ -30,11 +30,19 @@ set(KAI_HEADERS
     ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/pack/kai_rhs_pack_kxn_f32p8x1biasf32_f32_f32_neon.h
 )
 
+set(MOBI_ATTN_ARM ON)
+set(MOBI_ATTN_ENABLE_TEST OFF)
+set(MOBI_ATTN_ENABLE_BENCHMARK OFF)
+set(MOBI_ATTN_ENABLE_EXAMPLE OFF)
+set(MOBI_ATTN_ARM_COMPILE_OPTIONS ${MLLM_ARM_BACKEND_COMPILE_OPTIONS})
+add_subdirectory(Vendors/MobiAttn)
+
 add_library(
   MllmArmBackend SHARED
   ${MLLM_ARM_BACKEND_SRC_OP} ${MLLM_ARM_BACKEND_SRC_KERNELS} ${KAI_SOURCES}
   ${KAI_HEADERS} ArmAllocator.cpp ArmBackend.cpp)
 target_include_directories(MllmArmBackend PRIVATE ${MLLM_KAI_INCLUDE_DIRS})
 target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp)
+target_link_libraries(MllmArmBackend INTERFACE mafa2)
 target_compile_options(MllmArmBackend PUBLIC ${MLLM_ARM_BACKEND_COMPILE_OPTIONS}
                                              -fopenmp)
