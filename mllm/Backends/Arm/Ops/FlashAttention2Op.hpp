@@ -37,7 +37,8 @@ class ArmFlashAttn2Op final : public FlashAttn2Op {
   void* mobi_attn_kernel_ptr_ = nullptr;
 };
 
-class ArmFlashAttn2OpFactory final : public TypedOpFactory<OpType::kFill, FlashAttn2OpCargo> {
+class ArmFlashAttn2OpFactory final
+    : public TypedOpFactory<OpType::kFlashAttention_2, FlashAttn2OpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const FlashAttn2OpCargo& cargo) override {
     return std::make_shared<ArmFlashAttn2Op>(cargo);
