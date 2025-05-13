@@ -17,6 +17,7 @@
 
 #define MLLM_LDG128(DST, SRC) *(uint4*)(DST) = *(uint4*)(SRC)
 #define MLLM_STG128(DST, SRC) *(uint4*)(DST) = *(uint4*)(SRC)
+#define MLLM_LOG2E_CONSTANT 1.44269504
 
 namespace mllm::cuda::mllm_math {
 

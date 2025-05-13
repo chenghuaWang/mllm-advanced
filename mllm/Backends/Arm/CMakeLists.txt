@@ -1,6 +1,8 @@
 file(GLOB_RECURSE MLLM_ARM_BACKEND_SRC_OP ${CMAKE_CURRENT_LIST_DIR}/Ops/*.cpp)
 file(GLOB_RECURSE MLLM_ARM_BACKEND_SRC_KERNELS
      ${CMAKE_CURRENT_LIST_DIR}/Kernels/*.cpp)
+file(GLOB_RECURSE MLLM_ARM_BACKEND_ASM_KERNELS
+     ${CMAKE_CURRENT_LIST_DIR}/Kernels/*.S)
 
 # We treat kleidiai as a external lib.
 set(KLEIDIAI_BUILD_TESTS OFF)
@@ -40,6 +42,7 @@ add_subdirectory(Vendors/MobiAttn)
 add_library(
   MllmArmBackend SHARED
   ${MLLM_ARM_BACKEND_SRC_OP} ${MLLM_ARM_BACKEND_SRC_KERNELS} ${KAI_SOURCES}
+  ${MLLM_ARM_BACKEND_ASM_KERNELS}
   ${KAI_HEADERS} ArmAllocator.cpp ArmBackend.cpp)
 target_include_directories(MllmArmBackend PRIVATE ${MLLM_KAI_INCLUDE_DIRS})
 target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp mafa2)

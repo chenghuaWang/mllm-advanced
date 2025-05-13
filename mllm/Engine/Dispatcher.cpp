@@ -143,6 +143,7 @@ std::future<void> DispatcherManager::sendAsyncTaskDirectTo(const std::string& di
   if (!info.dispatcher_impl_->isConsumable(task)) {  // NOLINT
     MLLM_WARN("Task in dispatcher {} is not consumable", dispatcher_name);
     std::promise<void> p;
+    p.set_value();
     return p.get_future();
   }
 

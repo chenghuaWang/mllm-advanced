@@ -9,6 +9,7 @@
  */
 #include <cstdio>
 #include "mllm/Backends/CUDA/Ops/OpSelection.hpp"
+#include "mllm/Backends/CUDA/Kernels/swish.cuh"
 #include "mllm/Backends/CUDA/Kernels/reduce.cuh"
 #include "mllm/Backends/CUDA/Kernels/elewise.cuh"
 #include "mllm/Backends/CUDA/Kernels/softmax.cuh"
@@ -109,7 +110,7 @@ void array_reduce_sum_fp32(void* __restrict__ Z, const void* __restrict__ X, int
     DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 512, 512)
     DEF_OP_SELECT_CONDITION_WHEN(block_dims.x <= 1024, 1024)
 
-#undef DEF_OP_SELECT_SUB_CONDITION_WHEN
+#undef DEF_OP_SELECT_CONDITION_WHEN
     return;
   }
 
@@ -119,6 +120,43 @@ void array_reduce_sum_fp32(void* __restrict__ Z, const void* __restrict__ X, int
   _1d_array_reduce_grid_level<WarpReduceAddOp<float>, float, 4, 1024>
       <<<grid_dims, block_dims>>>((float*)Z, (float*)X, num);
   return;
+}
+
+void vector_swish_fp32_call(float* __restrict__ z, const float* __restrict__ x, int N) {
+  constexpr int vector_size = 4;
+  constexpr int threads_in_each_block = 128;
+  dim3 block_dims(threads_in_each_block);
+  dim3 grid_dims((N + vector_size * threads_in_each_block - 1)
+                 / (vector_size * threads_in_each_block));
+  swish_fp32<<<grid_dims, block_dims>>>(z, x, N);
+}
+
+void super_cute_swish_fp32_call(float* __restrict__ z, const float* __restrict__ x, int N) {
+  constexpr int threads_in_each_block = 128;
+
+  // CASE 1: N <= 128 * 8
+  if (N <= 128 * 8) {
+#define DEF_OP_SELECT_CONDITION_WHEN(condition, num_per_thread)                \
+  if ((condition)) {                                                           \
+    dim3 block_dims(threads_in_each_block);                                    \
+    dim3 grid_dims((N + num_per_thread * threads_in_each_block - 1)            \
+                   / (num_per_thread * threads_in_each_block));                \
+    swish_super_cute_fp32<num_per_thread><<<grid_dims, block_dims>>>(z, x, N); \
+    return;                                                                    \
+  }
+
+    // num_per_thread must be multiple of 4
+    DEF_OP_SELECT_CONDITION_WHEN(N <= 128 * 4, 4);
+    DEF_OP_SELECT_CONDITION_WHEN(N <= 128 * 8, 8);
+
+#undef DEF_OP_SELECT_CONDITION_WHEN
+    return;
+  }
+
+  // CASE 2: N > 128 * 8
+  dim3 block_dims(threads_in_each_block);
+  dim3 grid_dims((N + 128 * 4 * threads_in_each_block - 1) / (128 * 4 * threads_in_each_block));
+  swish_super_cute_fp32<4><<<grid_dims, block_dims>>>(z, x, N);
 }
 
 }  // namespace mllm::cuda
