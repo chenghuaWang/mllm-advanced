@@ -15,7 +15,7 @@
 #include "mllm/Engine/ParameterReader.hpp"
 #include "mllm/Utils/Argparse.hpp"
 
-using namespace mllm;
+using namespace mllm;  // NOLINT
 
 static void printLoaderMetaData(std::shared_ptr<ParameterLoader>& p) {
   std::vector<std::shared_ptr<TensorViewImpl>> _p{p->params().size(), nullptr};

@@ -43,7 +43,7 @@ add_library(
   MllmArmBackend SHARED
   ${MLLM_ARM_BACKEND_SRC_OP} ${MLLM_ARM_BACKEND_SRC_KERNELS} ${KAI_SOURCES}
   ${MLLM_ARM_BACKEND_ASM_KERNELS}
-  ${KAI_HEADERS} ArmAllocator.cpp ArmBackend.cpp)
+  ${KAI_HEADERS} ArmAllocator.cpp ArmBackend.cpp ArmQuantizerHelper.cpp)
 target_include_directories(MllmArmBackend PRIVATE ${MLLM_KAI_INCLUDE_DIRS})
 target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp mafa2)
 target_compile_options(MllmArmBackend PUBLIC ${MLLM_ARM_BACKEND_COMPILE_OPTIONS}
