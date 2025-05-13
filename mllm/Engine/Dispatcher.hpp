@@ -113,6 +113,8 @@ class DispatcherManager {
   };
 
  public:
+  explicit DispatcherManager(MllmEngineCtx* ctx);
+
   ~DispatcherManager();
 
   void registerDispatcher(const std::string& name, const std::shared_ptr<Dispatcher>& dispatcher,
@@ -137,6 +139,7 @@ class DispatcherManager {
       priority_max_heap_;  // The bigger the priority, the earlier the dispatcher will be executed.
   std::vector<std::pair<uint8_t, std::string>> priority_;
   SymbolTable<std::string, DispatcherMetaInfo> dispatchers_;
+  MllmEngineCtx* engine_ctx_ = nullptr;
 };
 
 }  // namespace mllm

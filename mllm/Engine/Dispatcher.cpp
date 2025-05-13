@@ -59,6 +59,8 @@ void EagerDispatcher::process(Task::ptr_t task) {
 
 void EagerDispatcher::setPerf(bool perf) { perf_ = perf; }
 
+DispatcherManager::DispatcherManager(MllmEngineCtx* ctx) : engine_ctx_(ctx) {}
+
 DispatcherManager::~DispatcherManager() {
   for (auto& [name, info] : dispatchers_._ref_raw_data()) {
     {
@@ -83,11 +85,8 @@ void DispatcherManager::registerDispatcher(const std::string& name,
     auto& info = dispatchers_._ref_raw_data()[name];
     info.dispatcher_impl_ = dispatcher;
     info.use_separate_thread_ = false;
-
-    // TODO set mllm ctx ptr
-
+    dispatcher->setMllmEngineCtx(engine_ctx_);
     priority_max_heap_.emplace(priority, name);
-
     return;
   }
 
@@ -97,7 +96,7 @@ void DispatcherManager::registerDispatcher(const std::string& name,
   info.dispatcher_impl_ = dispatcher;
   info.use_separate_thread_ = true;
 
-  // TODO set mllm ctx ptr
+  dispatcher->setMllmEngineCtx(engine_ctx_);
 
   priority_max_heap_.emplace(priority, name);
   info.attached_thread_ = std::thread([&info] {

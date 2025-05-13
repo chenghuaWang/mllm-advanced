@@ -8,17 +8,21 @@
  *
  */
 #include "mllm/Engine/Context.hpp"
+#include "mllm/Engine/Dispatcher.hpp"
 #include "mllm/Engine/MemManager.hpp"
 #include "mllm/Engine/Thread.hpp"
 #include "mllm/Utils/Log.hpp"
 #include <chrono>
+#include <memory>
 
 namespace mllm {
 
-MllmEngineCtx::MllmEngineCtx() {
+MllmEngineCtx::MllmEngineCtx() : dispatcher_manager_(this) {
   main_thread_ = std::make_shared<MllmEngineThread>();
   main_thread_mem_ = std::make_shared<MemManager>(MemManagerCargo{});
   thread_map_.insert({main_thread_->threadId(), main_thread_});
+  dispatcher_manager_.registerDispatcher("cpu:0:eager", std::make_shared<EagerDispatcher>(), 255,
+                                         false);
 }
 
 bool MllmEngineCtx::traceMode() const { return trace_mode_; }
@@ -109,6 +113,69 @@ std::vector<Tensor> MllmEngineCtx::dispatch(OpType op_type, const BaseOpCargoBas
   }
 
   return outputs;
+}
+
+std::vector<Tensor> MllmEngineCtx::sendTask2Dispatcher(const std::string& name,
+                                                       const std::vector<Tensor>& inputs) {
+  // dispatching already registered layer.
+  auto op = thisThread()->layer_ops_table[name];
+
+  auto task = std::shared_ptr<Task>();
+  task->task_type_ = kDispatchOpTask;
+  task->op_ = op;
+  task->inputs_ = inputs;
+
+  dispatcher_manager_.sendTask(task);
+
+  return task->outputs_;
+}
+
+std::vector<Tensor> MllmEngineCtx::sendTask2Dispatcher(OpType op_type,
+                                                       const BaseOpCargoBase& base_cargo,
+                                                       const std::vector<Tensor>& inputs) {
+  auto op = backends_table_[inputs[0].device()]->createOp(op_type, base_cargo);
+
+  auto task = std::shared_ptr<Task>();
+  task->task_type_ = kDispatchOpTask;
+  task->op_ = op;
+  task->inputs_ = inputs;
+
+  dispatcher_manager_.sendTask(task);
+
+  return task->outputs_;
+}
+
+std::vector<Tensor> MllmEngineCtx::sendAsyncTask2DispatcherAndWait(
+    const std::string& dispatcher_name, const std::string& name,
+    const std::vector<Tensor>& inputs) {
+  // dispatching already registered layer.
+  auto op = thisThread()->layer_ops_table[name];
+
+  auto task = std::shared_ptr<Task>();
+  task->task_type_ = kDispatchOpTask;
+  task->op_ = op;
+  task->inputs_ = inputs;
+
+  auto ok = dispatcher_manager_.sendAsyncTaskDirectTo(dispatcher_name, task);
+  ok.wait();
+
+  return task->outputs_;
+}
+
+std::vector<Tensor> MllmEngineCtx::sendAsyncTask2DispatcherAndWait(
+    const std::string& dispatcher_name, OpType op_type, const BaseOpCargoBase& base_cargo,
+    const std::vector<Tensor>& inputs) {
+  auto op = backends_table_[inputs[0].device()]->createOp(op_type, base_cargo);
+
+  auto task = std::shared_ptr<Task>();
+  task->task_type_ = kDispatchOpTask;
+  task->op_ = op;
+  task->inputs_ = inputs;
+
+  auto ok = dispatcher_manager_.sendAsyncTaskDirectTo(dispatcher_name, task);
+  ok.wait();
+
+  return task->outputs_;
 }
 
 void MllmEngineCtx::shutdown() {
