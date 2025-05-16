@@ -5,6 +5,7 @@
 
 ## P0
 
+- [ ] **Server:** Move `Models/AutoLLM` to `Server/Generator`
 - [ ] **Backend:** Arm, we used the `kleidiai` in an wrong way.
 - [x] **Core:** Refactor the current `TensorImpl` into `TensorViewImpl` and `StorageImpl`. @chenghuaWang
     - Replace `stride_offsets` with `storage_offsets`.

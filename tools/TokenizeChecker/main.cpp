@@ -22,7 +22,7 @@
 #include "mllm/Utils/Argparse.hpp"
 #include "mllm/Models/ds_qwen2/tokenization_ds_qwen2.hpp"
 
-using namespace mllm;
+using namespace mllm;  // NOLINT
 
 void initMllmCtx() {
   auto& ctx = MllmEngineCtx::instance();

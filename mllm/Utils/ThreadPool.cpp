@@ -8,6 +8,10 @@
  *
  */
 #include <pthread.h>
+#include <sched.h>
+#include <cstring>
+#include <sys/syscall.h>
+#include <unistd.h>
 #include "mllm/Utils/ThreadPool.hpp"
 #include "mllm/Utils/Common.hpp"
 
@@ -36,21 +40,35 @@ void MllmThreadPool::initialize(int num_threads) {
   for (size_t i = 0; i < num_threads_; ++i) {
     workers_.emplace_back([this, i] {
       current_thread_id_ = i;
+      system_workers_pid_.emplace_back(syscall(SYS_gettid));
       workLoop();
     });
   }
 }
 
-void MllmThreadPool::setAffinity(pthread_t handle, int cpu_id_mask) {
-  // TODO
+void MllmThreadPool::setAffinity(pid_t handle, int cpu_id_mask) {
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+
+  for (int i = 0; i < sizeof(int) * 8; ++i) {
+    if (cpu_id_mask & (1 << i)) { CPU_SET(i, &cpuset); }
+  }
+
+  int result = sched_setaffinity(handle, sizeof(cpu_set_t), &cpuset);
+  if (result != 0) {
+    MLLM_ERROR_EXIT(kError, "Failed to set thread affinity: error code {}. {}", result,
+                    strerror(errno));
+  }
 }
+
+int MllmThreadPool::getRunOnCPUCore(size_t worker_id) { return sched_getcpu(); }
 
 void MllmThreadPool::rebindCPUCore(size_t worker_id, int core_id_mask) {
   if (worker_id >= workers_.size()) {
     MLLM_ERROR_EXIT(kError, "Worker id {} is out of range.", worker_id);
   }
 
-  auto handle = workers_[worker_id].native_handle();
+  auto handle = system_workers_pid_[worker_id];
   setAffinity(handle, core_id_mask);
 }
 

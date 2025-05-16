@@ -9,6 +9,7 @@
  */
 #pragma once
 
+#include <sched.h>
 #include <vector>
 #include <thread>
 #include <functional>
@@ -24,6 +25,7 @@ namespace mllm {
 class MllmThreadPool {
   int num_threads_;
   std::vector<std::thread> workers_;
+  std::vector<pid_t> system_workers_pid_;
   std::queue<std::function<void()>> queue_tasks_;
   std::mutex queue_mutex_;
   std::condition_variable cv_;
@@ -44,7 +46,9 @@ class MllmThreadPool {
 
   void initialize(int num_threads);
 
-  void setAffinity(pthread_t handle, int cpu_id_mask);
+  void setAffinity(pid_t handle, int cpu_id_mask);
+
+  int getRunOnCPUCore(size_t worker_id);
 
   void rebindCPUCore(size_t worker_id, int core_id_mask);
 
@@ -139,5 +143,12 @@ class MllmThreadPool {
     MllmThreadPool::instance().parallelForWoChunk(start, end, step, [&](int var)
 
 #define MLLM_PARALLEL_FOR_END );
+
+#define MLLM_BIND_CURRENT_THREAD(mask) \
+  MllmThreadPool::instance().rebindCPUCore(MLLM_THIS_THREAD_ID, mask)
+
+#define MLLM_BIND_WORKER(worker_id, mask) MllmThreadPool::instance().rebindCPUCore(worker_id, mask)
+
+#define MLLM_CUR_RUN_ON_CPU_ID MllmThreadPool::instance().getRunOnCPUCore(MLLM_THIS_THREAD_ID)
 
 }  // namespace mllm

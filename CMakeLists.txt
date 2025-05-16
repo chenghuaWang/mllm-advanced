@@ -17,7 +17,8 @@ message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
 set(MLLM_INCLUDE_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include/)
 set(MLLM_JSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/json/)
 
@@ -43,6 +44,7 @@ endif()
 add_subdirectory(tools/Quantizer)
 add_subdirectory(tools/TokenizeChecker)
 add_subdirectory(tools/PowerCounter)
+add_subdirectory(tools/MllmRunner)
 
 if(MLLM_ENABLE_PY_MLLM)
   target_compile_options(MllmRT PRIVATE -fPIC)

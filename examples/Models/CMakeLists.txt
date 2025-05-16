@@ -8,7 +8,6 @@ add_executable(demo_ds_qwen2 demo_ds_qwen2.cpp)
 target_link_libraries(demo_ds_qwen2 PRIVATE ${_BACKEND_LIB_FOR_MODEL_EXAMPLES}
                                             MllmRT)
 
-
 add_executable(demo_ds_qwen2_fa2_fp16 demo_ds_qwen2_fa2_fp16.cpp)
-target_link_libraries(demo_ds_qwen2_fa2_fp16 PRIVATE ${_BACKEND_LIB_FOR_MODEL_EXAMPLES}
-                                            MllmRT)
+target_link_libraries(demo_ds_qwen2_fa2_fp16
+                      PRIVATE ${_BACKEND_LIB_FOR_MODEL_EXAMPLES} MllmRT)

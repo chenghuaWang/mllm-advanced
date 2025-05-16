@@ -6,6 +6,7 @@ file(GLOB_RECURSE MLLM_RT_MODELS_SRC ${CMAKE_CURRENT_LIST_DIR}/Models/*.cpp)
 file(GLOB_RECURSE MLLM_RT_IR_SRC ${CMAKE_CURRENT_LIST_DIR}/IR/*.cpp)
 file(GLOB_RECURSE MLLM_RT_PREPROCESSOR_SRC
      ${CMAKE_CURRENT_LIST_DIR}/Preprocessor/*.cpp)
+file(GLOB_RECURSE MLLM_RT_SERVER_SRC ${CMAKE_CURRENT_LIST_DIR}/Server/*.cpp)
 
 add_library(
   MllmRT SHARED
@@ -15,7 +16,8 @@ add_library(
   ${MLLM_RT_NN_SRC}
   ${MLLM_RT_PREPROCESSOR_SRC}
   ${MLLM_RT_MODELS_SRC}
-  ${MLLM_RT_IR_SRC})
+  ${MLLM_RT_IR_SRC}
+  ${MLLM_RT_SERVER_SRC})
 
 target_include_directories(MllmRT PUBLIC ${MLLM_INCLUDE_DIR}
                                          ${MLLM_JSON_INCLUDE_DIR})
