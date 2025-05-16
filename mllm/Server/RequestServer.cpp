@@ -7,8 +7,10 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include "mllm/Engine/Context.hpp"
 #include "mllm/Utils/Common.hpp"
 #include "mllm/Server/RequestServer.hpp"
+#include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
 
 namespace mllm {
 void MllmRequestServer::start() {
@@ -93,25 +95,24 @@ void MllmRequestServer::processStreamRequest(int socket, const json& request) {
   float temperature = request.value("temperature", 0.7f);
   int max_tokens = request.value("max_tokens", 100);
 
-  // TODO If model context is not created. create one.
-
-  // TODO If model name is not match, throw error.
+  MLLM_RT_ASSERT(model == model_tag_);
 
   // TODO process image
 
-  // model_.generate_stream(
-  //     prompt, [&](const string& chunk) { send_stream_chunk(socket, chunk, "content"); }, model,
-  //     temperature, max_tokens);
+  model_->generate(model_->encode(prompt), max_tokens, [&](const std::wstring& output) {
+    sendStreamChunk(socket, preprocessor::wideString2Utf8String(output), "");
+  });
 
   sendStreamChunk(socket, "", "done");
 }
 
 std::string MllmRequestServer::buildPrompt(const json& messages) {
-  std::string prompt;
+  std::vector<std::pair<std::string, std::string>> prompt_parts;
+  prompt_parts.reserve(messages.size());
   for (const auto& msg : messages) {
-    prompt += msg["role"].get<std::string>() + ": " + msg["content"].get<std::string>() + "\n";
+    prompt_parts.emplace_back(msg["role"].get<std::string>(), msg["content"].get<std::string>());
   }
-  return prompt;
+  return model_->buildPrompt(prompt_parts);
 }
 
 void MllmRequestServer::sendResponseHeaders(int socket) {
@@ -126,14 +127,20 @@ void MllmRequestServer::sendResponseHeaders(int socket) {
 
 void MllmRequestServer::sendStreamChunk(int socket, const std::string& content,
                                         const std::string& type) {
+  // Get current time in ISO 8601 format
+  auto now = std::time(nullptr);
+  auto tm_info = std::localtime(&now);
+  char buffer[26];
+  std::strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S", tm_info);
+
   json chunk = {{"id", "chatcmpl-" + std::to_string(rand())},  // TODO
                 {"object", "chat.completion.chunk"},
-                {"created", time(nullptr)},  // TODO
-                {"model", "<TODO>"},         // TODO
+                {"created", buffer},
+                {"model", model_tag_},
                 {"choices",
                  {{{"delta", {{"content", content}}},
-                   {"finish_reason", type == "done" ? "stop" : "running"},  // TODO
-                   {"index", 0}}}}};                                        // TODO
+                   {"finish_reason", type == "done" ? "stop" : ""},
+                   {"index", 0}}}}};  // TODO
 
   std::string event = "data: " + chunk.dump() + "\n\n";
   send(socket, event.c_str(), event.size(), 0);
@@ -181,6 +188,10 @@ void MllmRequestServer::acceptConnections(int server_fd) {
 }
 
 void MllmRequestServer::run() {
+  // clone model to this thread
+  auto& ctx = MllmEngineCtx::instance();
+  ctx.thisThread()->layer_ops_table = ctx.mainThread()->layer_ops_table;
+
   int server_fd = createSocket();
   if (server_fd < 0) return;
   setupSocket(server_fd);

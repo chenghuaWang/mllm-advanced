@@ -39,6 +39,8 @@ std::shared_ptr<MllmEngineThread> MllmEngineCtx::thisThread() {
   return thread_map_[std::this_thread::get_id()];
 }
 
+std::shared_ptr<MllmEngineThread> MllmEngineCtx::mainThread() { return main_thread_; }
+
 uint32_t MllmEngineCtx::getUUID() {
   uint32_t ret = custom_uuid_giver_;
   custom_uuid_giver_++;

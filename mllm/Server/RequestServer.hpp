@@ -30,6 +30,7 @@ class MllmRequestServer {
 
   int port_ = 9808;
   std::shared_ptr<MllmStreamModelGenerator> model_ = nullptr;
+  std::string model_tag_;
   std::atomic<bool> running_;
   std::thread server_thread_;
 
@@ -42,6 +43,12 @@ class MllmRequestServer {
   void start();
 
   void stop();
+
+  inline void setMllmStreamModelGenerator(const std::shared_ptr<MllmStreamModelGenerator>& model) {
+    model_ = model;
+  }
+
+  inline void setModelTag(const std::string& tag) { model_tag_ = tag; }
 
  private:
   int createSocket();

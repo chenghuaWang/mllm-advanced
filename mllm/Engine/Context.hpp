@@ -38,6 +38,8 @@ class MllmEngineCtx {
 
   std::shared_ptr<MllmEngineThread> thisThread();
 
+  std::shared_ptr<MllmEngineThread> mainThread();
+
   MllmEngineCtx(const MllmEngineCtx&) = delete;
 
   MllmEngineCtx& operator=(const MllmEngineCtx&) = delete;
