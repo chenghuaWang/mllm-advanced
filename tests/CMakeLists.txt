@@ -5,6 +5,7 @@ add_subdirectory(Utils)
 
 if(MLLM_BUILD_ARM_BACKEND)
   add_subdirectory(Arm)
+  add_subdirectory(OpenCL)
 else()
   add_subdirectory(X86)
 endif()

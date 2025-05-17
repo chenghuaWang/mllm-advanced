@@ -25,6 +25,7 @@ target_link_libraries(MllmRT PUBLIC fmt::fmt-header-only)
 
 if(MLLM_BUILD_ARM_BACKEND)
   add_subdirectory(Backends/Arm)
+  add_subdirectory(Backends/OpenCL)
 endif()
 
 if(MLLM_BUILD_CUDA_BACKEND)
