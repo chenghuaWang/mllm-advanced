@@ -59,6 +59,8 @@ bool OpenCLLoader::tryingToLoadOpenCLDynLibAndParseSymbols(const std::string& li
   opencl_dynlib_handle_ = dlopen(lib_path.c_str(), RTLD_NOW | RTLD_LOCAL);
   if (opencl_dynlib_handle_ == nullptr) { return false; }
 
+  MLLM_INFO("Load opencl dyn lib: {}", lib_path);
+
   // Load opencl symbols
   using enable_opencl_f_t = void (*)();
   using load_opencl_ptr_f_t = void* (*)(const char*);
@@ -86,9 +88,23 @@ bool OpenCLLoader::tryingToLoadOpenCLDynLibAndParseSymbols(const std::string& li
   LOAD_FUNCTION_PTR(clGetDeviceIDs);
   LOAD_FUNCTION_PTR(clGetDeviceInfo);
 
+#define LOAD_SVM_FUNCTION_PTR(func_name)                                                   \
+  func_name = reinterpret_cast<func_name##_f_t>(dlsym(opencl_dynlib_handle_, #func_name)); \
+  if (func_name == nullptr && load_opencl_ptr_f != nullptr) {                              \
+    func_name = reinterpret_cast<func_name##_f_t>(load_opencl_ptr_f(#func_name));          \
+  }                                                                                        \
+  if (func_name == nullptr) { svm_load_error_ = true; }
+
+  LOAD_SVM_FUNCTION_PTR(clSVMAlloc);
+  LOAD_SVM_FUNCTION_PTR(clSVMFree);
+  LOAD_SVM_FUNCTION_PTR(clEnqueueSVMMap);
+  LOAD_SVM_FUNCTION_PTR(clEnqueueSVMUnmap);
+  LOAD_SVM_FUNCTION_PTR(clSetKernelArgSVMPointer);
+
   // TODO More functions and special features to load
 
 #undef LOAD_FUNCTION_PTR
+#undef LOAD_SVM_FUNCTION_PTR
 
   return true;
 }
