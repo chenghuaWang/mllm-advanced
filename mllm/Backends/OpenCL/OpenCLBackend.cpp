@@ -7,8 +7,10 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "mllm/Backends/OpenCL/Runtime/OpenCLLoader.hpp"
+/// The OpenCLBackend.hpp head should be imported first. Due to its defined some opencl based macros
+/// that will be used in the opencl related infrastructure below.
 #include "mllm/Backends/OpenCL/OpenCLBackend.hpp"
+#include "mllm/Backends/OpenCL/Runtime/OpenCLLoader.hpp"
 
 namespace mllm::opencl {
 OpenCLBackend::OpenCLBackend() : BackendBase(kOpenCL) {

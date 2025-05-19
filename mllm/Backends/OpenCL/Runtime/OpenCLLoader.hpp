@@ -24,7 +24,8 @@
 #endif
 
 // The CL_TARGET_OPENCL_VERSION is set for devices support OpenCL 3.0.
-#define CL_TARGET_OPENCL_VERSION 300
+// #define CL_TARGET_OPENCL_VERSION 300
+// #define CL_HPP_TARGET_OPENCL_VERSION 300
 
 #include "mllm/Utils/Common.hpp"
 

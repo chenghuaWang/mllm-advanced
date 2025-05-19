@@ -66,7 +66,7 @@ if(MLLM_ENABLE_PY_MLLM)
   pybind11_add_module(
     _C
     SHARED
-    ${PROJECT_SOURCE_DIR}/pymllm/_C/PyWarp.cpp
+    ${PROJECT_SOURCE_DIR}/pymllm/_C/PyWrap.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Nn.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Core.cpp
     ${PROJECT_SOURCE_DIR}/pymllm/_C/Engine.cpp)

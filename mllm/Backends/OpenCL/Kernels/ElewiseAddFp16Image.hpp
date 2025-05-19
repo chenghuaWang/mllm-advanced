@@ -1,7 +1,7 @@
 // This file is the template of OpenCL kernels.
 //
 // OpenCL File      :elewise_add_fp16_image.cl
-// Generate Date    :Sun May 18 11:15:36 2025
+// Generate Date    :Mon May 19 10:43:03 2025
 //
 #pragma once
 
