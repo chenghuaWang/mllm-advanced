@@ -1,6 +1,7 @@
 import tilelang
 import tilelang.language as T
 from .tlop import TLOp
+from ..._C import OpTypes
 
 
 def elementwise_add(
@@ -36,7 +37,7 @@ def elementwise_add(
 
 class ElewiseAddTLOp(TLOp):
     def __init__(
-        self, op_type, op_name="element_wise_add", kernel_handle=elementwise_add
+        self, op_type: OpTypes=OpTypes.Add, op_name="element_wise_add", kernel_handle=elementwise_add
     ):
         super().__init__(op_type, op_name, kernel_handle)
         self.kernel_cfg = {

@@ -109,4 +109,91 @@ bool OpenCLLoader::tryingToLoadOpenCLDynLibAndParseSymbols(const std::string& li
   return true;
 }
 
+/// wrap to same name symbols
+extern "C" {
+cl_int CL_API_CALL clGetPlatformIDs(cl_uint _0, cl_platform_id* _1, cl_uint* _2) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clGetPlatformIDs;
+  return func(_0, _1, _2);
+}
+
+cl_int CL_API_CALL clGetPlatformInfo(cl_platform_id _0, cl_platform_info _1, size_t _2, void* _3,
+                                     size_t* _4) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clGetPlatformInfo;
+  return func(_0, _1, _2, _3, _4);
+}
+
+cl_int CL_API_CALL clGetDeviceIDs(cl_platform_id _0, cl_device_type _1, cl_uint _2,
+                                  cl_device_id* _3, cl_uint* _4) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clGetDeviceIDs;
+  return func(_0, _1, _2, _3, _4);
+}
+
+cl_int CL_API_CALL clGetDeviceInfo(cl_device_id _0, cl_device_info _1, size_t _2, void* _3,
+                                   size_t* _4) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clGetDeviceInfo;
+  return func(_0, _1, _2, _3, _4);
+}
+
+cl_int CL_API_CALL clReleaseDevice(cl_device_id _0) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clReleaseDevice;
+  return func(_0);
+}
+
+cl_int CL_API_CALL clReleaseContext(cl_context _0) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clReleaseContext;
+  return func(_0);
+}
+
+cl_int CL_API_CALL clReleaseCommandQueue(cl_command_queue _0) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clReleaseCommandQueue;
+  return func(_0);
+}
+
+cl_context CL_API_CALL clCreateContext(
+    const cl_context_properties* _0, cl_uint _1, const cl_device_id* _2,
+    void(CL_CALLBACK* _3)(const char*, const void*, size_t, void*), void* _4, cl_int* _5) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clCreateContext;
+  return func(_0, _1, _2, _3, _4, _5);
+}
+
+cl_command_queue CL_API_CALL clCreateCommandQueueWithProperties(cl_context _0, cl_device_id _1,
+                                                                const cl_queue_properties* _2,
+                                                                cl_int* _3) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clCreateCommandQueueWithProperties;
+  return func(_0, _1, _2, _3);
+}
+
+cl_int CL_API_CALL clRetainDevice(cl_device_id _0) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clRetainDevice;
+  return func(_0);
+}
+
+void* CL_API_CALL clSVMAlloc(cl_context _0, cl_svm_mem_flags _1, size_t _2, cl_uint _3) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clSVMAlloc;
+  return func(_0, _1, _2, _3);
+}
+
+void CL_API_CALL clSVMFree(cl_context _0, void* _1) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clSVMFree;
+  func(_0, _1);
+}
+
+cl_int CL_API_CALL clSetKernelArgSVMPointer(cl_kernel _0, cl_uint _1, const void* _2) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clSetKernelArgSVMPointer;
+  return func(_0, _1, _2);
+}
+
+cl_int CL_API_CALL clEnqueueSVMMap(cl_command_queue _0, cl_bool _1, cl_map_flags _2, void* _3,
+                                   size_t _4, cl_uint _5, const cl_event* _6, cl_event* _7) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clEnqueueSVMMap;
+  return func(_0, _1, _2, _3, _4, _5, _6, _7);
+}
+
+cl_int CL_API_CALL clEnqueueSVMUnmap(cl_command_queue _0, void* _1, cl_uint _2, const cl_event* _3,
+                                     cl_event* _4) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clEnqueueSVMUnmap;
+  return func(_0, _1, _2, _3, _4);
+}
+}
+
 }  // namespace mllm::opencl

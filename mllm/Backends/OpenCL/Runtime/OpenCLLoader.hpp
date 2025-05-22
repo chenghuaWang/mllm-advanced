@@ -18,7 +18,6 @@
 // The gpu arch we support is :
 //  - Adreno(Fully Tested)
 //  - Mali(Partially Tested)
-
 #if !defined(__ANDROID__)
 #error "Only support android platform with GPU Arch: Adreno and Mali."
 #endif
@@ -75,6 +74,21 @@ class OpenCLLoader {
   using clGetDeviceInfo_f_t = cl_int(CL_API_CALL*)(cl_device_id, cl_device_info, size_t, void*,
                                                    size_t*);
 
+  using clReleaseDevice_f_t = cl_int(CL_API_CALL*)(cl_device_id);
+
+  using clReleaseContext_f_t = cl_int(CL_API_CALL*)(cl_context);
+
+  using clReleaseCommandQueue_f_t = cl_int(CL_API_CALL*)(cl_command_queue);
+
+  using clRetainDevice_f_t = cl_int(CL_API_CALL*)(cl_device_id);
+
+  using clCreateCommandQueueWithProperties_f_t =
+      cl_command_queue(CL_API_CALL*)(cl_context, cl_device_id, const cl_queue_properties*, cl_int*);
+
+  using clCreateContext_f_t = cl_context(CL_API_CALL*)(
+      const cl_context_properties*, cl_uint, const cl_device_id*,
+      void(CL_CALLBACK*)(const char*, const void*, size_t, void*), void*, cl_int*);
+
   // SVM related
   using clSVMAlloc_f_t = void*(CL_API_CALL*)(cl_context, cl_svm_mem_flags, size_t, cl_uint);
 
@@ -94,6 +108,12 @@ class OpenCLLoader {
   DEFINE_FUNC_PTR_MEMBER(clGetPlatformInfo);
   DEFINE_FUNC_PTR_MEMBER(clGetDeviceIDs);
   DEFINE_FUNC_PTR_MEMBER(clGetDeviceInfo);
+  DEFINE_FUNC_PTR_MEMBER(clReleaseDevice);
+  DEFINE_FUNC_PTR_MEMBER(clReleaseContext);
+  DEFINE_FUNC_PTR_MEMBER(clReleaseCommandQueue);
+  DEFINE_FUNC_PTR_MEMBER(clRetainDevice);
+  DEFINE_FUNC_PTR_MEMBER(clCreateCommandQueueWithProperties);
+  DEFINE_FUNC_PTR_MEMBER(clCreateContext);
 
   // SVM related
   DEFINE_FUNC_PTR_MEMBER(clSVMAlloc);
@@ -113,5 +133,50 @@ class OpenCLLoader {
 
   bool svm_load_error_ = false;
 };
+
+/// wrap to same name symbols
+extern "C" {
+cl_int CL_API_CALL clGetPlatformIDs(cl_uint _0, cl_platform_id* _1, cl_uint* _2);
+
+cl_int CL_API_CALL clGetPlatformInfo(cl_platform_id _0, cl_platform_info _1, size_t _2, void* _3,
+                                     size_t* _4);
+
+cl_int CL_API_CALL clGetDeviceIDs(cl_platform_id _0, cl_device_type _1, cl_uint _2,
+                                  cl_device_id* _3, cl_uint* _4);
+
+cl_int CL_API_CALL clGetDeviceInfo(cl_device_id _0, cl_device_info _1, size_t _2, void* _3,
+                                   size_t* _4);
+
+cl_int CL_API_CALL clReleaseDevice(cl_device_id _0);
+
+cl_int CL_API_CALL clReleaseContext(cl_context _0);
+
+cl_int CL_API_CALL clReleaseCommandQueue(cl_command_queue _0);
+
+cl_context CL_API_CALL clCreateContext(
+    const cl_context_properties* _0, cl_uint _1, const cl_device_id* _2,
+    void(CL_CALLBACK* _3)(const char*, const void*, size_t, void*), void* _4, cl_int* _5);
+
+cl_command_queue CL_API_CALL clCreateCommandQueueWithProperties(cl_context _0, cl_device_id _1,
+                                                                const cl_queue_properties* _2,
+                                                                cl_int* _3);
+
+cl_context CL_API_CALL clCreateContext(
+    const cl_context_properties* _0, cl_uint _1, const cl_device_id* _2,
+    void(CL_CALLBACK* _3)(const char*, const void*, size_t, void*), void* _4, cl_int* _5);
+
+// SVM
+void* CL_API_CALL clSVMAlloc(cl_context _0, cl_svm_mem_flags _1, size_t _2, cl_uint _3);
+
+void CL_API_CALL clSVMFree(cl_context _0, void* _1);
+
+cl_int CL_API_CALL clSetKernelArgSVMPointer(cl_kernel _0, cl_uint _1, const void* _2);
+
+cl_int CL_API_CALL clEnqueueSVMMap(cl_command_queue _0, cl_bool _1, cl_map_flags _2, void* _3,
+                                   size_t _4, cl_uint _5, const cl_event* _6, cl_event* _7);
+
+cl_int CL_API_CALL clEnqueueSVMUnmap(cl_command_queue _0, void* _1, cl_uint _2, const cl_event* _3,
+                                     cl_event* _4);
+}
 
 }  // namespace mllm::opencl

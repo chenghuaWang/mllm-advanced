@@ -7,8 +7,8 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include <memory>
 #include <sstream>
-#include <CL/opencl.hpp>
 #include "mllm/Backends/OpenCL/Runtime/OpenCLRuntime.hpp"
 #include "mllm/Backends/OpenCL/Runtime/OpenCLLoader.hpp"
 #include "mllm/Utils/Common.hpp"
@@ -76,7 +76,7 @@ MllmOpenCLRuntime::MllmOpenCLRuntime(void* ctx_ptr, int platform_size, int platf
         device_info_.device_version_.substr(device_info_.device_version_.size() - 3);
 
     if (adreno_version >= "730") {
-      device_info_.fe_set_workgroup_attr = true;
+      device_info_.fe_set_workgroup_attr_ = true;
       device_info_.gpu_level_ = OpenCLDeviceInfo::GpuLevel::kTop;
     } else {
       NYI("Unsupported Adreno Version");
@@ -93,13 +93,135 @@ MllmOpenCLRuntime::MllmOpenCLRuntime(void* ctx_ptr, int platform_size, int platf
   if (ext_has_property_hints) {
     switch (device_info_.gpu_arch_) {
       case OpenCLDeviceInfo::GpuArch::kAdreno:
-        // TODO
+#define CL_CONTEXT_PERF_HINT_QCOM 0x40C2
+#define CL_PERF_HINT_HIGH_QCOM 0x40C3
+#define CL_CONTEXT_PRIORITY_HINT_QCOM 0x40C9
+#define CL_PRIORITY_HINT_LOW_QCOM 0x40CC
+
+        device_ext_properties.push_back(CL_CONTEXT_PERF_HINT_QCOM);
+        device_ext_properties.push_back(CL_PERF_HINT_HIGH_QCOM);
+        device_ext_properties.push_back(CL_CONTEXT_PRIORITY_HINT_QCOM);
+        device_ext_properties.push_back(CL_PRIORITY_HINT_LOW_QCOM);
+        device_info_.fe_support_low_power_ = true;
+
+#undef CL_CONTEXT_PERF_HINT_QCOM
+#undef CL_PERF_HINT_HIGH_QCOM
+#undef CL_CONTEXT_PRIORITY_HINT_QCOM
+#undef CL_PRIORITY_HINT_LOW_QCOM
         break;
       default: break;
     }
   }
 
-  // TODO check if has other features. Such as fp16, int8, low power...
+  auto device_exts = gpu_device_ptr_.get()->getInfo<CL_DEVICE_EXTENSIONS>();
+
+  auto check_device_support_fe = [](const cl::Device& device, const std::string& feat_str) -> bool {
+    std::string extensions = device.getInfo<CL_DEVICE_EXTENSIONS>();
+    auto pos = extensions.find(feat_str);
+    return (pos != std::string::npos);
+  };
+
+  device_info_.fe_support_android_hardware_buffer_ =
+      (device_info_.gpu_arch_ == OpenCLDeviceInfo::GpuArch::kAdreno)
+      && check_device_support_fe(*(gpu_device_ptr_.get()),
+                                 "cl_qcom_android_ahardwarebuffer_host_ptr");
+
+  if (nullptr != device_info_.context_ptr_) {
+    ctx_ptr_ =
+        std::shared_ptr<cl::Context>((cl::Context*)device_info_.context_ptr_, [](void* ptr) {});
+  } else {
+    cl_int res;
+    if (device_ext_properties.size() > 0) {
+      device_ext_properties.push_back(0);
+      ctx_ptr_ =
+          std::make_shared<cl::Context>(std::vector<cl::Device>({*gpu_device_ptr_}),
+                                        device_ext_properties.data(), nullptr, nullptr, &res);
+    } else {
+      ctx_ptr_ = std::make_shared<cl::Context>(std::vector<cl::Device>({*gpu_device_ptr_}), nullptr,
+                                               nullptr, nullptr, &res);
+    }
+    MLLM_CHECK_OPENCL_SUCCESS(res, "context create error.")
+  }
+
+  cl_int res;
+  if (ext_has_property_hints) {
+    cl_queue_properties prop[] = {CL_QUEUE_PRIORITY_KHR, CL_QUEUE_PRIORITY_LOW_KHR, 0};
+
+    command_queue_ptr_ = std::make_shared<cl::CommandQueue>(clCreateCommandQueueWithProperties(
+        (*ctx_ptr_).get(), (*gpu_device_ptr_).get(), prop, &res));
+  } else {
+    cl_command_queue_properties properties = 0;
+    command_queue_ptr_ =
+        std::make_shared<cl::CommandQueue>(*ctx_ptr_, *gpu_device_ptr_, properties, &res);
+  }
+  MLLM_CHECK_OPENCL_SUCCESS(res, "command queue create error.")
+
+  command_queue_tuning_ptr_ = std::make_shared<cl::CommandQueue>(*ctx_ptr_, *gpu_device_ptr_,
+                                                                 CL_QUEUE_PROFILING_ENABLE, &res);
+
+  cur_command_queue_ptr_ = command_queue_ptr_.get();
+  MLLM_CHECK_OPENCL_SUCCESS(gpu_device_ptr_->getInfo(CL_DEVICE_GLOBAL_MEM_CACHE_SIZE,
+                                                     &device_info_.gpu_global_mem_cache_size_),
+                            "");
+  MLLM_CHECK_OPENCL_SUCCESS(
+      gpu_device_ptr_->getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &device_info_.gpu_compute_units_num_),
+      "");
+  MLLM_CHECK_OPENCL_SUCCESS(
+      gpu_device_ptr_->getInfo(CL_DEVICE_MAX_CLOCK_FREQUENCY, &device_info_.max_freq_), "");
+  MLLM_CHECK_OPENCL_SUCCESS(
+      gpu_device_ptr_->getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &device_info_.max_mem_alloc_size_),
+      "");
+  MLLM_CHECK_OPENCL_SUCCESS(
+      gpu_device_ptr_->getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &device_info_.max_local_mem_size_), "");
+  device_info_.max_work_group_size_ = gpu_device_ptr_->getInfo<CL_DEVICE_MAX_WORK_GROUP_SIZE>();
+
+  {
+    cl_device_fp_config fp_cfg;
+    auto success = gpu_device_ptr_->getInfo(CL_DEVICE_HALF_FP_CONFIG, &fp_cfg);
+    device_info_.fe_support_fp16_ = CL_SUCCESS == success && fp_cfg > 0;
+    bool has_fp16_ext = check_device_support_fe(*(gpu_device_ptr_.get()), "cl_khr_fp16");
+    device_info_.fe_support_fp16_ = (device_info_.fe_support_fp16_ && has_fp16_ext);
+  }
+
+  if (check_device_support_fe(*(gpu_device_ptr_.get()), "cl_arm_integer_dot_product_int8")) {
+    device_info_.fe_support_dot_int8_ = true;
+  }
+  if (check_device_support_fe(*(gpu_device_ptr_.get()),
+                              "cl_arm_integer_dot_product_accumulate_int8")) {
+    device_info_.fe_support_dot_acc_int8_ = true;
+  }
+
+  // recordable queue
+  // TODO, for specific gpu arch, need to include diff ext provided by vendors.
+
+  {
+    // Init info
+    size_t max_height, max_width;
+    MLLM_CHECK_OPENCL_SUCCESS(gpu_device_ptr_->getInfo(CL_DEVICE_IMAGE2D_MAX_HEIGHT, &max_height),
+                              "");
+    MLLM_CHECK_OPENCL_SUCCESS(gpu_device_ptr_->getInfo(CL_DEVICE_IMAGE2D_MAX_WIDTH, &max_width),
+                              "");
+    max_image_size_ = {max_height, max_width};
+  }
+
+  do {
+    int dims = 3;
+    MLLM_CHECK_OPENCL_SUCCESS(gpu_device_ptr_->getInfo(CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, &dims),
+                              "");
+
+    if (dims < 3) {
+      std::vector<uint32_t> work_item(3, 8);
+      max_work_items_ = work_item;
+      break;
+    }
+    cl::vector<cl::size_type> _work_items(dims, 1);
+    MLLM_CHECK_OPENCL_SUCCESS(gpu_device_ptr_->getInfo(CL_DEVICE_MAX_WORK_ITEM_SIZES, &_work_items),
+                              "");
+
+    std::vector<uint32_t> work_items(dims, 1);
+    for (int i = 0; i < dims; ++i) { work_items[i] = _work_items[i]; }
+    max_work_items_ = work_items;
+  } while (false);
 }
 
 bool MllmOpenCLRuntime::compileKernel(OpenCLKernel::ptr_t kernel) { return true; }

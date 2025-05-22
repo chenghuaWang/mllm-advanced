@@ -1,6 +1,7 @@
 import tilelang
 import tilelang.language as T
 from .tlop import TLOp
+from ..._C import OpTypes
 
 
 # ref:
@@ -152,7 +153,6 @@ def fa2_gqa_bshd(batch, seq_len, heads, dim, is_causal, groups=1, tune=False):
         return main
 
     if tune:
-
         raise NotImplementedError("Tuning is not implemented yet.")
     else:
 
@@ -160,3 +160,28 @@ def fa2_gqa_bshd(batch, seq_len, heads, dim, is_causal, groups=1, tune=False):
             return kernel_impl(block_M, block_N, num_stages, threads)
 
         return kernel
+
+
+class FA2GqaBshdTLOp(TLOp):
+    def __init__(
+        self,
+        op_type: OpTypes = OpTypes.FlashAttention_2,
+        op_name: str = "fa2_gqa_bshd",
+        kernel_handle=fa2_gqa_bshd,
+    ):
+        super().__init__(op_type, op_name, kernel_handle)
+
+    def selector(self, *argv, **kwargs):
+        raise NotImplementedError(
+            f"TLOp: {self.op_name}'s selector func is not implemented!"
+        )
+
+    def compile(self, *argv, **kwargs):
+        raise NotImplementedError(
+            f"TLOp: {self.op_name}'s compile func is not implemented!"
+        )
+
+    def forward(self, *argv, **kwargs):
+        raise NotImplementedError(
+            f"TLOp: {self.op_name}'s compile func is not implemented!"
+        )

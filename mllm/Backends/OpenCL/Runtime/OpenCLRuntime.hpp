@@ -12,7 +12,6 @@
 #include <string>
 #include <memory>
 #include <cstdint>
-#include <CL/opencl.hpp>
 #include "mllm/Backends/OpenCL/Runtime/OpenCLKernel.hpp"
 
 namespace mllm::opencl {
@@ -69,11 +68,11 @@ struct OpenCLDeviceInfo {
   // Features enabled
   bool fe_support_fp16_ = false;
   bool fe_support_recordable_queue_ = false;
-  bool fe_support_dot_int8 = false;
-  bool fe_support_dot_acc_int8 = false;
+  bool fe_support_dot_int8_ = false;
+  bool fe_support_dot_acc_int8_ = false;
   bool fe_support_low_power_ = false;
   bool fe_support_android_hardware_buffer_ = false;
-  bool fe_set_workgroup_attr = false;
+  bool fe_set_workgroup_attr_ = false;
 
   // Shared Virtual Memory support
   cl_device_svm_capabilities fe_support_svm_capabilities_;
@@ -92,6 +91,14 @@ class MllmOpenCLRuntime {
 
  private:
   std::shared_ptr<::cl::Device> gpu_device_ptr_;
+  std::shared_ptr<::cl::Context> ctx_ptr_;
+  std::shared_ptr<::cl::CommandQueue> command_queue_ptr_;
+  std::shared_ptr<::cl::CommandQueue> command_queue_tuning_ptr_;
+  ::cl::CommandQueue* cur_command_queue_ptr_;
+
+  std::pair<size_t, size_t> max_image_size_;
+  std::vector<uint32_t> max_work_items_;
+
   OpenCLDeviceInfo device_info_;
   OpenCLKernelPool kernel_pool_;
 };

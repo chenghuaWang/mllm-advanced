@@ -7,9 +7,9 @@
  * @copyright Copyright (c) 2025
  *
  */
-#pragma once
-
 #define CL_HPP_TARGET_OPENCL_VERSION 300
+
+#pragma once
 
 #include <memory>
 #include "mllm/Engine/BackendBase.hpp"
