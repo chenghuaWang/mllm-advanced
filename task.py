@@ -22,8 +22,9 @@ PROJECT_ROOT_PATH = Path(os.path.dirname(os.path.abspath(__file__)))
 
 
 def wildcard_to_regex(pattern):
-    regex = re.escape(pattern)
-    return f'^{regex.replace(r"\*", ".*").replace(r"\?", ".")}$'
+    escaped = re.escape(pattern)
+    processed = escaped.replace(r"\*", ".*").replace(r"\?", ".")
+    return f"^{processed}$"
 
 
 def filter_files(directory, patterns, ignore_dirs=None, r=True, case_sensitive=True):
@@ -226,7 +227,7 @@ class ArmKernelBenchmarkTask(Task):
                 self.export_ld_path,
                 target,
                 "--benchmark_out_format=json",
-                f"--benchmark_out={os.path.join(self.config["remote_results_path"], file_name + ".json")}",
+                f"--benchmark_out={os.path.join(self.config['remote_results_path'], file_name + '.json')}",
             ]
             command = [
                 "adb",
@@ -247,7 +248,7 @@ class ArmKernelBenchmarkTask(Task):
             command = [
                 "adb",
                 "pull",
-                f"{os.path.join(self.config["remote_results_path"], file_name + ".json")}",
+                f"{os.path.join(self.config['remote_results_path'], file_name + '.json')}",
                 (PROJECT_ROOT_PATH / Path("temp")).as_posix(),
             ]
             logging.info(self.make_command_str(command))
@@ -321,7 +322,7 @@ class GenPybind11StubsTask(Task):
         ]
         os.system(self.make_command_str(COMMANDS))
         logging.info(self.make_command_str(COMMANDS))
-        tmp_C_path = PROJECT_ROOT_PATH / "stubs" / "pymllm" 
+        tmp_C_path = PROJECT_ROOT_PATH / "stubs" / "pymllm"
         _C_path = PROJECT_ROOT_PATH / "pymllm"
         self.copy_files(tmp_C_path, _C_path)
 
@@ -354,7 +355,7 @@ class BuildDocTask(Task):
         os.system(self.make_command_str(COMMANDS))
         logging.info(self.make_command_str(COMMANDS))
         logging.info(
-            f"Run `cd {PROJECT_ROOT_PATH / "docs" / "build"} && python -m http.server` to view the change."
+            f"Run `cd {PROJECT_ROOT_PATH / 'docs' / 'build'} && python -m http.server` to view the change."
         )
 
 
