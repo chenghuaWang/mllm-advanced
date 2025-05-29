@@ -142,7 +142,7 @@ class MllmThreadPool {
 #define MLLM_PARALLEL_FOR_CHUNK(var, start, end, step) \
     MllmThreadPool::instance().parallelForWoChunk(start, end, step, [&](int var)
 
-#define MLLM_PARALLEL_FOR_END );
+#define MLLM_PARALLEL_FOR_END )
 
 #define MLLM_BIND_CURRENT_THREAD(mask) \
   MllmThreadPool::instance().rebindCPUCore(MLLM_THIS_THREAD_ID, mask)

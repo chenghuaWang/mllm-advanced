@@ -1,11 +1,11 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 WORKDIR /root
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LC_ALL=en_US.UTF-8 \
     PATH="/opt/conda/bin:$PATH" \
-    ANDROID_NDK=/opt/ndk/android-ndk-r28b
+    ANDROID_NDK_PATH=/opt/ndk/android-ndk-r28b
 
 # Install system dependencies
 RUN apt-get update && \

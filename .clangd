@@ -1,6 +1,6 @@
 CompileFlags:
   Add:
-    - -std=c++17
+    - -std=c++20
     - --cuda-path=/usr/local/cuda
     - --cuda-gpu-arch=sm_89
     - -L/usr/local/cuda/lib64

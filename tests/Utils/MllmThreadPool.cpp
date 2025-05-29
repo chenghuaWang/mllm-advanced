@@ -14,7 +14,7 @@ int main() {
   MLLM_PARALLEL_FOR(i, 0, 8) {
     MLLM_INFO("i={}, thread={}, core={}", i, MLLM_THIS_THREAD_ID, MLLM_CUR_RUN_ON_CPU_ID);
   }
-  MLLM_PARALLEL_FOR_END
+  MLLM_PARALLEL_FOR_END;
 
   std::cout << " --- \n";
 
@@ -25,12 +25,12 @@ int main() {
   MLLM_PARALLEL_FOR_CHUNK(i, 0, 8, 1) {
     MLLM_INFO("i={}, thread={}, core={}", i, MLLM_THIS_THREAD_ID, MLLM_CUR_RUN_ON_CPU_ID);
   }
-  MLLM_PARALLEL_FOR_END
+  MLLM_PARALLEL_FOR_END;
 
   std::cout << " --- \n";
 
   MLLM_PARALLEL_FOR_STEP(i, 0, 8, 1) {
     MLLM_INFO("i={}, thread={}, core={}", i, MLLM_THIS_THREAD_ID, MLLM_CUR_RUN_ON_CPU_ID);
   }
-  MLLM_PARALLEL_FOR_END
+  MLLM_PARALLEL_FOR_END;
 }

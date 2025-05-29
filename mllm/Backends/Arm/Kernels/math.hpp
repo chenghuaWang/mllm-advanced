@@ -102,6 +102,143 @@ static inline float32x4_t vexpq_fast_f32(float32x4_t x) {
   return y;
 }
 
+static inline float vsum_reduce_fp32(const float* __restrict__ X, int N) {
+  float sum_ret = 0.0f;
+
+  float32x4_t sum_vec0 = vdupq_n_f32(0.0f);
+  float32x4_t sum_vec1 = vdupq_n_f32(0.0f);
+
+  int i = 0;
+  for (; i <= N - 16; i += 16) {
+    float32x4_t vec0 = vld1q_f32(X + i);
+    float32x4_t vec1 = vld1q_f32(X + i + 4);
+    float32x4_t vec2 = vld1q_f32(X + i + 8);
+    float32x4_t vec3 = vld1q_f32(X + i + 12);
+
+    sum_vec0 = vaddq_f32(sum_vec0, vec0);
+    sum_vec0 = vaddq_f32(sum_vec0, vec1);
+    sum_vec1 = vaddq_f32(sum_vec1, vec2);
+    sum_vec1 = vaddq_f32(sum_vec1, vec3);
+  }
+
+  sum_vec0 = vaddq_f32(sum_vec0, sum_vec1);
+
+  for (; i <= N - 8; i += 8) {
+    float32x4_t vec0 = vld1q_f32(X + i);
+    float32x4_t vec1 = vld1q_f32(X + i + 4);
+
+    sum_vec0 = vaddq_f32(sum_vec0, vec0);
+    sum_vec0 = vaddq_f32(sum_vec0, vec1);
+  }
+
+  for (; i <= N - 4; i += 4) {
+    float32x4_t vec0 = vld1q_f32(X + i);
+    sum_vec0 = vaddq_f32(sum_vec0, vec0);
+  }
+
+  sum_ret += vaddvq_f32(sum_vec0);
+
+  for (; i < N; ++i) { sum_ret += X[i]; }
+
+  return sum_ret;
+}
+
+static inline float vmax_reduce_fp32(const float* __restrict__ X, int N) {
+  float max_ret = X[0];
+
+  float32x4_t max_vec0 = vdupq_n_f32(max_ret);
+  float32x4_t max_vec1 = vdupq_n_f32(max_ret);
+
+  int i;
+  for (i = 0; i <= N - 16; i += 16) {
+    // load
+    float32x4_t vec0 = vld1q_f32(X + i);
+    float32x4_t vec1 = vld1q_f32(X + i + 4);
+    float32x4_t vec2 = vld1q_f32(X + i + 8);
+    float32x4_t vec3 = vld1q_f32(X + i + 12);
+
+    // compare
+    max_vec0 = vmaxq_f32(max_vec0, vec0);
+    max_vec0 = vmaxq_f32(max_vec0, vec1);
+    max_vec1 = vmaxq_f32(max_vec1, vec2);
+    max_vec1 = vmaxq_f32(max_vec1, vec3);
+  }
+
+  for (; i <= N - 8; i += 8) {
+    // load
+    float32x4_t vec0 = vld1q_f32(X + i);
+    float32x4_t vec1 = vld1q_f32(X + i + 4);
+
+    // compare
+    max_vec0 = vmaxq_f32(max_vec0, vec0);
+    max_vec1 = vmaxq_f32(max_vec1, vec1);
+  }
+
+  max_vec0 = vmaxq_f32(max_vec0, max_vec1);
+
+  for (; i <= N - 4; i += 4) {
+    // load
+    float32x4_t vec0 = vld1q_f32(X + i);
+
+    // compare
+    max_vec0 = vmaxq_f32(max_vec0, vec0);
+  }
+
+  max_ret = fmax(max_ret, vmaxvq_f32(max_vec0));
+
+  for (; i < N; ++i) { max_ret = fmax(max_ret, X[i]); }
+
+  return max_ret;
+}
+
+static inline float vmin_reduce_fp32(const float* __restrict__ X, int N) {
+  float min_ret = X[0];
+
+  float32x4_t min_vec0 = vdupq_n_f32(min_ret);
+  float32x4_t min_vec1 = vdupq_n_f32(min_ret);
+
+  int i;
+  for (i = 0; i <= N - 16; i += 16) {
+    // load
+    float32x4_t vec0 = vld1q_f32(X + i);
+    float32x4_t vec1 = vld1q_f32(X + i + 4);
+    float32x4_t vec2 = vld1q_f32(X + i + 8);
+    float32x4_t vec3 = vld1q_f32(X + i + 12);
+
+    // compare
+    min_vec0 = vminq_f32(min_vec0, vec0);
+    min_vec0 = vminq_f32(min_vec0, vec1);
+    min_vec1 = vminq_f32(min_vec1, vec2);
+    min_vec1 = vminq_f32(min_vec1, vec3);
+  }
+
+  for (; i <= N - 8; i += 8) {
+    // load
+    float32x4_t vec0 = vld1q_f32(X + i);
+    float32x4_t vec1 = vld1q_f32(X + i + 4);
+
+    // compare
+    min_vec0 = vminq_f32(min_vec0, vec0);
+    min_vec1 = vminq_f32(min_vec1, vec1);
+  }
+
+  min_vec0 = vminq_f32(min_vec0, min_vec1);
+
+  for (; i <= N - 4; i += 4) {
+    // load
+    float32x4_t vec0 = vld1q_f32(X + i);
+
+    // compare
+    min_vec0 = vmaxq_f32(min_vec0, vec0);
+  }
+
+  min_ret = fmin(min_ret, vminvq_f32(min_vec0));
+
+  for (; i < N; ++i) { min_ret = fmin(min_ret, X[i]); }
+
+  return min_ret;
+}
+
 static inline float32x4_t vsigmoid_f32(float32x4_t x) {
   float32x4_t ones = vdupq_n_f32(1.f);
   x = vnegq_f32(x);
