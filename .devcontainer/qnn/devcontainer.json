@@ -1,5 +1,5 @@
 {
-    "name": "mllm-a-arm",
+    "name": "mllm-a-qnn",
     "build": {
         "dockerfile": "../../docker/Dockerfile.arm"
     },
