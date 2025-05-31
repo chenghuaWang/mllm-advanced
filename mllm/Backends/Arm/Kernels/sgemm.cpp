@@ -140,16 +140,17 @@ void sgemm_mk_kn_mn_V1(const float* __restrict lhs, const float* __restrict rhs,
                        float* __restrict dst, int M, int K, int N, const float* __restrict bias,
                        int threads) {
   constexpr kai_matmul_clamp_f32_f32_f32p_ukernel ukernel{
-      kai_get_m_step_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_n_step_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_nr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_kr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_sr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_lhs_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_rhs_packed_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_dst_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_get_dst_size_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
-      kai_run_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla};
+      .get_m_step = kai_get_m_step_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_n_step = kai_get_n_step_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_nr = kai_get_nr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_kr = kai_get_kr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_sr = kai_get_sr_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_lhs_offset = kai_get_lhs_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_rhs_packed_offset =
+          kai_get_rhs_packed_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_dst_offset = kai_get_dst_offset_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .get_dst_size = kai_get_dst_size_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla,
+      .run_matmul = kai_run_matmul_clamp_f32_f32_f32p8x1biasf32_6x8x4_neon_mla};
 
   const size_t nr = ukernel.get_nr();
   const size_t kr = ukernel.get_kr();
@@ -184,7 +185,7 @@ void sgemm_mk_kn_mn_V1(const float* __restrict lhs, const float* __restrict rhs,
     for (size_t i_n_step = 0; i_n_step < N; i_n_step += n_step) {
       // Support functions return offset in bytes
       const uint8_t* lhs_ptr =
-          (const uint8_t*)lhs + (ukernel.get_lhs_packed_offset(i_m_step, K * sizeof(float)));
+          (const uint8_t*)lhs + (ukernel.get_lhs_offset(i_m_step, K * sizeof(float)));
       const uint8_t* rhs_ptr =
           (const uint8_t*)rhs_packed + (ukernel.get_rhs_packed_offset(i_n_step, K));
       uint8_t* dst_ptr =

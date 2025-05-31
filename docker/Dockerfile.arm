@@ -15,6 +15,7 @@ RUN apt-get update && \
     wget \
     unzip \
     llvm-dev \
+    ninja-build \
     libtinfo-dev \
     zlib1g-dev \
     libedit-dev \
@@ -46,4 +47,4 @@ RUN cd mllm-advanced && \
     pip install -r requirements.txt && \
     python task.py tasks/android_build.yaml
 
-CMD base
+CMD bash
