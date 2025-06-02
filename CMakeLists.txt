@@ -17,7 +17,7 @@ message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_compile_options(-Wno-nan-infinity-disabled)
+  add_compile_options(-Wno-nan-infinity-disabled)
 endif()
 
 set(MLLM_INCLUDE_DIR

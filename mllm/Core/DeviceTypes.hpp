@@ -15,12 +15,13 @@
 
 namespace mllm {
 
-enum DeviceTypes {
+enum DeviceTypes {  // NOLINT
   kDeviceTypes_Start = 0,
 
   kCPU,
   kCUDA,
   kOpenCL,
+  kQNN,
 
   kDeviceTypes_End,
 };

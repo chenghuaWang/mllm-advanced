@@ -28,6 +28,10 @@ if(MLLM_BUILD_ARM_BACKEND)
   add_subdirectory(Backends/OpenCL)
 endif()
 
+if(MLLM_BUILD_QNN_BACKEND)
+  add_subdirectory(Backends/QNN)
+endif()
+
 if(MLLM_BUILD_CUDA_BACKEND)
   add_subdirectory(Backends/CUDA)
 endif()
