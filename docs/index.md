@@ -82,6 +82,7 @@ CoreComponents/index
 :numbered:
 
 ArmBackend/Design
+ArmBackend/KaiLinear
 ArmBackend/Benchmark/index
 :::
 

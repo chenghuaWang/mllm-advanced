@@ -9,12 +9,12 @@
  */
 #pragma once
 
-#include <arm_neon.h>
+// ArmQuantizerHelper.hpp implements parameter packing functions required by kleidiai. These
+// functions are designed to preprocess model parameters prior to inference. We recommend performing
+// all parameter packing operations offline rather than during runtime for:
+// 1. Memory Optimization: Eliminates temporary memory overhead during online processing
+// 2. Execution Efficiency: Reduces computational time during inference phase
 
-namespace mllm::arm {
+#include "mllm/Backends/Arm/Kernels/kai_linear.hpp"
 
-void pack_kxn_fp16_w_bias_kleidiai(float16_t* __restrict__ packed_weight,
-                                   const float16_t* __restrict__ weight,
-                                   const float16_t* __restrict__ bias, int K, int N);
-
-}  // namespace mllm::arm
+namespace mllm::arm {}

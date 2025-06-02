@@ -16,6 +16,10 @@ option(MLLM_ENABLE_PY_MLLM "Enable mllm python binding" OFF)
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-Wno-nan-infinity-disabled)
+endif()
+
 set(MLLM_INCLUDE_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include
