@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include "mllm/IR/Graph/Op.hpp"
 #include "mllm/IR/Tensor/Value.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLoader.hpp"
@@ -39,10 +40,10 @@ class QnnIRGraph {
 
   void endRecord();
 
-  bool addTensor(const std::string& tensor_name, Qnn_Tensor_t* qnn_tensor_ptr,
+  bool addTensor(const std::string& node_name, Qnn_Tensor_t* qnn_tensor_ptr,
                  bool save_tensor = true);
 
-  bool addTensor(const std::string& tensor_name, Qnn_Tensor_t& qnn_tensor_ref,
+  bool addTensor(const std::string& node_name, Qnn_Tensor_t& qnn_tensor_ref,
                  bool save_tensor = true);
 
   void freezeAndCompile();
@@ -55,11 +56,12 @@ class QnnIRGraph {
 
   // QNN meta info
   Qnn_GraphHandle_t qnn_graph_handle_ = nullptr;
-  std::vector<Qnn_Tensor_t*> qnn_input_tensors_;
-  std::vector<Qnn_Tensor_t*> qnn_output_tensors_;
+  std::vector<Qnn_Tensor_t> qnn_input_tensors_;
+  std::vector<Qnn_Tensor_t> qnn_output_tensors_;
   QnnGraph_Config_t qnn_graph_cfg_;
   Qnn_ContextHandle_t qnn_cxt_handle_ = nullptr;
   QnnContext_Config_t** qnn_context_config = nullptr;
+  std::unordered_map<std::string, Qnn_Tensor_t> qnn_tensor_map_;
 
   // wrapped qnn functions
   const QnnBackendDevice& qnn_bk_device_;
@@ -68,6 +70,9 @@ class QnnIRGraph {
   // mllm info
   std::string name_;
   ir::graph::SubGraphOp::self_ptr_t graph_ir_ = nullptr;
+
+  // static data segment
+  static const std::unordered_map<Qnn_DataType_t, size_t> dtype_to_size_;
 };
 
 }  // namespace mllm::qnn
