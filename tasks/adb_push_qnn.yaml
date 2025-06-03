@@ -1,0 +1,11 @@
+AdbPushTask:
+  files:
+    - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtp.so"
+    - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpV79Stub.so"
+    - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpPrepare.so"
+    - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpProfilingReader.so"
+    - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpV79CalculatorStub.so"
+    - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpOptraceProfilingReader.so"
+    - "$QNN_SDK_ROOT/lib/hexagon-v79/unsigned/libQnnHtpV79Skel.so"
+    
+  to_path: "/data/local/tmp/mllm-advanced/lib64/"

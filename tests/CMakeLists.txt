@@ -13,3 +13,7 @@ endif()
 if(MLLM_BUILD_CUDA_BACKEND)
   add_subdirectory(CUDA)
 endif()
+
+if(MLLM_BUILD_QNN_BACKEND)
+  add_subdirectory(QNN)
+endif()

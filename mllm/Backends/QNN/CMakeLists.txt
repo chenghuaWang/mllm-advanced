@@ -10,10 +10,17 @@ else()
   message(ERROR "HEXAGON_SDK_ROOT is not set.")
 endif()
 
-add_library(MllmQnnBackend SHARED QnnAllocator.cpp QnnBackend.cpp
-                                  QnnDispatcher.cpp)
+file(GLOB_RECURSE MLLM_QNN_BACKEND_SRC_RUNTIME
+     ${CMAKE_CURRENT_LIST_DIR}/Runtime/*.cpp)
+file(GLOB_RECURSE MLLM_QNN_BACKEND_SRC_PASSES
+     ${CMAKE_CURRENT_LIST_DIR}/Passes/*.cpp)
+
+add_library(
+  MllmQnnBackend SHARED
+  QnnAllocator.cpp QnnBackend.cpp QnnDispatcher.cpp
+  ${MLLM_QNN_BACKEND_SRC_RUNTIME} ${MLLM_QNN_BACKEND_SRC_PASSES})
 target_include_directories(
   MllmQnnBackend
-  PRIVATE $ENV{QNN_SDK_ROOT}/include $ENV{QNN_SDK_ROOT}/include/QNN
+  PUBLIC $ENV{QNN_SDK_ROOT}/include $ENV{QNN_SDK_ROOT}/include/QNN
           $ENV{HEXAGON_SDK_ROOT}/incs)
 target_link_libraries(MllmQnnBackend PUBLIC MllmRT)

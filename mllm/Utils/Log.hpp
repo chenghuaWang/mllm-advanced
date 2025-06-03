@@ -15,7 +15,7 @@
 
 namespace mllm {
 
-enum class LogLevel {
+enum class LogLevel {  // NOLINT
   kInfo = 0,
   kWarn = 1,
   kError = 2,

@@ -21,4 +21,8 @@ AdbPushTask:
     - "build-android-arm64-v8a/tests/Utils/Mllm-Utils-MllmThreadPool"
     - "build-android-arm64-v8a/tests/OpenCL/Mllm-OpenCL-DetectTest"
 
+    # QNN
+    - "build-android-arm64-v8a-qnn/tests/QNN/Mllm-Qnn-DetectTest"
+    - "build-android-arm64-v8a-qnn/mllm/Backends/QNN/libMllmQnnBackend.so"
+
   to_path: "/data/local/tmp/mllm-advanced/bin/"

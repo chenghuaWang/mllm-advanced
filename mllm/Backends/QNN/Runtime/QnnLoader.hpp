@@ -38,7 +38,7 @@ struct QnnDynLibDescriptor {
     if (handle_ == nullptr) { MLLM_ERROR_EXIT(kError, "QnnDynSymbolLoader: handle is nullptr."); }
     auto func_ptr = dlsym(handle_, symbol_name.c_str());
     MLLM_RT_ASSERT(func_ptr != nullptr);
-    return reinterpret_cast<FuncType>(func_ptr);
+    return (FuncType*)(func_ptr);
   };
 };
 
@@ -48,17 +48,6 @@ class QnnDynSymbolLoader {
     kRTLD_NOW = RTLD_NOW,
     kRTLD_LOCAL = RTLD_LOCAL,
     kRTLD_GLOBAL = RTLD_GLOBAL,
-  };
-
-  // Collection of symbols that we need to load from qnn dyn lib.
-  struct QnnFuncSymbols {
-    using QnnInterfaceGetProvidersFuncType = Qnn_ErrorHandle_t(const QnnInterface_t*** providerList,
-                                                               uint32_t* numProviders);
-    using QnnSystemInterfaceGetProvidersFuncType =
-        Qnn_ErrorHandle_t(const QnnSystemInterface_t*** providerList, uint32_t* numProviders);
-
-    QNN_INTERFACE_VER_TYPE qnn_interface_ver_;
-    QNN_SYSTEM_INTERFACE_VER_TYPE qnn_system_interface_ver_;
   };
 
   static QnnDynSymbolLoader& instance() {
@@ -74,18 +63,33 @@ class QnnDynSymbolLoader {
 
   QnnDynSymbolLoader& operator=(const QnnDynSymbolLoader&) = delete;
 
-  bool initHTPBackend();
-
   bool loadQnnDynLib(const std::string& lib_name, int flag);
 
   inline QnnDynLibDescriptor& operator()(const std::string& lib_name) { return libs_.at(lib_name); }
 
-  inline QnnFuncSymbols& htpFuncSymbols() { return qnn_htp_func_symbols_; }
-
  private:
-  QnnFuncSymbols qnn_htp_func_symbols_;
   std::unordered_map<std::string, QnnDynLibDescriptor> libs_;
   static const std::vector<std::string> possible_qnn_dyn_lib_paths_;
+};
+
+// Collection of symbols that we need to load from qnn dyn lib.
+struct QnnFuncSymbols {
+  using QnnInterfaceGetProvidersFuncType = Qnn_ErrorHandle_t(const QnnInterface_t*** providerList,
+                                                             uint32_t* numProviders);
+  using QnnSystemInterfaceGetProvidersFuncType =
+      Qnn_ErrorHandle_t(const QnnSystemInterface_t*** providerList, uint32_t* numProviders);
+
+  QNN_INTERFACE_VER_TYPE qnn_interface_;
+  QNN_SYSTEM_INTERFACE_VER_TYPE qnn_system_interface_;
+};
+
+// Backend + Device
+struct QnnBackendDevice {
+  Qnn_LogHandle_t log_ = nullptr;
+  Qnn_BackendHandle_t bk_handle_ = nullptr;
+  Qnn_DeviceHandle_t device_handle_ = nullptr;
+  QnnBackend_Config_t** bk_cfg_ = nullptr;
+  Qnn_ProfileHandle_t profile_bk_handle_ = nullptr;
 };
 
 }  // namespace mllm::qnn
