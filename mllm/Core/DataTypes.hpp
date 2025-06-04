@@ -16,7 +16,7 @@
 
 namespace mllm {
 
-enum DataTypes : uint32_t {
+enum DataTypes : uint32_t {  // NOLINT
   kDataTypes_Start = 0,
 
   // normal

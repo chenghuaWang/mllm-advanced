@@ -19,6 +19,14 @@ PassManager& PassManager::reg(const pass_ptr_t& pass) {
   return *this;
 }
 
+PassManager& PassManager::reg(const std::vector<pass_ptr_t>& pass) {
+  for (auto& p : pass) {
+    p->setCtx(ctx_);
+    passes_.emplace_back(p);
+  }
+  return *this;
+}
+
 void PassManager::clear() { passes_.clear(); }
 
 bool PassManager::run(Pattern p) {

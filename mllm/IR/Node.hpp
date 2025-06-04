@@ -261,6 +261,14 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
 
   DeviceTypes getDevice();
 
+  bool isCacheInputOutputTensor(uint32_t uuid);
+
+  void cacheInputOutputTensor(uint32_t uuid, const val_ptr_t& tensor_ir);
+
+  val_ptr_t getCacheInputOutputTensor(uint32_t uuid);
+
+  std::unordered_map<uint32_t, val_ptr_t>& getAllCachedInputOutputTensorIRs();
+
  private:
   DeviceTypes device_type_ = kCPU;
   std::unordered_map<std::string, node_ptr_t> symbol_table_;
@@ -268,6 +276,7 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
   std::unordered_map<val_ptr_t, std::string> value_names_;
   region_ptr_t cur_insert_region_;
   node_ptr_t top_level_op_;
+  std::unordered_map<uint32_t, val_ptr_t> cached_inputs_outputs_;
 };
 
 class IRWriterGuard {
@@ -449,6 +458,8 @@ class IRWriter {
         }
 
         if (!is_iterator_modified_) cur_op_iter_++;
+      } else {
+        cur_op_iter_++;
       }
     }
 

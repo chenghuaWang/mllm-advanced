@@ -22,5 +22,5 @@ add_library(
 target_include_directories(
   MllmQnnBackend
   PUBLIC $ENV{QNN_SDK_ROOT}/include $ENV{QNN_SDK_ROOT}/include/QNN
-          $ENV{HEXAGON_SDK_ROOT}/incs)
+         $ENV{HEXAGON_SDK_ROOT}/incs)
 target_link_libraries(MllmQnnBackend PUBLIC MllmRT)

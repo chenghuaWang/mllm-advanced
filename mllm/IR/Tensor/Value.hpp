@@ -48,8 +48,14 @@ static inline std::vector<std::shared_ptr<TensorValue>> wrapTensors2TensorIR(
     IRContext* ctx, const std::vector<Tensor>& tensors) {
   std::vector<std::shared_ptr<TensorValue>> tensor_ir_values;
   for (auto& t : tensors) {
-    auto ret = ctx->create<TensorValue>(t);
-    tensor_ir_values.emplace_back(ret);
+    if (ctx->isCacheInputOutputTensor(t.uuid())) {
+      tensor_ir_values.emplace_back(
+          ctx->getCacheInputOutputTensor(t.uuid())->cast_<ir::tensor::TensorValue>());
+    } else {
+      auto ret = ctx->create<TensorValue>(t);
+      ctx->cacheInputOutputTensor(t.uuid(), ret);
+      tensor_ir_values.emplace_back(ret);
+    }
   }
   return tensor_ir_values;
 }

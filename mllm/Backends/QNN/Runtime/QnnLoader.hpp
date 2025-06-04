@@ -19,11 +19,8 @@
 #include "mllm/Backends/QNN/Runtime/QnnCommon.hpp"
 
 // Only support android platform.
-// The gpu arch we support is :
-//  - Adreno(Fully Tested)
-//  - Mali(Partially Tested)
 #if !defined(__ANDROID__)
-#error "Only support android platform with GPU Arch: Adreno and Mali."
+#error "Only support android platform with NPU Arch: Hexagon."
 #endif
 
 namespace mllm::qnn {

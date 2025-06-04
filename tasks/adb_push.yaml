@@ -24,5 +24,6 @@ AdbPushTask:
     # QNN
     - "build-android-arm64-v8a-qnn/tests/QNN/Mllm-Qnn-DetectTest"
     - "build-android-arm64-v8a-qnn/mllm/Backends/QNN/libMllmQnnBackend.so"
+    - "build-android-arm64-v8a-qnn/tests/QNN/Mllm-Qnn-IRLoweringTest"
 
   to_path: "/data/local/tmp/mllm-advanced/bin/"

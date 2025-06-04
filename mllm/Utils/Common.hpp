@@ -11,11 +11,13 @@
 
 #include "mllm/Utils/Log.hpp"
 
+#define MLLM_NAMESPACE_ANONYMOUS
+
 #define MLLM_ENABLE_RT_ASSERT 1
 
 namespace mllm {
 
-enum ExitCode : int32_t {
+enum ExitCode : int32_t {  // NOLINT
   kSuccess = 0,
   kError,
   kAssert,

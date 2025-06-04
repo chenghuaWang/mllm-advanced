@@ -13,6 +13,7 @@
 #include "mllm/Engine/Context.hpp"
 #include "mllm/IR/Builtin/Op.hpp"
 #include "mllm/IR/Node.hpp"
+#include "mllm/IR/Tensor/Value.hpp"
 #include "mllm/Utils/Log.hpp"
 
 namespace mllm::ir {

@@ -128,8 +128,8 @@ class Module {
     std::vector<Tensor> inputs = {std::forward<Args>(args)...};
 
     // wrap the inputs to tensor ir.
-    std::vector<std::shared_ptr<ir::tensor::TensorValue>> inputs_ir;
-    for (auto& t : inputs) { inputs_ir.emplace_back(ir_ctx->create<ir::tensor::TensorValue>(t)); }
+    std::vector<std::shared_ptr<ir::tensor::TensorValue>> inputs_ir =
+        ir::tensor::wrapTensors2TensorIR(ir_ctx.get(), inputs);
 
     // link inputs to subgraph.
     for (size_t i = 0; i < inputs_ir.size(); ++i) {
@@ -148,8 +148,8 @@ class Module {
     }
 
     // wrap the outputs to tensor ir.
-    std::vector<std::shared_ptr<ir::tensor::TensorValue>> outputs_ir;
-    for (auto& t : outputs) { outputs_ir.emplace_back(ir_ctx->create<ir::tensor::TensorValue>(t)); }
+    std::vector<std::shared_ptr<ir::tensor::TensorValue>> outputs_ir =
+        ir::tensor::wrapTensors2TensorIR(ir_ctx.get(), outputs);
 
     // link outputs to subgraph.
     for (size_t i = 0; i < outputs_ir.size(); ++i) {

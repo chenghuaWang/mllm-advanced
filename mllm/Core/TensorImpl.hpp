@@ -22,7 +22,7 @@
 
 namespace mllm {
 
-enum TensorMemTypes : int32_t {
+enum TensorMemTypes : int32_t {  // NOLINT
   kTensorMemTypes_Start = 0,
   kNormal,
   kExtraInput,
@@ -137,6 +137,8 @@ class TensorViewImpl : public std::enable_shared_from_this<TensorViewImpl> {
 
     return ptr<T>() + _offset;
   }
+
+  inline void dropStorage() { storage_ = nullptr; }
 
  private:
   int32_t shape_len_ = 0;

@@ -18,7 +18,7 @@ namespace mllm::ir {
 
 class PassManager {
  public:
-  enum Pattern {
+  enum Pattern {  // NOLINT
     GREEDY = 0,
   };
 
@@ -26,6 +26,8 @@ class PassManager {
   explicit PassManager(const std::shared_ptr<IRContext>& ctx);
 
   PassManager& reg(const pass_ptr_t& pass);
+
+  PassManager& reg(const std::vector<pass_ptr_t>& pass);
 
   void clear();
 

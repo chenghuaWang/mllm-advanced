@@ -13,6 +13,7 @@
 #include <QNN/HTP/QnnHtpGraph.h>
 #include "mllm/Backends/QNN/Runtime/QnnIRGraph.hpp"
 #include "mllm/Backends/QNN/QnnTensorHelpMacros.hpp"
+#include "mllm/Backends/QNN/QnnOpHelpMacros.hpp"
 
 namespace mllm::qnn {
 
@@ -27,6 +28,10 @@ const std::unordered_map<Qnn_DataType_t, size_t> QnnIRGraph::dtype_to_size_ = {
     {QNN_DATATYPE_UFIXED_POINT_8, 1},  {QNN_DATATYPE_UFIXED_POINT_16, 2},
     {QNN_DATATYPE_UFIXED_POINT_32, 4},
 };
+
+const std::string QnnIRGraph::QTI_AISW_OP_PACKAGE = "qti.aisw";
+
+const std::string QnnIRGraph::MLLM_QNN_OP_PACKAGE = "MllmQnnOpPackage";
 
 QnnIRGraph::QnnIRGraph(const std::string& name, const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
                        const QnnFuncSymbols& qnn_func_symbols,
@@ -50,6 +55,8 @@ std::shared_ptr<QnnIRGraph> QnnIRGraph::build(const std::string& name,
 }
 
 void QnnIRGraph::startRecord() {
+  MLLM_RT_ASSERT_EQ(freezed_, false);
+
   // create context for this graph
   auto status = qnn_func_symbols_.qnn_interface_.contextCreate(
       qnn_bk_device_.bk_handle_, qnn_bk_device_.device_handle_,
@@ -75,8 +82,95 @@ void QnnIRGraph::endRecord() {
   // TODO free context
 }
 
+bool QnnIRGraph::addOp(Qnn_OpConfigVersion_t version, const std::string& op_name,
+                       const std::string& op_package_name, const std::string& type,
+                       const std::vector<Qnn_Param_t*>& params,
+                       const std::vector<std::string>& input_names,
+                       const std::vector<Qnn_Tensor_t*>& output_tensors) {
+  MLLM_RT_ASSERT_EQ(freezed_, false);
+
+  Qnn_OpConfig_t op_definition = QNN_OPCONFIG_INIT;
+  op_definition.version = version;
+
+  HELP_QNN_OPCONFIG_VALIDATE_VERSION(op_definition);
+
+  Qnn_Param_t* node_params = (Qnn_Param_t*)malloc(params.size() * sizeof(Qnn_Param_t));
+  Qnn_Tensor_t* inputs = (Qnn_Tensor_t*)malloc(input_names.size() * sizeof(Qnn_Tensor_t));
+  Qnn_Tensor_t* outputs = (Qnn_Tensor_t*)malloc(output_tensors.size() * sizeof(Qnn_Tensor_t));
+
+  MLLM_RT_ASSERT(node_params != nullptr && inputs != nullptr && outputs != nullptr);
+
+  // Add correspond params' tensor/scalar to context
+  uint32_t node_params_cnt = 0;
+  for (auto param_tensor : params) {
+    switch (param_tensor->paramType) {
+      // The parameter is tensor
+      case QNN_PARAMTYPE_TENSOR: {
+        Qnn_Tensor_t& tensor = param_tensor->tensorParam;
+
+        // No need to release node_params, inputs, outputs. Will panic immediately
+        MLLM_RT_ASSERT_EQ(addTensor(op_name, &tensor, false), true);
+
+        node_params[node_params_cnt].paramType = QNN_PARAMTYPE_TENSOR;
+        node_params[node_params_cnt].name = param_tensor->name;
+        node_params[node_params_cnt++].tensorParam = tensor;
+        break;
+      }
+      // The parameter is scalar
+      case QNN_PARAMTYPE_SCALAR: {
+        node_params[node_params_cnt].paramType = QNN_PARAMTYPE_SCALAR;
+        node_params[node_params_cnt].name = param_tensor->name;
+        node_params[node_params_cnt++].scalarParam = param_tensor->scalarParam;
+        break;
+      }
+      default: MLLM_ERROR_EXIT(kError, "Not supported param tensor type"); break;
+    }
+  }
+
+  size_t inputs_cnt = 0;
+  for (auto const& input_tensor : input_names) {
+    getTensor(op_name, input_tensor, inputs[inputs_cnt++]);
+  }
+
+  size_t output_cnt = 0;
+  MLLM_RT_ASSERT_EQ(qnn_op_output_tensor_map_.count(op_name), 0);
+  for (auto output_tensor : output_tensors) {
+    // We need to save output tensor to tensor map
+    addTensor(op_name, output_tensor, true);
+
+    auto output_tensor_name = HELP_QNN_TENSOR_GET_NAME(output_tensor);
+    qnn_op_output_tensor_map_[op_name].emplace_back(output_tensor_name);
+
+    getTensor(op_name, output_tensor_name, outputs[output_cnt++]);
+  }
+
+  // Define and add op node to graph
+  HELP_QNN_OPCONFIG_SET_NAME(op_definition, strdup(op_name.c_str()));
+  HELP_QNN_OPCONFIG_SET_PACKAGE_NAME(op_definition, strdup(op_package_name.c_str()));
+  HELP_QNN_OPCONFIG_SET_TYPE_NAME(op_definition, strdup(type.c_str()));
+  HELP_QNN_OPCONFIG_SET_PARAMS(op_definition, params.size(), node_params);
+  HELP_QNN_OPCONFIG_SET_INPUTS(op_definition, input_names.size(), inputs);
+  HELP_QNN_OPCONFIG_SET_OUTPUTS(op_definition, output_tensors.size(), outputs);
+
+  auto status = qnn_func_symbols_.qnn_interface_.backendValidateOpConfig(qnn_bk_device_.bk_handle_,
+                                                                         op_definition);
+  MLLM_RT_ASSERT(status != QNN_BACKEND_ERROR_NOT_SUPPORTED);
+  MLLM_RT_ASSERT_EQ(status, QNN_SUCCESS);
+
+  status = qnn_func_symbols_.qnn_interface_.graphAddNode(qnn_graph_handle_, op_definition);
+  MLLM_RT_ASSERT(QNN_GRAPH_NO_ERROR != status);
+
+  ::free(node_params);
+  ::free(inputs);
+  ::free(outputs);
+
+  return true;
+}
+
 bool QnnIRGraph::addTensor(const std::string& node_name, Qnn_Tensor_t* qnn_tensor_ptr,
                            bool save_tensor) {
+  MLLM_RT_ASSERT_EQ(freezed_, false);
+
   if (!qnn_tensor_ptr) { MLLM_ERROR_EXIT(kError, "tensor is nil"); }
 
   HELP_QNN_TENSOR_VALIDATE_VERSION(qnn_tensor_ptr);
@@ -133,8 +227,20 @@ bool QnnIRGraph::addTensor(const std::string& node_name, Qnn_Tensor_t& qnn_tenso
   return addTensor(node_name, &qnn_tensor_ref, save_tensor);
 }
 
-void QnnIRGraph::freezeAndCompile() {}
+void QnnIRGraph::getTensor(const std::string& node_name, const std::string& tensor_name,
+                           Qnn_Tensor_t& tensor) {
+  MLLM_RT_ASSERT_EQ(qnn_tensor_map_.count(tensor_name), 1);
+  tensor = qnn_tensor_map_[tensor_name];
+}
 
-void QnnIRGraph::free() {}
+void QnnIRGraph::freezeAndCompile() {
+  MLLM_RT_ASSERT_EQ(freezed_, false);
+  auto status = qnn_func_symbols_.qnn_interface_.graphFinalize(
+      qnn_graph_handle_, qnn_bk_device_.profile_bk_handle_, /*signalHandle*/ nullptr);
+
+  MLLM_RT_ASSERT_EQ(QNN_GRAPH_NO_ERROR, status);
+}
+
+void QnnIRGraph::free() { MLLM_RT_ASSERT_EQ(freezed_, true); }
 
 }  // namespace mllm::qnn

@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include "mllm/IR/Graph/Op.hpp"
 #include "mllm/IR/Tensor/Value.hpp"
@@ -40,15 +41,26 @@ class QnnIRGraph {
 
   void endRecord();
 
+  bool addOp(Qnn_OpConfigVersion_t version, const std::string& op_name,
+             const std::string& op_package_name, const std::string& type,
+             const std::vector<Qnn_Param_t*>& params, const std::vector<std::string>& input_names,
+             const std::vector<Qnn_Tensor_t*>& output_tensors);
+
   bool addTensor(const std::string& node_name, Qnn_Tensor_t* qnn_tensor_ptr,
                  bool save_tensor = true);
 
   bool addTensor(const std::string& node_name, Qnn_Tensor_t& qnn_tensor_ref,
                  bool save_tensor = true);
 
+  void getTensor(const std::string& node_name, const std::string& tensor_name,
+                 Qnn_Tensor_t& tensor);
+
   void freezeAndCompile();
 
   void free();
+
+  static const std::string QTI_AISW_OP_PACKAGE;
+  static const std::string MLLM_QNN_OP_PACKAGE;
 
  private:
   // freezed
@@ -61,6 +73,9 @@ class QnnIRGraph {
   QnnGraph_Config_t qnn_graph_cfg_;
   Qnn_ContextHandle_t qnn_cxt_handle_ = nullptr;
   QnnContext_Config_t** qnn_context_config = nullptr;
+  // map op_name->this_op_output_tensor_names
+  std::unordered_map<std::string, std::vector<std::string>> qnn_op_output_tensor_map_;
+  // map all input tensor and output tensor's name
   std::unordered_map<std::string, Qnn_Tensor_t> qnn_tensor_map_;
 
   // wrapped qnn functions

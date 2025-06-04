@@ -185,6 +185,23 @@ void IRContext::setDevice(DeviceTypes device_type) { device_type_ = device_type;
 
 DeviceTypes IRContext::getDevice() { return device_type_; }
 
+bool IRContext::isCacheInputOutputTensor(uint32_t uuid) {
+  if (cached_inputs_outputs_.count(uuid)) { return true; }
+  return false;
+}
+
+void IRContext::cacheInputOutputTensor(uint32_t uuid, const val_ptr_t& tensor_ir) {
+  cached_inputs_outputs_[uuid] = tensor_ir;
+}
+
+val_ptr_t IRContext::getCacheInputOutputTensor(uint32_t uuid) {
+  return cached_inputs_outputs_[uuid];
+}
+
+std::unordered_map<uint32_t, val_ptr_t>& IRContext::getAllCachedInputOutputTensorIRs() {
+  return cached_inputs_outputs_;
+}
+
 IRWriterGuard::IRWriterGuard(const std::shared_ptr<IRContext>& ctx,
                              const std::shared_ptr<Region>& new_region)
     : ctx_(ctx), new_region_(new_region) {

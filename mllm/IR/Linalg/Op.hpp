@@ -92,6 +92,10 @@ class LinalgIROp : public Op {
     op_ = op;
   }
 
+  inline OpType getAOpType() const { return op_type_; }
+
+  inline BaseOp* getAOp() const { return op_; }
+
  protected:
   OpType op_type_;
   BaseOp* op_;
