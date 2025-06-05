@@ -12,8 +12,13 @@
 
 namespace mllm::qnn {
 
-std::vector<std::shared_ptr<ir::Pass>> createQnnLoweringPipeline(/*TODO cfg struct*/) {
-  return {createQnnTensorNamingPass()};
+std::vector<std::shared_ptr<ir::Pass>> createQnnLoweringPipeline(
+    const QnnLoweringPipelineCfg& cfg) {
+  std::vector<std::shared_ptr<ir::Pass>> ret;
+
+  if (cfg.tensor_readable_rename) { ret.emplace_back(createQnnTensorNamingPass()); }
+
+  return ret;
 }
 
 }  // namespace mllm::qnn

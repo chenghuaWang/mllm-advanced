@@ -34,19 +34,6 @@ enum TensorMemTypes : int32_t {  // NOLINT
   kTensorMemTypes_End,
 };
 
-struct QuantizePayload {};
-
-struct PTQuantizePayload : public QuantizePayload {
-  float bias_ = 0.f;
-  float scale_ = 0.f;
-};
-
-struct PCQuantizePayload : public QuantizePayload {
-  int channel_dim_ = 0;
-  float* bias_ = nullptr;
-  float* scale_ = nullptr;
-};
-
 // Tensor = (TensorViewImpl) * N
 //
 //// FIXME: TensorStorage should be made thread safe.

@@ -53,6 +53,12 @@ class Tensor {
 
   Tensor& alloc();
 
+  Tensor& allocExtraTensorView(const std::string& extra_tensor_name,
+                               const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
+                               DeviceTypes device = kCPU);
+
+  Tensor getExtraTensorViewInTensor(const std::string& extra_tensor_name);
+
   static Tensor zeros(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                       DeviceTypes device = kCPU);
 
@@ -211,6 +217,7 @@ class Tensor {
   }
 
   std::shared_ptr<TensorViewImpl> impl_ = nullptr;
+  std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>> extra_tensor_view_;
 };
 
 class Affine {

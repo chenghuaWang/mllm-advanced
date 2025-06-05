@@ -14,6 +14,9 @@
 namespace mllm::cuda {
 
 class CUDAAllocator final : public Allocator {
+ public:
+  inline bool ctrlByMllmMemManager() override { return true; }
+
   bool alloc(const std::shared_ptr<Storage>& storage) override;
   void free(const std::shared_ptr<Storage>& storage) override;
   void free(Storage* storage) override;

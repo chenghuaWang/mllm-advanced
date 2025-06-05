@@ -29,8 +29,7 @@ class QnnIRGraph {
   QnnIRGraph(const std::string& name, const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
              const QnnFuncSymbols& qnn_func_symbols, const QnnBackendDevice& qnn_bk_device);
 
-  void setUpInputsOutputs(const std::vector<ir::tensor::TensorValue::self_ptr_t>& inputs,
-                          const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs);
+  void setupInputs(const std::vector<ir::tensor::TensorValue::self_ptr_t>& inputs);
 
   static std::shared_ptr<QnnIRGraph> build(const std::string& name,
                                            const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
@@ -66,21 +65,20 @@ class QnnIRGraph {
   // freezed
   bool freezed_ = false;
 
-  // QNN meta info
-  Qnn_GraphHandle_t qnn_graph_handle_ = nullptr;
-  std::vector<Qnn_Tensor_t> qnn_input_tensors_;
-  std::vector<Qnn_Tensor_t> qnn_output_tensors_;
-  QnnGraph_Config_t qnn_graph_cfg_;
-  Qnn_ContextHandle_t qnn_cxt_handle_ = nullptr;
-  QnnContext_Config_t** qnn_context_config = nullptr;
-  // map op_name->this_op_output_tensor_names
-  std::unordered_map<std::string, std::vector<std::string>> qnn_op_output_tensor_map_;
-  // map all input tensor and output tensor's name
-  std::unordered_map<std::string, Qnn_Tensor_t> qnn_tensor_map_;
-
   // wrapped qnn functions
   const QnnBackendDevice& qnn_bk_device_;
   const QnnFuncSymbols& qnn_func_symbols_;
+
+  // QNN meta info
+  QnnGraph_Config_t qnn_graph_cfg_;
+  Qnn_GraphHandle_t qnn_graph_handle_ = nullptr;
+  std::vector<Qnn_Tensor_t> qnn_input_tensors_;
+  std::vector<Qnn_Tensor_t> qnn_output_tensors_;
+
+  // map all input tensor and output tensor's name
+  std::unordered_map<std::string, Qnn_Tensor_t> qnn_tensor_map_;
+  // map op_name->this_op_output_tensor_names
+  std::unordered_map<std::string, std::vector<std::string>> qnn_op_output_tensor_map_;
 
   // mllm info
   std::string name_;

@@ -95,6 +95,13 @@ bool QnnBackend::initHTPBackend() {
                                                      QNN_PROFILE_LEVEL_DETAILED,
                                                      &qnn_htp_backend_.profile_bk_handle_);
 
+  // Create context
+  auto status = qnn_htp_func_symbols_.qnn_interface_.contextCreate(
+      qnn_htp_backend_.bk_handle_, qnn_htp_backend_.device_handle_,
+      (const QnnContext_Config_t**)&qnn_htp_backend_.qnn_context_config_,
+      &qnn_htp_backend_.qnn_ctx_handle_);
+  MLLM_RT_ASSERT_EQ(QNN_CONTEXT_NO_ERROR, status);
+
   return true;
 }
 

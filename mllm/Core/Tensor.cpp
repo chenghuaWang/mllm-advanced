@@ -67,6 +67,21 @@ Tensor& Tensor::alloc() {
   return *this;
 }
 
+Tensor& Tensor::allocExtraTensorView(const std::string& extra_tensor_name,
+                                     const std::vector<int32_t>& shape, DataTypes dtype,
+                                     DeviceTypes device) {
+  MLLM_RT_ASSERT_EQ(extra_tensor_view_.count(extra_tensor_name), 0);
+  auto storage = TensorStorage::create(shape, dtype, device);
+  auto impl = TensorViewImpl::create(shape, storage);
+  extra_tensor_view_.insert({extra_tensor_name, impl});
+  return *this;
+}
+
+Tensor Tensor::getExtraTensorViewInTensor(const std::string& extra_tensor_name) {
+  MLLM_RT_ASSERT_EQ(extra_tensor_view_.count(extra_tensor_name), 1);
+  return Tensor(extra_tensor_view_.at(extra_tensor_name));
+}
+
 Tensor Tensor::to(DeviceTypes device) {
   if (device == impl_->device()) { return *this; }
   // TODO create a function like op

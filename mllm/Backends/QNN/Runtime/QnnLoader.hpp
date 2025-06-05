@@ -15,6 +15,7 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include "QnnCommon.h"
 #include "mllm/Utils/Common.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnCommon.hpp"
 
@@ -67,26 +68,6 @@ class QnnDynSymbolLoader {
  private:
   std::unordered_map<std::string, QnnDynLibDescriptor> libs_;
   static const std::vector<std::string> possible_qnn_dyn_lib_paths_;
-};
-
-// Collection of symbols that we need to load from qnn dyn lib.
-struct QnnFuncSymbols {
-  using QnnInterfaceGetProvidersFuncType = Qnn_ErrorHandle_t(const QnnInterface_t*** providerList,
-                                                             uint32_t* numProviders);
-  using QnnSystemInterfaceGetProvidersFuncType =
-      Qnn_ErrorHandle_t(const QnnSystemInterface_t*** providerList, uint32_t* numProviders);
-
-  QNN_INTERFACE_VER_TYPE qnn_interface_;
-  QNN_SYSTEM_INTERFACE_VER_TYPE qnn_system_interface_;
-};
-
-// Backend + Device
-struct QnnBackendDevice {
-  Qnn_LogHandle_t log_ = nullptr;
-  Qnn_BackendHandle_t bk_handle_ = nullptr;
-  Qnn_DeviceHandle_t device_handle_ = nullptr;
-  QnnBackend_Config_t** bk_cfg_ = nullptr;
-  Qnn_ProfileHandle_t profile_bk_handle_ = nullptr;
 };
 
 }  // namespace mllm::qnn

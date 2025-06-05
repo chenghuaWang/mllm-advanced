@@ -17,6 +17,7 @@ namespace mllm {
 
 class Allocator {
  public:
+  virtual bool ctrlByMllmMemManager() = 0;
   virtual bool alloc(const std::shared_ptr<Storage>& storage) = 0;
   virtual void free(const std::shared_ptr<Storage>& storage) = 0;
   virtual void free(Storage* storage) = 0;
