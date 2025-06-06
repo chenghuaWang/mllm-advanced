@@ -17,6 +17,7 @@
 
 #include "mllm/Backends/QNN/Ops/QnnBaseOp.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/IR/Graph/Op.hpp"
 #include "mllm/IR/Passes/Pass.hpp"
 
 namespace mllm::qnn {
@@ -42,6 +43,8 @@ class GraphBuildPass : public ir::Pass {
     auto pair = T::create();
     patterns_.insert({pair.first, pair.second});
   }
+
+  void buildQnnLego(const ir::graph::SubGraphOp::self_ptr_t& sub_graph_op);
 
   std::unordered_map<OpType, std::shared_ptr<QnnBaseOpPattern>> patterns_;
 };

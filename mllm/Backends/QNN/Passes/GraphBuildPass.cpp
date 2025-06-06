@@ -10,11 +10,16 @@
  */
 #include "mllm/Backends/QNN/Passes/GraphBuildPass.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
+#include "mllm/Backends/QNN/QnnBackend.hpp"
+#include "mllm/Engine/Context.hpp"
 #include "mllm/IR/Builtin/Op.hpp"
 #include "mllm/IR/Graph/Op.hpp"
+#include "mllm/IR/Linalg/Op.hpp"
+#include "mllm/IR/Tensor/Value.hpp"
 #include "mllm/Utils/Common.hpp"
 
 #include <algorithm>
+#include <memory>
 
 namespace mllm::qnn {
 
@@ -55,10 +60,55 @@ uint8_t GraphBuildPass::run(const ir::node_ptr_t& op) {
   }
 
   // QNN Graph build and Compile
-  for (auto& graph_ir : graphs_ir_to_be_compiled) {}
-  // TODO
+  for (auto& graph_ir : graphs_ir_to_be_compiled) { buildQnnLego(graph_ir); }
 
   return ir::PASS_RET_SUCCESS;
+}
+
+void GraphBuildPass::buildQnnLego(const ir::graph::SubGraphOp::self_ptr_t& sub_graph_op) {
+  auto& mllm_ctx = mllm::MllmEngineCtx::instance();
+  auto qnn_backend = std::static_pointer_cast<QnnBackend>(mllm_ctx.getBackend(kQNN));
+  auto g = qnn_backend->createQnnGraph(sub_graph_op->getSymbolAttr()->str(), sub_graph_op,
+                                       qnn_backend->htpFuncSymbols(), qnn_backend->htpBackend());
+
+  g->startRecord();
+  g->setupInputs({});  // TODO
+
+  auto graph_region = sub_graph_op->getTopRegion();
+  for (auto& op : graph_region->ops()) {
+    if (op->isa_<ir::graph::CallGraphOp>()) {
+      MLLM_ERROR_EXIT(kError,
+                      "When building QNN graph, found CallGraphOp in Subgraph. You should call "
+                      "QnnGraphInlinePass first to inline all nested qnn graph into one graph.");
+    } else if (op->isa_<ir::linalg::LinalgIROp>()) {
+      auto mllm_op = op->cast_<ir::linalg::LinalgIROp>()->getAOp();
+      auto mllm_op_type = op->cast_<ir::linalg::LinalgIROp>()->getAOpType();
+
+      MLLM_RT_ASSERT_EQ(patterns_.count(mllm_op_type), 1);
+      MLLM_RT_ASSERT_EQ(patterns_[mllm_op_type]->match(op), true);
+
+      std::vector<ir::tensor::TensorValue::self_ptr_t> op_inputs;
+      std::vector<ir::tensor::TensorValue::self_ptr_t> op_outputs;
+
+      for (auto& i : op->inputs()) {
+        MLLM_RT_ASSERT_EQ(i->isa_<ir::tensor::TensorValue>(), true);
+        op_inputs.emplace_back(i->cast_<ir::tensor::TensorValue>());
+      }
+
+      for (auto& o : op->outputs()) {
+        MLLM_RT_ASSERT_EQ(o->isa_<ir::tensor::TensorValue>(), true);
+        op_inputs.emplace_back(o->cast_<ir::tensor::TensorValue>());
+      }
+
+      MLLM_RT_ASSERT_EQ(patterns_[mllm_op_type]->addNode(*g, op, op_inputs, op_outputs), true);
+    } else {
+      NYI("This op is not supported by mllm qnn backend yet or this op has no need to be compiled");
+    }
+  }
+
+  g->setupOutputs({});  // TODO
+  g->endRecord();
+  g->compile();
 }
 
 }  // namespace mllm::qnn

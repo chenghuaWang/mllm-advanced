@@ -8,6 +8,8 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include "mllm/Backends/QNN/Passes/QnnTensorNamingPass.hpp"
+#include "mllm/Backends/QNN/Passes/QnnAnonymousOpNamingPass.hpp"
 #include "mllm/Backends/QNN/Passes/QnnLoweringPipeline.hpp"
 
 namespace mllm::qnn {
@@ -17,6 +19,8 @@ std::vector<std::shared_ptr<ir::Pass>> createQnnLoweringPipeline(
   std::vector<std::shared_ptr<ir::Pass>> ret;
 
   if (cfg.tensor_readable_rename) { ret.emplace_back(createQnnTensorNamingPass()); }
+
+  ret.emplace_back(createQnnAnonymousOpNamingPass());
 
   return ret;
 }

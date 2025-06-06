@@ -27,6 +27,10 @@ bool QnnMatMulOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
 
   auto mllm_matmul_op = (QnnMatMulOp*)(op->cast_<ir::linalg::MatMulOp>()->getAOp());
   if (!mllm_matmul_op->transposeA() && !mllm_matmul_op->transposeB()) {
+    std::vector<Qnn_Tensor_t> output_tensors;
+
+    // TODO init output_tensors
+
     // graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_matmul_op->name(), QnnIRGraph::QTI_AISW_OP_PACKAGE,
     //             "MatMul", {}, input_names, const std::vector<Qnn_Tensor_t*>& output_tensors);
   } else {

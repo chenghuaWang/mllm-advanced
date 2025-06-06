@@ -32,7 +32,7 @@
     auto ctx = (ir::IRContext*)trace_context;                                                  \
     auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);                                \
     auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);                               \
-    ctx->create<ir::linalg::name>(this, i_irs, o_irs);                                         \
+    ctx->create<ir::linalg::name>(shared_from_this(), i_irs, o_irs);                           \
   }                                                                                            \
   void name::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {        \
     MLLM_WARN(#name "::forward is not implemented");                                           \

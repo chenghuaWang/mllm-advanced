@@ -23,7 +23,7 @@ void D2HOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
   auto ctx = (ir::IRContext*)trace_context;
   auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
   auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
-  ctx->create<ir::linalg::D2HOp>(this, i_irs, o_irs);
+  ctx->create<ir::linalg::D2HOp>(shared_from_this(), i_irs, o_irs);
 }
 
 void D2HOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

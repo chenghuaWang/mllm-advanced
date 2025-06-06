@@ -24,7 +24,7 @@ void SoftmaxOp::trace(void* trace_context, const std::vector<Tensor>& inputs,
   auto ctx = (ir::IRContext*)trace_context;
   auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
   auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
-  ctx->create<ir::linalg::SoftmaxOp>(this, i_irs, o_irs);
+  ctx->create<ir::linalg::SoftmaxOp>(shared_from_this(), i_irs, o_irs);
 }
 
 void SoftmaxOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

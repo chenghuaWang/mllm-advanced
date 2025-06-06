@@ -20,7 +20,7 @@
 
 namespace mllm {
 
-enum class OpType : int32_t {
+enum class OpType : int32_t {  // NOLINT
   kOpType_Start = 0,
 
   kFill,
@@ -145,7 +145,7 @@ class BaseOpCargoBase {
   std::unique_ptr<Concept> inner_;
 };
 
-class BaseOp {
+class BaseOp : public std::enable_shared_from_this<BaseOp> {
  public:
   explicit BaseOp(OpType op_type);
 
