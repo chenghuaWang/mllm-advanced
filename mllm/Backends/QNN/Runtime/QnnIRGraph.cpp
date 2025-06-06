@@ -35,11 +35,13 @@ const std::string QnnIRGraph::MLLM_QNN_OP_PACKAGE = "MllmQnnOpPackage";
 
 QnnIRGraph::QnnIRGraph(const std::string& name, const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
                        const QnnFuncSymbols& qnn_func_symbols,
-                       const QnnBackendDevice& qnn_bk_device)
+                       const QnnBackendDevice& qnn_bk_device,
+                       const std::shared_ptr<QnnAllocator>& allocator)
     : name_(name),
       graph_ir_(graph_ir),
       qnn_func_symbols_(qnn_func_symbols),
-      qnn_bk_device_(qnn_bk_device) {}
+      qnn_bk_device_(qnn_bk_device),
+      qnn_allocator_(allocator) {}
 
 void QnnIRGraph::setupInputs(const std::vector<ir::tensor::TensorValue::self_ptr_t>& inputs) {
   for (auto& input_tensor_ir : inputs) {
@@ -108,17 +110,27 @@ void QnnIRGraph::setupInputs(const std::vector<ir::tensor::TensorValue::self_ptr
         // use ir value's name instead of mllm_tensor name.
         // QnnTensorNaming Pass will make readable names for QNN, and the name is stored in ir.
         input_tensor_ir->name(), qnn_tensor);
+  }
 
-    // TODO
-    // create a new input buffer and output buffer for the graph
+  // Add shared buffer pointer to this graph's inputs shared buffer vector.
+  for (const auto& input : inputs) {
+    qnn_input_shared_buffer_ptr_.emplace_back(input->tensor_.ptr<uint8_t>());
+  }
+}
+
+void QnnIRGraph::setupOutputs(const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs) {
+  // Add shared buffer pointer to this graph's inputs shared buffer vector.
+  for (const auto& output : outputs) {
+    qnn_output_shared_buffer_ptr_.emplace_back(output->tensor_.ptr<uint8_t>());
   }
 }
 
 std::shared_ptr<QnnIRGraph> QnnIRGraph::build(const std::string& name,
                                               const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
                                               const QnnFuncSymbols& qnn_func_symbols,
-                                              const QnnBackendDevice& qnn_bk_device) {
-  return std::make_shared<QnnIRGraph>(name, graph_ir, qnn_func_symbols, qnn_bk_device);
+                                              const QnnBackendDevice& qnn_bk_device,
+                                              const std::shared_ptr<QnnAllocator>& allocator) {
+  return std::make_shared<QnnIRGraph>(name, graph_ir, qnn_func_symbols, qnn_bk_device, allocator);
 }
 
 void QnnIRGraph::startRecord() {
@@ -141,7 +153,8 @@ void QnnIRGraph::startRecord() {
 }
 
 void QnnIRGraph::endRecord() {
-  // TODO free context
+  // Freeze this Graph
+  freezed_ = true;
 }
 
 bool QnnIRGraph::addOp(Qnn_OpConfigVersion_t version, const std::string& op_name,
@@ -295,12 +308,35 @@ void QnnIRGraph::getTensor(const std::string& node_name, const std::string& tens
   tensor = qnn_tensor_map_[tensor_name];
 }
 
-void QnnIRGraph::freezeAndCompile() {
-  MLLM_RT_ASSERT_EQ(freezed_, false);
+void QnnIRGraph::compile() {
+  MLLM_RT_ASSERT_EQ(freezed_, true);
+
+  // Compile QNN Graph First
   auto status = qnn_func_symbols_.qnn_interface_.graphFinalize(
       qnn_graph_handle_, qnn_bk_device_.profile_bk_handle_, /*signalHandle*/ nullptr);
-
   MLLM_RT_ASSERT_EQ(QNN_GRAPH_NO_ERROR, status);
+
+  // Set inputs and outputs
+  // TODO Graph class should not handle memory
+  // TODO Graph class should not handle memory
+  // TODO Graph class should not handle memory
+  // TODO Graph class should not handle memory
+  // TODO Graph class should not handle memory
+  // TODO Graph class should not handle memory
+  // we should pass memory register / free / alloc in CompiledObj class and use a GraphBeginOp to
+  // wrap CompiledObj to do execution.
+  int cnt = 0;
+  MLLM_RT_ASSERT_EQ(qnn_input_tensors_.size(), qnn_input_shared_buffer_ptr_.size());
+  for (auto& qnn_tensor_i : qnn_input_tensors_) {
+    qnn_allocator_->registerQnnTensorToSharedBuffer(qnn_input_shared_buffer_ptr_[cnt++],
+                                                    qnn_tensor_i);
+  }
+  cnt = 0;
+  MLLM_RT_ASSERT_EQ(qnn_output_tensors_.size(), qnn_output_shared_buffer_ptr_.size());
+  for (auto& qnn_tensor_o : qnn_output_tensors_) {
+    qnn_allocator_->registerQnnTensorToSharedBuffer(qnn_output_shared_buffer_ptr_[cnt++],
+                                                    qnn_tensor_o);
+  }
 }
 
 void QnnIRGraph::free() { MLLM_RT_ASSERT_EQ(freezed_, true); }

@@ -9,6 +9,7 @@
  *
  */
 #include "mllm/Backends/QNN/Passes/GraphBuildPass.hpp"
+#include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
 #include "mllm/IR/Builtin/Op.hpp"
 #include "mllm/IR/Graph/Op.hpp"
 #include "mllm/Utils/Common.hpp"
@@ -16,6 +17,8 @@
 #include <algorithm>
 
 namespace mllm::qnn {
+
+GraphBuildPass::GraphBuildPass() { regPattern<QnnMatMulOpPattern>(); }
 
 uint8_t GraphBuildPass::run(const ir::node_ptr_t& op) {
   // The top op should be ModuleOp

@@ -10,20 +10,40 @@
  */
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <string>
+#include <unordered_map>
+
+#include "mllm/Backends/QNN/Ops/QnnBaseOp.hpp"
+#include "mllm/Core/AOps/BaseOp.hpp"
 #include "mllm/IR/Passes/Pass.hpp"
 
 namespace mllm::qnn {
 
 class GraphBuildPass : public ir::Pass {
  public:
-  GraphBuildPass() = default;
+  GraphBuildPass();
+
   ~GraphBuildPass() override = default;
 
   uint8_t run(const ir::node_ptr_t& op) override;
 
   std::vector<std::string> graph_need_to_be_compiled_;
+
+  template<typename... Args>
+  void regPattern() {
+    (..., (_reg_one_pattern<Args>()));
+  }
+
+ private:
+  template<typename T>
+  void _reg_one_pattern() {
+    auto pair = T::create();
+    patterns_.insert({pair.first, pair.second});
+  }
+
+  std::unordered_map<OpType, std::shared_ptr<QnnBaseOpPattern>> patterns_;
 };
 
 static inline std::shared_ptr<GraphBuildPass> createGraphBuildPass(

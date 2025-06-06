@@ -8,9 +8,11 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include <memory>
 #include "mllm/Backends/QNN/QnnBackend.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLoader.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLog.hpp"
+#include "mllm/Backends/QNN/QnnAllocator.hpp"
 
 namespace mllm::qnn {
 
@@ -18,6 +20,12 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
   QnnLogger::instance();
 
   MLLM_RT_ASSERT_EQ(initHTPBackend(), true);
+
+  // NOTE: Init HTP memory allocator AFTER HTPBackend is inited.
+  allocator_ = std::make_shared<QnnAllocator>(qnn_htp_func_symbols_, qnn_htp_backend_);
+
+  // TODO
+  regOpFactory<>();
 }
 
 bool QnnBackend::initHTPBackend() {
@@ -113,7 +121,8 @@ std::shared_ptr<QnnIRGraph> QnnBackend::createQnnGraph(
     return nullptr;
   }
 
-  auto ret = QnnIRGraph::build(name, graph_ir, qnn_func_symbols, qnn_bk_device);
+  auto ret = QnnIRGraph::build(name, graph_ir, qnn_func_symbols, qnn_bk_device,
+                               std::static_pointer_cast<QnnAllocator>(allocator_));
   qnn_graphs_.insert({name, ret});
   return ret;
 }

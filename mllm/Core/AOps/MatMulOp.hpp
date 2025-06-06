@@ -33,6 +33,10 @@ class MatMulOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
+  inline bool transposeA() { return cargo_.transpose_a; }
+
+  inline bool transposeB() { return cargo_.transpose_b; }
+
  protected:
   MatMulOpCargo cargo_;
 };
