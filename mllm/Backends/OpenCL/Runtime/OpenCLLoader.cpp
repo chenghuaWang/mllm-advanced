@@ -87,6 +87,13 @@ bool OpenCLLoader::tryingToLoadOpenCLDynLibAndParseSymbols(const std::string& li
   LOAD_FUNCTION_PTR(clGetPlatformInfo);
   LOAD_FUNCTION_PTR(clGetDeviceIDs);
   LOAD_FUNCTION_PTR(clGetDeviceInfo);
+  LOAD_FUNCTION_PTR(clReleaseDevice);
+  LOAD_FUNCTION_PTR(clReleaseContext);
+  LOAD_FUNCTION_PTR(clReleaseCommandQueue);
+  LOAD_FUNCTION_PTR(clRetainDevice);
+  LOAD_FUNCTION_PTR(clCreateCommandQueueWithProperties);
+  LOAD_FUNCTION_PTR(clCreateContext);
+  LOAD_FUNCTION_PTR(clRetainCommandQueue);
 
 #define LOAD_SVM_FUNCTION_PTR(func_name)                                                   \
   func_name = reinterpret_cast<func_name##_f_t>(dlsym(opencl_dynlib_handle_, #func_name)); \
@@ -165,6 +172,11 @@ cl_command_queue CL_API_CALL clCreateCommandQueueWithProperties(cl_context _0, c
 
 cl_int CL_API_CALL clRetainDevice(cl_device_id _0) {
   auto func = ::mllm::opencl::OpenCLLoader::instance().clRetainDevice;
+  return func(_0);
+}
+
+cl_int CL_API_CALL clRetainCommandQueue(cl_command_queue _0) {
+  auto func = ::mllm::opencl::OpenCLLoader::instance().clRetainCommandQueue;
   return func(_0);
 }
 

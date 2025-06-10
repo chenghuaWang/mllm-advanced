@@ -7,6 +7,7 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include <algorithm>
 #include <filesystem>
 #include "mllm/Preprocessor/Visual/Image.hpp"
 
@@ -64,7 +65,7 @@ void Image::save(const std::string& fp) {
   std::string ext = file_path.extension().string();
 
   if (!ext.empty() && ext[0] == '.') { ext = ext.substr(1); }
-  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  std::ranges::transform(ext, ext.begin(), ::tolower);
 
   if (ext == "png") {
     stbi_write_png(fp.c_str(), w_, h_, c_, image_ptr_->ptr_, w_ * c_);
@@ -78,19 +79,20 @@ void Image::save(const std::string& fp) {
 }
 
 Tensor Image::tensor() {
-  auto ret_tensor = Tensor::empty({h_, w_, c_}, kFp32, kCPU).alloc();
+  auto ret_tensor = Tensor::empty({c_, h_, w_}, kFp32, kCPU).alloc();
 
   auto bare_tensor_ptr = ret_tensor.ptr<float>();
   auto bare_stb_ptr = static_cast<unsigned char*>(image_ptr_->ptr_);
 
   // H, W, C -> C, H, W
-  for (int i_c = 0; i_c < c_; ++i_c) {
-    for (int i_h = 0; i_h < h_; ++i_h) {
-      for (int i_w = 0; i_w < w_; ++i_w) {
-        int src_index = (i_h * w_ + i_w) * c_ + i_c;
-        int dst_index = i_c * (h_ * w_) + i_h * w_ + i_w;
-        bare_tensor_ptr[dst_index] = static_cast<float>(bare_stb_ptr[src_index]);
-      }
+  for (int i_h = 0; i_h < h_; ++i_h) {
+    for (int i_w = 0; i_w < w_; ++i_w) {
+      int src_index = (i_h * w_ + i_w) * 3;
+      int dst_index = (i_h * w_ + i_w) * 3;
+
+      bare_tensor_ptr[dst_index] = static_cast<float>(bare_stb_ptr[src_index]) / 255.0f;
+      bare_tensor_ptr[dst_index + 1] = static_cast<float>(bare_stb_ptr[src_index + 1]) / 255.0f;
+      bare_tensor_ptr[dst_index + 2] = static_cast<float>(bare_stb_ptr[src_index + 2]) / 255.0f;
     }
   }
 

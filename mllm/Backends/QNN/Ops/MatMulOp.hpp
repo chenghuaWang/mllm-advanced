@@ -37,4 +37,11 @@ class QnnMatMulOp final : public MatMulOp {
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
+class QnnMatMulOpFactory : public TypedOpFactory<OpType::kMatMul, MatMulOpCargo> {
+ public:
+  std::shared_ptr<BaseOp> createOpImpl(const MatMulOpCargo& cargo) override {
+    return std::make_shared<QnnMatMulOp>(cargo);
+  }
+};
+
 }  // namespace mllm::qnn

@@ -27,9 +27,6 @@ class QnnBaseOpPattern {
                        const std::vector<ir::tensor::TensorValue::self_ptr_t>& inputs,
                        const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs) = 0;
 
-  void transformTensorIR2QnnTensor(const ir::tensor::TensorValue::self_ptr_t& tensor_ir,
-                                   Qnn_Tensor_t& qnn_tensor_ptr);
-
  private:
 };
 

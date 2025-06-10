@@ -142,6 +142,11 @@ class Tensor {
   }
 
   template<typename T>
+  T& item() {
+    return at<T>({0});
+  }
+
+  template<typename T>
   void print() {
     fmt::println("Tensor Meta Info");
     fmt::println("address   :{:#010x}", (uintptr_t)(impl_->address()));

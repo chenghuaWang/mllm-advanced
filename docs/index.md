@@ -88,6 +88,15 @@ ArmBackend/Benchmark/index
 
 :::{toctree}
 :maxdepth: 3
+:caption: QNN Backend
+:glob:
+:numbered:
+
+QnnBackend/QnnLoweringPipeline
+:::
+
+:::{toctree}
+:maxdepth: 3
 :caption: CUDA Backend
 :glob:
 :numbered:

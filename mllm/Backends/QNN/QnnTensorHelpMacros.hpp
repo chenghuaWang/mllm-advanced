@@ -20,7 +20,7 @@
 namespace mllm::qnn {
 
 inline bool validate_tensor_version(Qnn_Tensor_t& tensor) {
-  if (tensor.version != QNN_TENSOR_VERSION_1 || tensor.version != QNN_TENSOR_VERSION_2) {
+  if (tensor.version != QNN_TENSOR_VERSION_1 && tensor.version != QNN_TENSOR_VERSION_2) {
     MLLM_ERROR_EXIT(kError, "The mllm-advanced lib only support QNN_TENSOR_VERSION_1 and "
                             "QNN_TENSOR_VERSION_2 right now");
   }
@@ -28,9 +28,9 @@ inline bool validate_tensor_version(Qnn_Tensor_t& tensor) {
 }
 
 inline bool validate_tensor_version(Qnn_Tensor_t* tensor) {
-  if (tensor->version != QNN_TENSOR_VERSION_1 || tensor->version != QNN_TENSOR_VERSION_2) {
+  if (tensor->version != QNN_TENSOR_VERSION_1 && tensor->version != QNN_TENSOR_VERSION_2) {
     MLLM_ERROR_EXIT(kError, "The mllm-advanced lib only support QNN_TENSOR_VERSION_1 and "
-                            "QNN_TENSOR_VERSION_2 right now");
+                            "QNN_TENSOR_VERSION_2 right now!");
   }
   return true;
 }
@@ -333,101 +333,5 @@ inline void set_qnn_tensor_mem_handle(Qnn_Tensor_t& tensor, Qnn_MemHandle_t hand
 #define HELP_QNN_TENSOR_SET_MEM_TYPE(__t, __v) set_qnn_tensor_mem_type(__t, __v)
 #define HELP_QNN_TENSOR_SET_CLIENT_BUF(__t, __v) set_qnn_tensor_client_buf(__t, __v)
 #define HELP_QNN_TENSOR_SET_MEM_HANDLE(__t, __v) set_qnn_tensor_mem_handle(__t, __v)
-
-size_t __memscpy(void* dst, size_t dstSize, const void* src, size_t copySize) {
-  if (!dst || !src || !dstSize || !copySize) return 0;
-
-  size_t minSize = dstSize < copySize ? dstSize : copySize;
-
-  memcpy(dst, src, minSize);
-
-  return minSize;
-}
-
-inline bool clone_qnn_tensor(Qnn_Tensor_t& src, Qnn_Tensor_t& dst) {
-  // Check and init version
-  HELP_QNN_TENSOR_VALIDATE_VERSION(src);
-  dst.version = src.version;
-
-  // Set name
-  HELP_QNN_TENSOR_SET_NAME(dst, strndup(HELP_QNN_TENSOR_GET_NAME(src),
-                                        std::string(HELP_QNN_TENSOR_GET_NAME(src)).size()));
-  MLLM_RT_ASSERT(HELP_QNN_TENSOR_GET_NAME(dst) != nullptr)
-
-  // Set ID
-  HELP_QNN_TENSOR_SET_ID(dst, HELP_QNN_TENSOR_GET_ID(src));
-
-  // Set Type
-  HELP_QNN_TENSOR_SET_TYPE(dst, HELP_QNN_TENSOR_GET_TYPE(src));
-
-  // Set Format
-  HELP_QNN_TENSOR_SET_DATA_FORMAT(dst, HELP_QNN_TENSOR_GET_DATA_FORMAT(src));
-
-  // Set Data Type
-  HELP_QNN_TENSOR_SET_DATA_TYPE(dst, HELP_QNN_TENSOR_GET_DATA_TYPE(src));
-
-  // Set Memory Type
-  HELP_QNN_TENSOR_SET_MEM_TYPE(dst, HELP_QNN_TENSOR_GET_MEM_TYPE(src));
-
-  // Only metadata (i.e. non-static data) is copied from source to destination. The union still
-  // must be initialized so that the clientBuf/memHandle do not contain garbage data
-  if (HELP_QNN_TENSOR_GET_MEM_TYPE(src) == QNN_TENSORMEMTYPE_RAW) {
-    Qnn_ClientBuffer_t cb = {nullptr, 0};
-    HELP_QNN_TENSOR_SET_CLIENT_BUF(dst, cb);
-  } else if (HELP_QNN_TENSOR_GET_MEM_TYPE(src) == QNN_TENSORMEMTYPE_MEMHANDLE) {
-    HELP_QNN_TENSOR_SET_MEM_HANDLE(dst, nullptr);
-  } else {
-    MLLM_ERROR_EXIT(kError, "HELP_QNN_TENSOR_GET_MEM_TYPE(src) should be in [RAW, MEMHANDLE]");
-  }
-
-  Qnn_QuantizeParams_t qp = HELP_QNN_TENSOR_GET_QUANT_PARAMS(src);
-  Qnn_QuantizationEncoding_t encoding = qp.quantizationEncoding;
-
-  if (encoding == QNN_QUANTIZATION_ENCODING_AXIS_SCALE_OFFSET) {
-    // need to allocate and copy memory for scaleOffset as it is a pointer array
-    Qnn_QuantizeParams_t qp_cpy = qp;
-    Qnn_AxisScaleOffset_t& axis_scale_offset = qp_cpy.axisScaleOffsetEncoding;
-    Qnn_ScaleOffset_t** scaleOffset = &axis_scale_offset.scaleOffset;
-    size_t scale_offset_size = axis_scale_offset.numScaleOffsets * sizeof(Qnn_ScaleOffset_t);
-    *scaleOffset = (Qnn_ScaleOffset_t*)malloc(scale_offset_size);
-    __memscpy(*scaleOffset, scale_offset_size, qp.axisScaleOffsetEncoding.scaleOffset,
-              scale_offset_size);
-    HELP_QNN_TENSOR_SET_QUANT_PARAMS(dst, qp_cpy);
-  } else if (encoding == QNN_QUANTIZATION_ENCODING_BW_AXIS_SCALE_OFFSET) {
-    // need to allocate and copy memory for scaleOffset as it is a pointer array
-    Qnn_QuantizeParams_t qp_cpy = qp;
-    Qnn_BwAxisScaleOffset_t& bw_axis_scale_offset = qp_cpy.bwAxisScaleOffsetEncoding;
-    size_t scaleSize = bw_axis_scale_offset.numElements * sizeof(float);
-    float** scales = &bw_axis_scale_offset.scales;
-    int32_t** offsets = &bw_axis_scale_offset.offsets;
-    *scales = (float*)malloc(scaleSize);
-    __memscpy(*scales, scaleSize, qp.bwAxisScaleOffsetEncoding.scales, scaleSize);
-
-    // Only copy offsets if present, nullptr implies all offsets are 0
-    if (bw_axis_scale_offset.offsets != nullptr) {
-      size_t offset_size = bw_axis_scale_offset.numElements * sizeof(int32_t);
-      *offsets = (int32_t*)malloc(offset_size);
-      __memscpy(*offsets, offset_size, qp.bwAxisScaleOffsetEncoding.offsets, offset_size);
-    }
-    HELP_QNN_TENSOR_SET_QUANT_PARAMS(dst, qp_cpy);
-  } else {
-    HELP_QNN_TENSOR_SET_QUANT_PARAMS(dst, qp);
-  }
-
-  // need to allocate and copy memory for all the pointer members
-  uint32_t rank = HELP_QNN_TENSOR_GET_RANK(src);
-  HELP_QNN_TENSOR_SET_RANK(dst, rank);
-  size_t dim_size = rank * sizeof(uint32_t);
-  uint32_t* dimensions = (uint32_t*)malloc(dim_size);
-
-  MLLM_RT_ASSERT(dimensions != nullptr);
-
-  __memscpy(dimensions, dim_size, HELP_QNN_TENSOR_GET_DIMENSIONS(src), dim_size);
-  HELP_QNN_TENSOR_SET_DIMENSIONS(dst, dimensions);
-
-  return true;
-}
-
-#define HELP_QNN_TENSOR_CLONE(_dst, _src) clone_qnn_tensor(_src, _dst);
 
 }  // namespace mllm::qnn

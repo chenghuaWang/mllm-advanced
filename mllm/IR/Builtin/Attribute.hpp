@@ -7,16 +7,6 @@
  * @copyright Copyright (c) 2025
  *
  */
-/**
- * @file Attribute.hpp
- * @author Chenghua Wang (chenghua.wang.edu@gmail.com)
- * @brief Builtin Attribute
- * @version 0.1
- * @date 2024-09-30
- *
- * @copyright Copyright (c) 2024
- *
- */
 #pragma once
 
 #include <string>
@@ -107,6 +97,24 @@ class SymbolAttr : public BuiltinIRAttr {
 
  private:
   std::string data_;
+};
+
+class BoolAttr : public BuiltinIRAttr {
+ public:
+  DEFINE_SPECIFIC_IR_CLASS(BoolAttr);
+
+  ~BoolAttr() override;
+  BoolAttr();
+  explicit BoolAttr(const NodeKind& kind);
+
+  bool& data();
+
+  static self_ptr_t build(IRContext*, bool data);
+
+  static inline bool classof(const Node* node) { RTTI_RK_ATTR_BUILTINIRATTR_BOOLATTR_IMPL(node); }
+
+ private:
+  bool data_;
 };
 
 }  // namespace mllm::ir

@@ -102,6 +102,8 @@ class OpenCLLoader {
   using clEnqueueSVMUnmap_f_t = cl_int(CL_API_CALL*)(cl_command_queue, void*, cl_uint,
                                                      const cl_event*, cl_event*);
 
+  using clRetainCommandQueue_f_t = cl_int(CL_API_CALL*)(cl_command_queue);
+
 #define DEFINE_FUNC_PTR_MEMBER(func) func##_f_t func = nullptr
   // Normal
   DEFINE_FUNC_PTR_MEMBER(clGetPlatformIDs);
@@ -114,6 +116,7 @@ class OpenCLLoader {
   DEFINE_FUNC_PTR_MEMBER(clRetainDevice);
   DEFINE_FUNC_PTR_MEMBER(clCreateCommandQueueWithProperties);
   DEFINE_FUNC_PTR_MEMBER(clCreateContext);
+  DEFINE_FUNC_PTR_MEMBER(clRetainCommandQueue);
 
   // SVM related
   DEFINE_FUNC_PTR_MEMBER(clSVMAlloc);
@@ -164,6 +167,8 @@ cl_command_queue CL_API_CALL clCreateCommandQueueWithProperties(cl_context _0, c
 cl_context CL_API_CALL clCreateContext(
     const cl_context_properties* _0, cl_uint _1, const cl_device_id* _2,
     void(CL_CALLBACK* _3)(const char*, const void*, size_t, void*), void* _4, cl_int* _5);
+
+cl_int CL_API_CALL clRetainCommandQueue(cl_command_queue _0);
 
 // SVM
 void* CL_API_CALL clSVMAlloc(cl_context _0, cl_svm_mem_flags _1, size_t _2, cl_uint _3);

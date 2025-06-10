@@ -1,4 +1,4 @@
-// Auto generated: 2025-03-30 17:10:10
+// Auto generated: 2025-06-08 05:17:27
 // do not modify this file
 #pragma once
 namespace mllm::ir {
@@ -205,6 +205,10 @@ struct NodeRTTIClassOfImpl {
 #define RTTI_RK_ATTR_BUILTINIRATTR_SYMBOLATTR_IMPL(v)       \
   return (v)->getKind() >= RK_Attr_BuiltinIRAttr_SymbolAttr \
          && (v)->getKind() <= RK_Attr_BuiltinIRAttr_SymbolAttr
+
+#define RTTI_RK_ATTR_BUILTINIRATTR_BOOLATTR_IMPL(v)       \
+  return (v)->getKind() >= RK_Attr_BuiltinIRAttr_BoolAttr \
+         && (v)->getKind() <= RK_Attr_BuiltinIRAttr_BoolAttr
 
 #define RTTI_RK_ATTR_CONTROLFLOWIRATTR_IMPL(v) \
   return (v)->getKind() >= RK_Attr_ControlFlowIRAttr && (v)->getKind() <= RK_Attr_ControlFlowIRAttr

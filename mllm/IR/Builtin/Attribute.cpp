@@ -19,7 +19,7 @@ BuiltinIRAttr::BuiltinIRAttr() : Attr(RK_Attr_BuiltinIRAttr) {}
 
 BuiltinIRAttr::BuiltinIRAttr(const NodeKind& kind) : Attr(kind) {}
 
-IntAttr::~IntAttr() {}
+IntAttr::~IntAttr() = default;
 
 IntAttr::IntAttr() : BuiltinIRAttr(RK_Attr_BuiltinIRAttr_IntAttr) {}
 
@@ -70,6 +70,20 @@ std::string& SymbolAttr::str() { return data_; }
 SymbolAttr::self_ptr_t SymbolAttr::build(IRContext*, const std::string& symbol_name) {
   auto ret = std::make_shared<SymbolAttr>();
   ret->str() = symbol_name;
+  return ret;
+}
+
+BoolAttr::~BoolAttr() = default;
+
+BoolAttr::BoolAttr() : BuiltinIRAttr(RK_Attr_BuiltinIRAttr_BoolAttr) {}
+
+BoolAttr::BoolAttr(const NodeKind& kind) : BuiltinIRAttr(kind) {}
+
+bool& BoolAttr::data() { return data_; }
+
+BoolAttr::self_ptr_t BoolAttr::build(IRContext*, bool data) {
+  auto ret = std::make_shared<BoolAttr>();
+  ret->data() = data;
   return ret;
 }
 

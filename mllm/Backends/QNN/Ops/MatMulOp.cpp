@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2025
  *
  */
+#include "mllm/Backends/QNN/Runtime/QnnTensorTransform.hpp"
 #include "mllm/IR/Linalg/Op.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
 
@@ -29,10 +30,15 @@ bool QnnMatMulOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
   if (!mllm_matmul_op->transposeA() && !mllm_matmul_op->transposeB()) {
     std::vector<Qnn_Tensor_t> output_tensors;
 
-    // TODO init output_tensors
+    // Transform output tensor ir to qnn tensor
+    for (auto& out : op->outputs()) {
+      output_tensors.emplace_back(QnnTensorTransform::instance().transform(
+          out->cast_<ir::tensor::TensorValue>(), QNN_TENSOR_VERSION_2));
+    }
 
-    // graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_matmul_op->name(), QnnIRGraph::QTI_AISW_OP_PACKAGE,
-    //             "MatMul", {}, input_names, const std::vector<Qnn_Tensor_t*>& output_tensors);
+    // Add Node to Qnn Graph.
+    graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_matmul_op->name(), QnnIRGraph::QTI_AISW_OP_PACKAGE,
+                "MatMul", {}, input_names, output_tensors);
   } else {
     NYI("Not support transpose LHS or RHS in QnnMatMulOp");
   }

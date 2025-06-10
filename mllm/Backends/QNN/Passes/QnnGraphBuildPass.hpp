@@ -1,5 +1,5 @@
 /**
- * @file GraphBuildPass.hpp
+ * @file QnnGraphBuildPass.hpp
  * @author chenghua Wang (chenghua.wang.edu@gmail.com)
  * @brief
  * @version 0.1
@@ -22,11 +22,11 @@
 
 namespace mllm::qnn {
 
-class GraphBuildPass : public ir::Pass {
+class QnnGraphBuildPass : public ir::Pass {
  public:
-  GraphBuildPass();
+  QnnGraphBuildPass();
 
-  ~GraphBuildPass() override = default;
+  ~QnnGraphBuildPass() override = default;
 
   uint8_t run(const ir::node_ptr_t& op) override;
 
@@ -49,9 +49,9 @@ class GraphBuildPass : public ir::Pass {
   std::unordered_map<OpType, std::shared_ptr<QnnBaseOpPattern>> patterns_;
 };
 
-static inline std::shared_ptr<GraphBuildPass> createGraphBuildPass(
+static inline std::shared_ptr<QnnGraphBuildPass> createQnnGraphBuildPass(
     const std::vector<std::string>& graphs_need_to_be_compiled) {
-  auto ret = std::make_shared<GraphBuildPass>();
+  auto ret = std::make_shared<QnnGraphBuildPass>();
   ret->graph_need_to_be_compiled_ = graphs_need_to_be_compiled;
   return ret;
 }
