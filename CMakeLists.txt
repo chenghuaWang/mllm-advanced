@@ -16,7 +16,7 @@ option(MLLM_ENABLE_PY_MLLM "Enable mllm python binding" OFF)
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if((CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang") AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "i686|i386|x86_64"))
   add_compile_options(-Wno-nan-infinity-disabled)
 endif()
 

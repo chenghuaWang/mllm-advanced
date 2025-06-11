@@ -154,7 +154,7 @@ static_assert(sizeof(block_q4_k_t)
                      + 12);  // 128B(256x4bits) + 2B(scale) + 2B(min) + 12B((6bits + 6bits) x 8)
 
 #pragma pack(push, 1)
-using __block_q8_k = struct {
+struct __block_q8_k {
   float d;            // delta
   int8_t qs[256];     // quants
   int16_t bsums[16];  // sum of quants in groups of 16

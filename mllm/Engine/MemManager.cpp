@@ -41,6 +41,15 @@ void MemManager::alloc(const std::shared_ptr<Storage>& s) {
   auto allocator = allocators_st_[s->device_];
   auto try_to_alloc_size = allocator->allocSize(s);
 
+  // NOTE:
+  // For device:
+  //  1. QNN
+  // If the allocator is not managed by MemManager, just allocate it.
+  if (!allocator->ctrlByMllmMemManager()) {
+    allocator->alloc(s);
+    return;
+  }
+
   // large storage
   if (try_to_alloc_size >= cargo_.really_large_tensor_threshold) {
     MLLM_WARN("Trying to alloc a really large storage, whose storage size is {}B. The mllm memory "
@@ -72,6 +81,15 @@ void MemManager::alloc(const std::shared_ptr<Storage>& s) {
 void MemManager::free(Storage* s) {
   auto allocator = allocators_st_[s->device_];
   auto try_to_alloc_size = allocator->allocSize(s);
+
+  // NOTE:
+  // For device:
+  //  1. QNN
+  // If the allocator is not ctrl by MemManager, we should free it by allocator.
+  if (!allocator->ctrlByMllmMemManager()) {
+    allocator->free(s);
+    return;
+  }
 
   if (try_to_alloc_size >= cargo_.really_large_tensor_threshold) {
     _free_really_large(s);

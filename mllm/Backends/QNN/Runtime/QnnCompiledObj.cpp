@@ -8,6 +8,7 @@
  *
  */
 #include <cstdint>
+#include "mllm/Backends/QNN/QnnTensorHelpMacros.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnCompiledObj.hpp"
 
 namespace mllm::qnn {
@@ -65,8 +66,21 @@ bool QnnCompiledObj::forward() {
 }
 
 Tensor QnnCompiledObj::qnnTensorDescriptorToMllmTensor(const Qnn_Tensor_t& qnn_tensor) {
-  // TODO
-  return {};
+  DataTypes mllm_tensor_dtype = DataTypes::kDataTypes_End;
+  std::vector<int32_t> mllm_tensor_shape;
+
+  auto rank = HELP_QNN_TENSOR_GET_RANK(qnn_tensor);
+  mllm_tensor_shape.resize(rank);
+
+  auto dim_ptr = HELP_QNN_TENSOR_GET_DIMENSIONS(qnn_tensor);
+  for (int i = 0; i < rank; i++) { mllm_tensor_shape[i] = dim_ptr[i]; }
+
+  switch (HELP_QNN_TENSOR_GET_DATA_TYPE(qnn_tensor)) {
+    case QNN_DATATYPE_FLOAT_32: mllm_tensor_dtype = DataTypes::kFp32; break;
+    default: NYI("QNN data type not supported") break;
+  }
+
+  return Tensor::empty(mllm_tensor_shape, mllm_tensor_dtype, kQNN);
 }
 
 }  // namespace mllm::qnn
