@@ -140,7 +140,10 @@ void QnnAllocator::registerQnnTensorToSharedBuffer(void* ptr, Qnn_Tensor_t& qnn_
 }
 
 void QnnAllocator::deRegisterQnnTensorFromSharedBuffer(void* ptr) {
-  MLLM_RT_ASSERT_EQ(QNN_SUCCESS, qnn_func_symbols_.qnn_interface_.memDeRegister(&ptr, 1));
+  MLLM_RT_ASSERT_EQ(qnn_memhandle_map_.count(ptr), 1);
+  MLLM_RT_ASSERT_EQ(QNN_SUCCESS, qnn_func_symbols_.qnn_interface_.memDeRegister(
+                                     &(qnn_memhandle_map_[ptr].second), 1));
+  qnn_memhandle_map_.erase(ptr);
 }
 
 void QnnAllocator::deRegisterAllQnnTensorFromSharedBuffer() {

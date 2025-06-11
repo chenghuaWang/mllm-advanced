@@ -10,10 +10,11 @@
 #include <cstdint>
 #include "mllm/Backends/QNN/QnnTensorHelpMacros.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnCompiledObj.hpp"
+#include "mllm/Utils/Dbg.hpp"
 
 namespace mllm::qnn {
 
-QnnCompiledObj::QnnCompiledObj(QnnIRGraph* const qnn_ir_graph,
+QnnCompiledObj::QnnCompiledObj(const std::shared_ptr<QnnIRGraph>& qnn_ir_graph,
                                const std::shared_ptr<QnnAllocator>& allocator)
     : qnn_ir_graph_(qnn_ir_graph), allocator_(allocator) {}
 
@@ -61,7 +62,14 @@ bool QnnCompiledObj::freeRuntime() {
 }
 
 bool QnnCompiledObj::forward() {
-  // TODO
+  auto status = qnn_ir_graph_->qnnFuncSymbols().qnn_interface_.graphExecute(
+      qnn_ir_graph_->qnnGraphHandle(), qnn_ir_graph_->getInputs().data(),
+      qnn_ir_graph_->getInputs().size(), qnn_ir_graph_->getOutputs().data(),
+      qnn_ir_graph_->getOutputs().size(), qnn_ir_graph_->qnnBackendDevice().profile_bk_handle_,
+      nullptr);
+
+  MLLM_RT_ASSERT_EQ(QNN_GRAPH_NO_ERROR, status);
+
   return true;
 }
 

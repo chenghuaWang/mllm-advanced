@@ -21,7 +21,7 @@ namespace mllm::qnn {
 
 class QnnCompiledObj {
  public:
-  explicit QnnCompiledObj(QnnIRGraph* const qnn_ir_graph,
+  explicit QnnCompiledObj(const std::shared_ptr<QnnIRGraph>& qnn_ir_graph,
                           const std::shared_ptr<QnnAllocator>& allocator);
 
   bool allocRuntime();
@@ -42,7 +42,7 @@ class QnnCompiledObj {
   std::shared_ptr<QnnAllocator> allocator_ = nullptr;
   std::vector<Tensor> buffered_mllm_tensor_inputs_;
   std::vector<Tensor> buffered_mllm_tensor_outputs_;
-  QnnIRGraph* const qnn_ir_graph_ = nullptr;
+  std::shared_ptr<QnnIRGraph> qnn_ir_graph_ = nullptr;
 };
 
 }  // namespace mllm::qnn

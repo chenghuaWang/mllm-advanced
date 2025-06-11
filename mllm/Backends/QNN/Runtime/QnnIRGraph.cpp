@@ -260,6 +260,10 @@ void QnnIRGraph::compile() {
   MLLM_RT_ASSERT_EQ(QNN_GRAPH_NO_ERROR, status);
 }
 
-void QnnIRGraph::free() { MLLM_RT_ASSERT_EQ(freezed_, true); }
+void QnnIRGraph::free() {
+  MLLM_RT_ASSERT_EQ(freezed_, true);
+  // No need to free graph and Qnn seems not provide method to free graph.
+  // Just free the context and backend. <- QnnBackend will handle this.
+}
 
 }  // namespace mllm::qnn

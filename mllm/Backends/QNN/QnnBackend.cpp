@@ -29,6 +29,17 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
   regOpFactory<QnnMatMulOpFactory>();
 }
 
+QnnBackend::~QnnBackend() {
+  // Free HTP Context
+  auto status = qnn_htp_func_symbols_.qnn_interface_.contextFree(
+      qnn_htp_backend_.qnn_ctx_handle_, qnn_htp_backend_.profile_bk_handle_);
+  MLLM_RT_ASSERT_EQ(status, QNN_CONTEXT_NO_ERROR);
+
+  // Free HTP devices
+  status = qnn_htp_func_symbols_.qnn_interface_.deviceFree(qnn_htp_backend_.device_handle_);
+  MLLM_RT_ASSERT_EQ(status, QNN_SUCCESS);
+}
+
 bool QnnBackend::initHTPBackend() {
   auto& loader = QnnDynSymbolLoader::instance();
 
@@ -125,6 +136,11 @@ std::shared_ptr<QnnIRGraph> QnnBackend::createQnnGraph(
   auto ret = QnnIRGraph::build(name, graph_ir, qnn_func_symbols, qnn_bk_device);
   qnn_graphs_.insert({name, ret});
   return ret;
+}
+
+std::shared_ptr<QnnIRGraph> QnnBackend::getCompiledQnnGraph(const std::string& name) {
+  MLLM_RT_ASSERT_EQ(qnn_graphs_.count(name), 1);
+  return qnn_graphs_[name];
 }
 
 std::shared_ptr<QnnBackend> createQnnBackend() { return std::make_shared<QnnBackend>(); }

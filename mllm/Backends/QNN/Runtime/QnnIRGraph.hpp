@@ -31,6 +31,8 @@ class QnnIRGraph;
 
 class QnnIRGraph {
  public:
+  inline ~QnnIRGraph() { free(); }
+
   QnnIRGraph(const std::string& name, const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
              const QnnFuncSymbols& qnn_func_symbols, const QnnBackendDevice& qnn_bk_device);
 
@@ -73,6 +75,11 @@ class QnnIRGraph {
 
   static const std::string QTI_AISW_OP_PACKAGE;
   static const std::string MLLM_QNN_OP_PACKAGE;
+
+  inline const QnnBackendDevice& qnnBackendDevice() { return qnn_bk_device_; }
+  inline const QnnFuncSymbols& qnnFuncSymbols() { return qnn_func_symbols_; }
+
+  inline Qnn_GraphHandle_t qnnGraphHandle() { return qnn_graph_handle_; }
 
  private:
   // freezed

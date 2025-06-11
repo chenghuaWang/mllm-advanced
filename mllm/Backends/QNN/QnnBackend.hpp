@@ -22,6 +22,8 @@ class QnnBackend final : public BackendBase {
  public:
   QnnBackend();
 
+  ~QnnBackend();
+
   bool initHTPBackend();
 
   inline QnnFuncSymbols& htpFuncSymbols() { return qnn_htp_func_symbols_; }
@@ -32,6 +34,8 @@ class QnnBackend final : public BackendBase {
                                              const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
                                              const QnnFuncSymbols& qnn_func_symbols,
                                              const QnnBackendDevice& qnn_bk_device);
+
+  std::shared_ptr<QnnIRGraph> getCompiledQnnGraph(const std::string& name);
 
  private:
   QnnBackendDevice qnn_htp_backend_;
