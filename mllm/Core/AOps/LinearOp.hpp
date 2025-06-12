@@ -59,6 +59,12 @@ class LinearOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
+  inline Tensor& weight() { return weight_; }
+
+  inline Tensor& bias() { return bias_; }
+
+  inline const LinearOpCargo& cargo() const { return cargo_; }
+
  protected:
   Tensor weight_;
   Tensor bias_;
