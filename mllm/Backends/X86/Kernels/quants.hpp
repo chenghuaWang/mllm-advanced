@@ -54,9 +54,9 @@ static inline int nearest_int(float fval) {
   return (i & 0x007fffff) - 0x00400000;
 }
 
-static inline float make_qkx2_quants(int n, int nmax, const float* __restrict x,
-                                     const float* __restrict weights, uint8_t* __restrict L,
-                                     float* __restrict the_min, uint8_t* __restrict laux,
+static inline float make_qkx2_quants(int n, int nmax, const float* __restrict__ x,
+                                     const float* __restrict__ weights, uint8_t* __restrict__ L,
+                                     float* __restrict__ the_min, uint8_t* __restrict__ laux,
                                      float rmin, float rdelta, int nstep, bool use_mad) {
   float min = x[0];
   float max = x[0];
@@ -131,8 +131,8 @@ static inline float make_qkx2_quants(int n, int nmax, const float* __restrict x,
   return scale;
 }
 
-static inline void get_scale_min_k4(int j, const uint8_t* __restrict q, uint8_t* __restrict d,
-                                    uint8_t* __restrict m) {
+static inline void get_scale_min_k4(int j, const uint8_t* __restrict__ q, uint8_t* __restrict__ d,
+                                    uint8_t* __restrict__ m) {
   if (j < 4) {
     *d = q[j] & 63;
     *m = q[j + 4] & 63;
@@ -142,16 +142,16 @@ static inline void get_scale_min_k4(int j, const uint8_t* __restrict q, uint8_t*
   }
 }
 
-void quantize_row_q4_k_reference(const float* __restrict x, block_q4_k_t* __restrict y, int k);
+void quantize_row_q4_k_reference(const float* __restrict__ x, block_q4_k_t* __restrict__ y, int k);
 
-void quantize_row_q4_k(block_q4_k_t* __restrict vy, const float* __restrict x, int k);
+void quantize_row_q4_k(block_q4_k_t* __restrict__ vy, const float* __restrict__ x, int k);
 
-void dequantize_row_q4_k(float* __restrict y, const block_q4_k_t* __restrict x, int k);
+void dequantize_row_q4_k(float* __restrict__ y, const block_q4_k_t* __restrict__ x, int k);
 
-void quantize_row_q8_K_reference(const float* __restrict x, block_q8_k_t* __restrict y, int k);
+void quantize_row_q8_K_reference(const float* __restrict__ x, block_q8_k_t* __restrict__ y, int k);
 
-void quantize_row_q8_k(void* __restrict y, const float* __restrict x, int k);
+void quantize_row_q8_k(void* __restrict__ y, const float* __restrict__ x, int k);
 
-void dequantize_row_q8_k(float* __restrict y, const block_q8_k_t* __restrict x, int k);
+void dequantize_row_q8_k(float* __restrict__ y, const block_q8_k_t* __restrict__ x, int k);
 
 }  // namespace mllm::X86

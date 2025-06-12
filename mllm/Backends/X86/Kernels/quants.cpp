@@ -38,7 +38,7 @@
 
 namespace mllm::X86 {
 
-void dequantize_row_q4_k(float* __restrict y, const block_q4_k_t* __restrict x, int k) {
+void dequantize_row_q4_k(float* __restrict__ y, const block_q4_k_t* __restrict__ x, int k) {
   MLLM_RT_ASSERT_EQ(k % QK_K, 0);
 
   const int nb = k / QK_K;
@@ -80,7 +80,7 @@ void dequantize_row_q4_k(float* __restrict y, const block_q4_k_t* __restrict x, 
   }
 }
 
-void quantize_row_q4_k_reference(const float* __restrict x, block_q4_k_t* __restrict y, int k) {
+void quantize_row_q4_k_reference(const float* __restrict__ x, block_q4_k_t* __restrict__ y, int k) {
   MLLM_RT_ASSERT(k % QK_K == 0);
   const int nb = k / QK_K;
 
@@ -180,13 +180,13 @@ void quantize_row_q4_k_reference(const float* __restrict x, block_q4_k_t* __rest
   }
 }
 
-void quantize_row_q4_k(block_q4_k_t* __restrict vy, const float* __restrict x, int k) {
+void quantize_row_q4_k(block_q4_k_t* __restrict__ vy, const float* __restrict__ x, int k) {
   MLLM_RT_ASSERT(k % QK_K == 0);
-  block_q4_k_t* __restrict y = (block_q4_k_t*)vy;
+  block_q4_k_t* __restrict__ y = (block_q4_k_t*)vy;
   quantize_row_q4_k_reference(x, y, k);
 }
 
-void quantize_row_q8_K_reference(const float* __restrict x, block_q8_k_t* __restrict y, int k) {
+void quantize_row_q8_K_reference(const float* __restrict__ x, block_q8_k_t* __restrict__ y, int k) {
   MLLM_RT_ASSERT(k % QK_K == 0);
   const int nb = k / QK_K;
 
@@ -221,11 +221,11 @@ void quantize_row_q8_K_reference(const float* __restrict x, block_q8_k_t* __rest
   }
 }
 
-void quantize_row_q8_k(void* __restrict y, const float* __restrict x, int k) {
+void quantize_row_q8_k(void* __restrict__ y, const float* __restrict__ x, int k) {
   quantize_row_q8_K_reference(x, (block_q8_k_t*)y, k);
 }
 
-void dequantize_row_q8_k(float* __restrict y, const block_q8_k_t* __restrict x, int k) {
+void dequantize_row_q8_k(float* __restrict__ y, const block_q8_k_t* __restrict__ x, int k) {
   MLLM_RT_ASSERT(k % QK_K == 0);
   const int nb = k / QK_K;
 

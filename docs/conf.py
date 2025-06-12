@@ -1,5 +1,7 @@
 import os
 import sys
+import textwrap
+
 
 sys.path.insert(0, os.path.abspath("../pymllm"))
 sys.path.insert(0, os.path.abspath("../"))
@@ -18,7 +20,36 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.autosummary",
     "myst_parser",
+    "breathe",
+    "exhale",
 ]
+this_file_dir = os.path.abspath(os.path.dirname(__file__))
+doxygen_xml_dir = os.path.join(this_file_dir, "xml")
+breathe_projects = {"mllm": doxygen_xml_dir}
+breathe_default_project = "mllm"
+
+repo_root = os.path.dirname(this_file_dir)
+
+# Setup the exhale extension
+exhale_args = {
+    "containmentFolder": f"{os.path.join(this_file_dir, 'CppAPI')}",
+    "rootFileName": "library_root.rst",
+    "rootFileTitle": "Library API",
+    "doxygenStripFromPath": repo_root,
+    "exhaleExecutesDoxygen": True,
+    "exhaleUseDoxyfile": True,
+    "verboseBuild": True,
+    "contentsDirectives": False,
+    "pageLevelConfigMeta": ":github_url: https://github.com/chenghuawang/mllm-advanced/",
+    "contentsTitle": "Page Contents",
+    "kindsWithContentsDirectives": ["class", "file", "namespace", "struct"],
+    "afterTitleDescription": textwrap.dedent(
+        """
+        Welcome to the developer reference for the MLLM C++ API.
+    """
+    ),
+}
+
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
@@ -30,7 +61,6 @@ myst_enable_extensions = [
 language = "en"
 languages = ["en", "zh"]
 exclude_patterns = ["build"]
-source_suffix = [".md"]
 pygments_style = "sphinx"
 todo_include_todos = False
 # == html settings

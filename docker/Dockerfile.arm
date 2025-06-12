@@ -14,6 +14,8 @@ RUN apt-get update && \
     git \
     wget \
     unzip \
+    doxygen \
+    graphviz \
     llvm-dev \
     ninja-build \
     libtinfo-dev \

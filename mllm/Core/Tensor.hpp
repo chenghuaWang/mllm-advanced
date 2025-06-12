@@ -42,110 +42,295 @@ struct SliceIndicesPair {
 
 using SliceIndices = std::vector<SliceIndicesPair>;
 
+/**
+ * @class Tensor
+ * @brief Represents a multi-dimensional array (tensor) with various operations and metadata.
+ *
+ * This class provides functionality for tensor creation, manipulation, and inspection.
+ * It supports operations like arithmetic, slicing, reshaping, device transfer, and more.
+ * Tensors can reside on different devices (CPU/GPU/NPU) and support multiple data types.
+ */
 class Tensor {
  public:
+  /**
+   * @brief Default constructor. Creates an empty (null) tensor.
+   */
   Tensor() = default;
 
+  /**
+   * @brief Constructs a tensor from an existing TensorViewImpl.
+   * @param impl Shared pointer to the underlying implementation object.
+   */
   explicit Tensor(const std::shared_ptr<TensorViewImpl>& impl);
 
+  /**
+   * @brief Creates an uninitialized tensor with specified shape and attributes.
+   * @note Empty tensor also has its TensorStorageImpl. Which means it is unique.
+   * @param shape Dimensions of the tensor.
+   * @param dtype Data type (default: kFp32).
+   * @param device Target device (default: kCPU).
+   * @return New tensor but NO MEMORY ALLOCTED!!!
+   */
   static Tensor empty(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                       DeviceTypes device = kCPU);
 
+  /**
+   * @brief Allocates memory for the tensor if not already allocated.
+   * @return Reference to this tensor for chaining.
+   * @note Must be called before accessing data in uninitialized tensors.
+   */
   Tensor& alloc();
 
+  /**
+   * @brief Creates and attaches an auxiliary tensor view to this tensor.
+   * @param extra_tensor_name Unique identifier for the auxiliary view.
+   * @param shape Dimensions of the auxiliary tensor.
+   * @param dtype Data type (default: kFp32).
+   * @param device Target device (default: kCPU).
+   * @return Reference to this tensor for chaining.
+   * @note This function is designed for quantized Tensor. If one Tensor is quantized to int8 using
+   * per tensor quantization method, you can use this_tensor.allocExtraTensorView("scale", shape,
+   * kFp32, kCPU); to attach a `scale` tensor to this tensor.
+   */
   Tensor& allocExtraTensorView(const std::string& extra_tensor_name,
                                const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                                DeviceTypes device = kCPU);
 
+  /**
+   * @brief Retrieves a previously attached auxiliary tensor view.
+   * @param extra_tensor_name Name of the auxiliary tensor.
+   * @return The requested tensor view.
+   * @note This function is designed for quantized Tensor. If one Tensor is quantized to int8 using
+   * per tensor quantization method, you can use
+   * this_tensor.getExtraTensorViewInTensor("scale").item<float>(); to get a `scale` tensor from
+   * this tensor.
+   */
   Tensor getExtraTensorViewInTensor(const std::string& extra_tensor_name);
 
+  /**
+   * @brief Creates a tensor filled with zeros.
+   * @param shape Dimensions of the tensor.
+   * @param dtype Data type (default: kFp32).
+   * @param device Target device (default: kCPU).
+   * @return New tensor with initialized zero values.
+   */
   static Tensor zeros(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                       DeviceTypes device = kCPU);
 
+  /**
+   * @brief Creates a tensor filled with ones.
+   * @param shape Dimensions of the tensor.
+   * @param dtype Data type (default: kFp32).
+   * @param device Target device (default: kCPU).
+   * @return New tensor with initialized one values.
+   */
   static Tensor ones(const std::vector<int32_t>& shape, DataTypes dtype = kFp32,
                      DeviceTypes device = kCPU);
 
-  // Make a slice of the tensor.
-  // If step is 1, this slice will always trying to use shallow copy.
+  /**
+   * @brief Creates a shallow view (slice) of the tensor.
+   * @param slice_index Slice specification.
+   * @return New tensor view referencing the sliced data.
+   * @note Uses shallow copy when step size is 1; may be unsafe for GPU tensors.
+   */
   Tensor operator[](const SliceIndices& slice_index);
 
+  /**
+   * @brief Accesses a tensor element at specified coordinates.
+   * @tparam T Expected data type (must match tensor dtype).
+   * @param offsets Multi-dimensional indices.
+   * @return Reference to the element.
+   */
   template<typename T>
   T& at(const std::vector<int32_t>& offsets) {
     return *(offsettedPtr<T>(offsets));
   }
 
+  /// @name Arithmetic Operations
+  /// Element-wise operations between tensors.
+  /// @{
   Tensor operator+(const Tensor& rhs);
-
   Tensor operator-(const Tensor& rhs);
-
   Tensor operator*(const Tensor& rhs);
-
   Tensor operator/(const Tensor& rhs);
+  /// @}
 
+  /// @name Scalar Operations
+  /// Element-wise operations with scalar values.
+  /// @{
   Tensor operator+(float rhs);
-
   Tensor operator-(float rhs);
-
   Tensor operator*(float rhs);
-
   Tensor operator/(float rhs);
+  /// @}
 
+  /**
+   * @brief Swaps two dimensions of the tensor.
+   * @param dim0 First dimension index.
+   * @param dim1 Second dimension index.
+   * @return New tensor with transposed dimensions.
+   */
   Tensor transpose(int dim0, int dim1);
 
+  /**
+   * @brief Transfers tensor to specified device.
+   * @param device Target device.
+   * @return New tensor on target device (data copied if needed).
+   */
   Tensor to(DeviceTypes device);
 
+  /**
+   * @brief Converts tensor to specified data type.
+   * @param dtype Target data type.
+   * @return New tensor with converted data type.
+   */
   Tensor to(DataTypes dtype);
 
+  /**
+   * @brief Shortcut for moving tensor to CPU.
+   * @return CPU-resident tensor.
+   */
   Tensor cpu();
 
+  /**
+   * @brief Shortcut for moving tensor to GPU.
+   * @return GPU-resident tensor.
+   */
   Tensor cuda();
 
+  /**
+   * @brief Gets the tensor's name.
+   * @return Name string (empty if unnamed).
+   */
   [[nodiscard]] std::string name() const;
 
+  /**
+   * @brief Gets memory type.
+   * @return Memory type identifier.
+   */
   [[nodiscard]] TensorMemTypes memType() const;
 
+  /**
+   * @brief Sets tensor name.
+   * @param name New name for tensor.
+   * @return Reference to this tensor for chaining.
+   */
   Tensor& setName(const std::string& name);
 
+  /**
+   * @brief Sets memory type.
+   * @param mem_type New memory type.
+   * @return Reference to this tensor for chaining.
+   */
   Tensor& setMemType(TensorMemTypes mem_type);
 
+  /**
+   * @brief Gets data type.
+   * @return Current data type.
+   */
   [[nodiscard]] DataTypes dtype() const;
 
+  /**
+   * @brief Gets device location.
+   * @return Current device type.
+   */
   [[nodiscard]] DeviceTypes device() const;
 
+  /**
+   * @brief Gets tensor dimensions.
+   * @return Shape vector.
+   */
   [[nodiscard]] std::vector<int32_t> shape() const;
 
+  /**
+   * @brief Calculates total number of elements.
+   * @return Product of all dimensions.
+   */
   [[nodiscard]] size_t numel() const;
 
+  /**
+   * @brief Gets unique tensor ID.
+   * @return Universally unique identifier.
+   */
   [[nodiscard]] uint32_t uuid() const;
 
+  /**
+   * @brief Checks memory layout contiguity.
+   * @return True if memory is contiguous.
+   */
   [[nodiscard]] bool isContiguous() const;
 
+  /**
+   * @brief Creates contiguous copy if non-contiguous.
+   * @return Contiguous tensor (may be a view or copy).
+   */
   Tensor contiguous();
 
+  /**
+   * @brief Reshapes tensor without changing data order.
+   * @param shape New dimensions.
+   * @return Reshaped tensor view.
+   */
   Tensor reshape(const std::vector<int>& shape);
 
-  // FIXME: This function is in an early age.
+  /**
+   * @brief Experimental: Creates tensor view with custom indexing.
+   * @param indicies View specification.
+   * @return New tensor view.
+   * @warning This function is in an early age.
+   */
   Tensor view(const std::vector<int>& indicies);
 
+  /**
+   * @brief Gets raw pointer offset by indices.
+   * @param offsets Multi-dimensional indices.
+   * @return Raw char pointer to the memory location.
+   */
   char* offsettedRawPtr(const std::vector<int32_t>& offsets);
 
+  /**
+   * @brief Accesses the underlying implementation object.
+   * @return Shared pointer to TensorViewImpl.
+   */
   [[nodiscard]] inline std::shared_ptr<TensorViewImpl> impl() const { return impl_; }
 
+  /**
+   * @brief Typed pointer access with offset.
+   * @tparam T Expected data type.
+   * @param offsets Multi-dimensional indices.
+   * @return Typed pointer to the element.
+   */
   template<typename T>
   T* offsettedPtr(const std::vector<int32_t>& offsets) {
     return impl_->offsettedPtr<T>(offsets);
   }
 
+  /**
+   * @brief Gets base pointer of tensor data.
+   * @tparam T Expected data type.
+   * @return Typed base pointer.
+   */
   template<typename T>
   T* ptr() const {
     return impl_->ptr<T>();
   }
 
+  /**
+   * @brief Accesses scalar value (for 0D or 1-element tensors).
+   * @tparam T Expected data type.
+   * @return Reference to the scalar value.
+   */
   template<typename T>
   T& item() {
     return at<T>({0});
   }
 
+  /**
+   * @brief Prints tensor metadata and data.
+   * @tparam T Data type for interpretation.
+   * @details Output includes address, name, shape, device, dtype, and formatted data.
+   * @note Data printing is truncated for large tensors.
+   */
   template<typename T>
   void print() {
     fmt::println("Tensor Meta Info");
@@ -159,6 +344,11 @@ class Tensor {
   }
 
  private:
+  /**
+   * @brief Internal helper for formatted data printing.
+   * @tparam T Data type for interpretation.
+   * @details Prints tensor data recursively with indentation. Truncates large dimensions.
+   */
   template<typename T>
   void printData() {
     const auto& tensor_shape = shape();
@@ -169,6 +359,15 @@ class Tensor {
     printRecursive<T>(tensor_shape, 0, {}, "");
   }
 
+  /**
+   * @brief Recursively prints tensor data per dimension.
+   * @tparam T Data type for interpretation.
+   * @param shape Tensor dimensions.
+   * @param dim Current dimension being processed.
+   * @param indices Accumulated indices for lower dimensions.
+   * @param indent Current indentation string.
+   * @note Automatically truncates dimensions >32 elements.
+   */
   template<typename T>
   void printRecursive(const std::vector<int32_t>& shape, size_t dim,
                       std::vector<int32_t> indices,  // NOLINT(performance-unnecessary-value-param)
@@ -221,7 +420,10 @@ class Tensor {
     if (dim == 0) fmt::println("");
   }
 
+  ///< Primary tensor data implementation
   std::shared_ptr<TensorViewImpl> impl_ = nullptr;
+
+  ///< Auxiliary tensor views
   std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>> extra_tensor_view_;
 };
 

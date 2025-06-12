@@ -16,8 +16,8 @@
 namespace mllm::arm {
 
 namespace {
-inline void _ew_sub_fp32_tile_16(const float* __restrict a, const float* __restrict b,
-                                 float* __restrict c) {
+inline void _ew_sub_fp32_tile_16(const float* __restrict__ a, const float* __restrict__ b,
+                                 float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -27,8 +27,8 @@ inline void _ew_sub_fp32_tile_16(const float* __restrict a, const float* __restr
   }
 }
 
-inline void _ew_mul_fp32_tile_16(const float* __restrict a, const float* __restrict b,
-                                 float* __restrict c) {
+inline void _ew_mul_fp32_tile_16(const float* __restrict__ a, const float* __restrict__ b,
+                                 float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -38,8 +38,8 @@ inline void _ew_mul_fp32_tile_16(const float* __restrict a, const float* __restr
   }
 }
 
-inline void _ew_div_fp32_tile_16(const float* __restrict a, const float* __restrict b,
-                                 float* __restrict c) {
+inline void _ew_div_fp32_tile_16(const float* __restrict__ a, const float* __restrict__ b,
+                                 float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -49,8 +49,8 @@ inline void _ew_div_fp32_tile_16(const float* __restrict a, const float* __restr
   }
 }
 
-inline void _ew_add_constant_fp32_tile_16(const float* __restrict a, const float b,
-                                          float* __restrict c) {
+inline void _ew_add_constant_fp32_tile_16(const float* __restrict__ a, const float b,
+                                          float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -60,8 +60,8 @@ inline void _ew_add_constant_fp32_tile_16(const float* __restrict a, const float
   }
 }
 
-inline void _ew_sub_constant_fp32_tile_16(const float* __restrict a, const float b,
-                                          float* __restrict c) {
+inline void _ew_sub_constant_fp32_tile_16(const float* __restrict__ a, const float b,
+                                          float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -71,8 +71,8 @@ inline void _ew_sub_constant_fp32_tile_16(const float* __restrict a, const float
   }
 }
 
-inline void _ew_mul_constant_fp32_tile_16(const float* __restrict a, const float b,
-                                          float* __restrict c) {
+inline void _ew_mul_constant_fp32_tile_16(const float* __restrict__ a, const float b,
+                                          float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -82,8 +82,8 @@ inline void _ew_mul_constant_fp32_tile_16(const float* __restrict a, const float
   }
 }
 
-inline void _ew_div_constant_fp32_tile_16(const float* __restrict a, const float b,
-                                          float* __restrict c) {
+inline void _ew_div_constant_fp32_tile_16(const float* __restrict__ a, const float b,
+                                          float* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 4; ++i) {
     const int offset = i * 4;
@@ -94,7 +94,7 @@ inline void _ew_div_constant_fp32_tile_16(const float* __restrict a, const float
 }
 }  // namespace
 
-void ew_add_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+void ew_add_fp32(const float* __restrict__ A, const float* __restrict__ B, float* __restrict__ C,
                  int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 floats per SIMD operation * 4 operations
 
@@ -173,7 +173,7 @@ void ew_add_fp32(const float* __restrict A, const float* __restrict B, float* __
   for (int i = 0; i < lefts; ++i) { c_ptr[i] = a_ptr[i] + b_ptr[i]; }
 }
 
-void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+void ew_sub_fp32(const float* __restrict__ A, const float* __restrict__ B, float* __restrict__ C,
                  int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -198,7 +198,7 @@ void ew_sub_fp32(const float* __restrict A, const float* __restrict B, float* __
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - b_remain[i]; }
 }
 
-void ew_mul_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+void ew_mul_fp32(const float* __restrict__ A, const float* __restrict__ B, float* __restrict__ C,
                  int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -216,7 +216,7 @@ void ew_mul_fp32(const float* __restrict A, const float* __restrict B, float* __
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * b_remain[i]; }
 }
 
-void ew_div_fp32(const float* __restrict A, const float* __restrict B, float* __restrict C,
+void ew_div_fp32(const float* __restrict__ A, const float* __restrict__ B, float* __restrict__ C,
                  int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -234,7 +234,7 @@ void ew_div_fp32(const float* __restrict A, const float* __restrict B, float* __
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / b_remain[i]; }
 }
 
-void ew_add_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+void ew_add_constant_fp32(const float* __restrict__ A, const float B, float* __restrict__ C,
                           int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -251,7 +251,7 @@ void ew_add_constant_fp32(const float* __restrict A, const float B, float* __res
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] + B; }
 }
 
-void ew_sub_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+void ew_sub_constant_fp32(const float* __restrict__ A, const float B, float* __restrict__ C,
                           int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -268,7 +268,7 @@ void ew_sub_constant_fp32(const float* __restrict A, const float B, float* __res
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - B; }
 }
 
-void ew_mul_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+void ew_mul_constant_fp32(const float* __restrict__ A, const float B, float* __restrict__ C,
                           int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -285,7 +285,7 @@ void ew_mul_constant_fp32(const float* __restrict A, const float B, float* __res
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * B; }
 }
 
-void ew_div_constant_fp32(const float* __restrict A, const float B, float* __restrict C,
+void ew_div_constant_fp32(const float* __restrict__ A, const float B, float* __restrict__ C,
                           int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 16;  // 4 vectors * 4 elements
   const int32_t blocks = len / TILE_SIZE;
@@ -305,8 +305,8 @@ void ew_div_constant_fp32(const float* __restrict A, const float B, float* __res
 #if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else
-void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
-                 float16_t* __restrict C, int32_t len, int threads) {
+void ew_add_fp16(const float16_t* __restrict__ A, const float16_t* __restrict__ B,
+                 float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;
 
   if (threads) {
@@ -384,8 +384,8 @@ void ew_add_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
 }
 
 namespace {
-inline void _ew_sub_fp16_tile_32(const float16_t* __restrict a, const float16_t* __restrict b,
-                                 float16_t* __restrict c) {
+inline void _ew_sub_fp16_tile_32(const float16_t* __restrict__ a, const float16_t* __restrict__ b,
+                                 float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -395,8 +395,8 @@ inline void _ew_sub_fp16_tile_32(const float16_t* __restrict a, const float16_t*
   }
 }
 
-inline void _ew_mul_fp16_tile_32(const float16_t* __restrict a, const float16_t* __restrict b,
-                                 float16_t* __restrict c) {
+inline void _ew_mul_fp16_tile_32(const float16_t* __restrict__ a, const float16_t* __restrict__ b,
+                                 float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -406,8 +406,8 @@ inline void _ew_mul_fp16_tile_32(const float16_t* __restrict a, const float16_t*
   }
 }
 
-inline void _ew_div_fp16_tile_32(const float16_t* __restrict a, const float16_t* __restrict b,
-                                 float16_t* __restrict c) {
+inline void _ew_div_fp16_tile_32(const float16_t* __restrict__ a, const float16_t* __restrict__ b,
+                                 float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -417,8 +417,8 @@ inline void _ew_div_fp16_tile_32(const float16_t* __restrict a, const float16_t*
   }
 }
 
-inline void _ew_add_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
-                                          float16_t* __restrict c) {
+inline void _ew_add_constant_fp16_tile_32(const float16_t* __restrict__ a, const float16_t b,
+                                          float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -428,8 +428,8 @@ inline void _ew_add_constant_fp16_tile_32(const float16_t* __restrict a, const f
   }
 }
 
-inline void _ew_sub_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
-                                          float16_t* __restrict c) {
+inline void _ew_sub_constant_fp16_tile_32(const float16_t* __restrict__ a, const float16_t b,
+                                          float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -439,8 +439,8 @@ inline void _ew_sub_constant_fp16_tile_32(const float16_t* __restrict a, const f
   }
 }
 
-inline void _ew_mul_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
-                                          float16_t* __restrict c) {
+inline void _ew_mul_constant_fp16_tile_32(const float16_t* __restrict__ a, const float16_t b,
+                                          float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -450,8 +450,8 @@ inline void _ew_mul_constant_fp16_tile_32(const float16_t* __restrict a, const f
   }
 }
 
-inline void _ew_div_constant_fp16_tile_32(const float16_t* __restrict a, const float16_t b,
-                                          float16_t* __restrict c) {
+inline void _ew_div_constant_fp16_tile_32(const float16_t* __restrict__ a, const float16_t b,
+                                          float16_t* __restrict__ c) {
 #pragma unroll
   for (int i = 0; i < 8; ++i) {
     const int offset = i * 8;
@@ -462,8 +462,8 @@ inline void _ew_div_constant_fp16_tile_32(const float16_t* __restrict a, const f
 }
 }  // namespace
 
-void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
-                 float16_t* __restrict C, int32_t len, int threads) {
+void ew_sub_fp16(const float16_t* __restrict__ A, const float16_t* __restrict__ B,
+                 float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
@@ -480,8 +480,8 @@ void ew_sub_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - b_remain[i]; }
 }
 
-void ew_mul_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
-                 float16_t* __restrict C, int32_t len, int threads) {
+void ew_mul_fp16(const float16_t* __restrict__ A, const float16_t* __restrict__ B,
+                 float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
@@ -498,8 +498,8 @@ void ew_mul_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * b_remain[i]; }
 }
 
-void ew_div_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
-                 float16_t* __restrict C, int32_t len, int threads) {
+void ew_div_fp16(const float16_t* __restrict__ A, const float16_t* __restrict__ B,
+                 float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
@@ -516,8 +516,8 @@ void ew_div_fp16(const float16_t* __restrict A, const float16_t* __restrict B,
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / b_remain[i]; }
 }
 
-void ew_add_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
-                          int32_t len, int threads) {
+void ew_add_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
+                          float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
@@ -533,8 +533,8 @@ void ew_add_constant_fp16(const float16_t* __restrict A, const float16_t B, floa
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] + B; }
 }
 
-void ew_sub_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
-                          int32_t len, int threads) {
+void ew_sub_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
+                          float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
@@ -550,8 +550,8 @@ void ew_sub_constant_fp16(const float16_t* __restrict A, const float16_t B, floa
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] - B; }
 }
 
-void ew_mul_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
-                          int32_t len, int threads) {
+void ew_mul_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
+                          float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
@@ -567,8 +567,8 @@ void ew_mul_constant_fp16(const float16_t* __restrict A, const float16_t B, floa
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] * B; }
 }
 
-void ew_div_constant_fp16(const float16_t* __restrict A, const float16_t B, float16_t* __restrict C,
-                          int32_t len, int threads) {
+void ew_div_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
+                          float16_t* __restrict__ C, int32_t len, int threads) {
   constexpr int32_t TILE_SIZE = 32;  // 4 vectors * 8 elements
   const int32_t blocks = len / TILE_SIZE;
   const int32_t lefts = len % TILE_SIZE;
