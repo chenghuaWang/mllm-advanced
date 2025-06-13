@@ -35,6 +35,8 @@ class RMSNormOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
+  params_t params() override;
+
  protected:
   Tensor weight_;
   RMSNormOpCargo cargo_;

@@ -74,16 +74,21 @@ bool KQP_linear_fp16_fp16_fp16p_mxk_kxn::quantize(const ir::op_ptr_t& op, const 
                                out_channels);
 
   // Assign new weights to the linear op
+  new_weights.setName(original_weight.name());
   mllm_op->weight() = new_weights;
 
   return true;
+}
+
+std::shared_ptr<KQP_linear_fp16_fp16_fp16p_mxk_kxn> KQP_linear_fp16_fp16_fp16p_mxk_kxn::create() {
+  return std::make_shared<KQP_linear_fp16_fp16_fp16p_mxk_kxn>();
 }
 
 bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::match(const ir::op_ptr_t& op,
                                                     const MllmModelCfg& cfg) {
   auto mllm_op = op->cast_<ir::linalg::LinearOp>()->getAOp();
 
-  std::string name = mllm_op->name();
+  std::string name = cfg.opImplType(mllm_op->name());
   std::vector<std::string> name_result;
   size_t name_prev = 0, name_pos;
   while ((name_pos = name.find(':', name_prev)) != std::string::npos) {
@@ -92,13 +97,14 @@ bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::match(const ir::op_ptr_t& op,
   }
   if (name_prev < name.length()) { name_result.push_back(name.substr(name_prev)); }
 
-  return cfg.opImplType(name_result[0]) == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk";
+  return name_result[0] == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk";
 }
 
 bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::quantize(const ir::op_ptr_t& op,
                                                        const MllmModelCfg& cfg) {
   auto mllm_op = (LinearOp*)(op->cast_<ir::linalg::LinearOp>()->getAOp());
-  std::string name = mllm_op->name();
+
+  std::string name = cfg.opImplType(mllm_op->name());
   std::vector<std::string> name_result;
   size_t name_prev = 0, name_pos;
   while ((name_pos = name.find(':', name_prev)) != std::string::npos) {
@@ -170,16 +176,22 @@ bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::quantize(const ir::op_ptr_t& op,
                                      in_channels, tile_cfg);
 
   // Assign new weights to the linear op
+  new_weights.setName(original_weight.name());
   mllm_op->weight() = new_weights;
 
   return true;
+}
+
+std::shared_ptr<KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk>
+KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::create() {
+  return std::make_shared<KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk>();
 }
 
 bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::match(const ir::op_ptr_t& op,
                                                     const MllmModelCfg& cfg) {
   auto mllm_op = op->cast_<ir::linalg::LinearOp>()->getAOp();
 
-  std::string name = mllm_op->name();
+  std::string name = cfg.opImplType(mllm_op->name());
   std::vector<std::string> name_result;
   size_t name_prev = 0, name_pos;
   while ((name_pos = name.find(':', name_prev)) != std::string::npos) {
@@ -188,13 +200,14 @@ bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::match(const ir::op_ptr_t& op,
   }
   if (name_prev < name.length()) { name_result.push_back(name.substr(name_prev)); }
 
-  return cfg.opImplType(name_result[0]) == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_kxn";
+  return name_result[0] == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_kxn";
 }
 
 bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::quantize(const ir::op_ptr_t& op,
                                                        const MllmModelCfg& cfg) {
   auto mllm_op = (LinearOp*)(op->cast_<ir::linalg::LinearOp>()->getAOp());
-  std::string name = mllm_op->name();
+
+  std::string name = cfg.opImplType(mllm_op->name());
   std::vector<std::string> name_result;
   size_t name_prev = 0, name_pos;
   while ((name_pos = name.find(':', name_prev)) != std::string::npos) {
@@ -266,9 +279,15 @@ bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::quantize(const ir::op_ptr_t& op,
                                      out_channels, tile_cfg);
 
   // Assign new weights to the linear op
+  new_weights.setName(original_weight.name());
   mllm_op->weight() = new_weights;
 
   return true;
+}
+
+std::shared_ptr<KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn>
+KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::create() {
+  return std::make_shared<KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn>();
 }
 
 namespace MLLM_NAMESPACE_ANONYMOUS {
@@ -312,6 +331,11 @@ void visitCallGraph(KaiQuantizationPass* this_pass, const std::shared_ptr<ir::IR
 }
 
 }  // namespace MLLM_NAMESPACE_ANONYMOUS
+
+KaiQuantizationPass::KaiQuantizationPass(const MllmModelCfg& cfg) : cfg_(cfg) {
+  regPattern<KQP_linear_fp16_fp16_fp16p_mxk_kxn, KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk,
+             KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn>();
+}
 
 uint8_t KaiQuantizationPass::run(const ir::node_ptr_t& op) {
   // The top op should be ModuleOp

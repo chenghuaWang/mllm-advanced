@@ -44,4 +44,10 @@ void LLMEmbeddingTokenOp::setup(const std::vector<Tensor>& inputs, std::vector<T
   outputs[0].alloc();
 }
 
+LLMEmbeddingTokenOp::params_t LLMEmbeddingTokenOp::params() {
+  params_t ret;
+  ret.insert({name() + ".weight", weight_});
+  return ret;
+}
+
 }  // namespace mllm

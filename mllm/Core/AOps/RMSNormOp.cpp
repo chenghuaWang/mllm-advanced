@@ -40,4 +40,10 @@ void RMSNormOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& ou
   outputs[0].alloc();
 }
 
+RMSNormOp::params_t RMSNormOp::params() {
+  params_t ret;
+  ret.insert({name() + ".weight", weight_});
+  return ret;
+}
+
 }  // namespace mllm

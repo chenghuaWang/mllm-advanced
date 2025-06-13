@@ -16,6 +16,7 @@
 // ...
 
 #include <nlohmann/json.hpp>
+#include <vector>
 
 namespace mllm {
 
@@ -26,6 +27,8 @@ class MllmEngineCfg {
 class MllmModelCfg {
  public:
   explicit MllmModelCfg(const std::string& file_path);
+
+  [[nodiscard]] std::string modelName() const;
 
   /**
    * @brief Parses the operator configuration section from the loaded JSON file.
@@ -56,6 +59,10 @@ class MllmModelCfg {
    * operator implementation to instantiate for each node in the computation graph.
    */
   [[nodiscard]] std::string opImplType(const std::string& op_name) const;
+
+  [[nodiscard]] std::string opType(const std::string& op_name) const;
+
+  [[nodiscard]] std::vector<std::string> opNames() const;
 
  private:
   nlohmann::json json_;

@@ -24,6 +24,13 @@ MllmModelCfg::MllmModelCfg(const std::string& file_path) {
   json_ = json::parse(file);
 }
 
+std::string MllmModelCfg::modelName() const {
+  if (!json_.contains("ModelName")) {
+    MLLM_ERROR_EXIT(kError, "Missing required field: ModelName in config");
+  }
+  return json_["ModelName"].get<std::string>();
+}
+
 std::string MllmModelCfg::opImplType(const std::string& op_name) const {
   if (!json_.contains("Ops") || !json_["Ops"].contains(op_name)
       || !json_["Ops"][op_name].contains("implType")) {
@@ -31,6 +38,23 @@ std::string MllmModelCfg::opImplType(const std::string& op_name) const {
   }
 
   return json_["Ops"][op_name]["implType"].get<std::string>();
+}
+
+std::string MllmModelCfg::opType(const std::string& op_name) const {
+  if (!json_.contains("Ops") || !json_["Ops"].contains(op_name)
+      || !json_["Ops"][op_name].contains("type")) {
+    MLLM_ERROR_EXIT(kError, "Missing required field in config for operator: {}", op_name);
+  }
+
+  return json_["Ops"][op_name]["type"].get<std::string>();
+}
+
+std::vector<std::string> MllmModelCfg::opNames() const {
+  std::vector<std::string> result;
+  if (json_.contains("Ops")) {
+    for (const auto& [key, value] : json_["Ops"].items()) { result.push_back(key); }
+  }
+  return result;
 }
 
 }  // namespace mllm

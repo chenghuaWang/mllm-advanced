@@ -18,6 +18,7 @@ Checks: >
     -google-readability-casting,
     -modernize-use-auto,
     -google-readability-avoid-underscore-in-googletest-name,
+    -performance-enum-size,
 
 CheckOptions:
   - key: IndentWidth

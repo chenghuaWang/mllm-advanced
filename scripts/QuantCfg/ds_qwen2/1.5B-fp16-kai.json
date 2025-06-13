@@ -1,0 +1,33 @@
+{
+    "ModelName": "DeepSeek-R1-Distill-Qwen-1.5B",
+    "Ops": {
+        "model.layers.0.mlp.down_proj": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        },
+        "model.layers.0.mlp.gate_proj": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        },
+        "model.layers.0.mlp.up_proj.weight": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        },
+        "model.layers.0.self_attn.k_proj": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        },
+        "model.layers.0.self_attn.q_proj": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        },
+        "model.layers.0.self_attn.v_proj": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        },
+        "model.layers.0.self_attn.o_proj": {
+            "type": "Linear",
+            "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
+        }
+    }
+}

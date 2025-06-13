@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/TensorImpl.hpp"
 
 namespace mllm {
@@ -103,4 +104,25 @@ class ParameterLoader {
 
 std::shared_ptr<ParameterLoader> load(const std::string& file_path);
 
+class ParameterWriter {
+ public:
+  ParameterWriter() = default;
+
+  void addParams(const std::unordered_map<std::string, Tensor>& params);
+
+  inline void setModelName(const std::string& model_name) { model_name_ = model_name; }
+
+  void write(const std::string& filename);
+
+ private:
+  std::string model_name_;
+  std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>> params_;
+};
+
+void write(const std::string& file_path, const std::unordered_map<std::string, Tensor>& params,
+           const std::string& model_name);
+
+void write(const std::string& file_path,
+           const std::unordered_map<std::string, std::shared_ptr<TensorViewImpl>>& params,
+           const std::string& model_name);
 }  // namespace mllm

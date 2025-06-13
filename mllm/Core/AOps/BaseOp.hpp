@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include <unordered_map>
 #include "mllm/Core/DataTypes.hpp"
 #include "mllm/Core/DeviceTypes.hpp"
 #include "mllm/Core/Tensor.hpp"
@@ -77,6 +78,7 @@ inline const char* opType2Str(OpType type) {
     case OpType::kH2D: return "kH2D";
     case OpType::kSplit: return "kSplit";
     case OpType::kView: return "kView";
+    case OpType::kFlashAttention_2: return "kFlashAttention_2";
     case OpType::kOpType_End: return "kOpType_End";
     default: return "Unknown";
   }
@@ -147,6 +149,8 @@ class BaseOpCargoBase {
 
 class BaseOp : public std::enable_shared_from_this<BaseOp> {
  public:
+  using params_t = std::unordered_map<std::string, Tensor>;
+
   explicit BaseOp(OpType op_type);
 
   virtual void load(const std::shared_ptr<ParameterLoader>& ploader) {};
@@ -159,6 +163,8 @@ class BaseOp : public std::enable_shared_from_this<BaseOp> {
   virtual void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
 
   virtual void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
+
+  virtual params_t params() { return {}; }
 
   [[nodiscard]] std::string name() const;
 

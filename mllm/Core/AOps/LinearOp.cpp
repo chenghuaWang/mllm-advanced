@@ -49,4 +49,11 @@ void LinearOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& out
   outputs[0].alloc();
 }
 
+LinearOp::params_t LinearOp::params() {
+  params_t ret;
+  ret.insert({name() + ".weight", weight_});
+  if (cargo_.bias) { ret.insert({name() + ".bias", bias_}); }
+  return ret;
+}
+
 }  // namespace mllm
