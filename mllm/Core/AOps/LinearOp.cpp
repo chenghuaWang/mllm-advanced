@@ -14,6 +14,37 @@
 
 namespace mllm {
 
+LinearOpImplType LinearOpCargo::parseLinearOpImplTypeStr(const std::string& type_str) {
+  if (type_str == "Default") { return LinearOpImplType::kDefault; }
+  if (type_str == "Kai_Start") { return LinearOpImplType::kKai_Start; }
+  if (type_str == "KaiLinear_fp16_fp16_fp16p_mxk_kxn") {
+    return LinearOpImplType::kKaiLinear_fp16_fp16_fp16p_mxk_kxn;
+  }
+  if (type_str == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp1x8_qsi4c32p4x8_1x4x32") {
+    return LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x8_qsi4c32p4x8_1x4x32;
+  }
+  if (type_str == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp1x8_qsi4c32p8x8_1x8x32") {
+    return LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x8_qsi4c32p8x8_1x8x32;
+  }
+  if (type_str == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32") {
+    return LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p4x8_8x4x32;
+  }
+  if (type_str == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_16x4x32") {
+    return LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p4x8_16x4x32;
+  }
+  if (type_str == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p8x8_4x8x32") {
+    return LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p8x8_4x8x32;
+  }
+  if (type_str == "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp1x4_qsi4c32p4x4_1x4") {
+    return LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x4_qsi4c32p4x4_1x4;
+  }
+  if (type_str == "Kai_End") { return LinearOpImplType::kKai_End; }
+
+  MLLM_WARN("Can't parse Linear Impl Type: {}. Fallback to default impl.", type_str);
+
+  return LinearOpImplType::kDefault;
+}
+
 LinearOp::LinearOp(const LinearOpCargo& cargo) : BaseOp(OpType::kLinear), cargo_(cargo) {}
 
 void LinearOp::load(const std::shared_ptr<ParameterLoader>& ploader) {

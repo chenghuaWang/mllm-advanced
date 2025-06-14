@@ -42,6 +42,9 @@ int main(int argc, char* argv[]) {
   auto& model_vocab_path = Argparse::add<std::string>("-vp|--model-vocab-path")
                                .help("Model vocab path.")
                                .meta("MODEL_VOCAB_PATH");
+  auto& model_config_path = Argparse::add<std::string>("-c|--model-config-path")
+                                .help("Model config path.")
+                                .meta("MODEL_CONFIG_PATH");
 
   Argparse::parse(argc, argv);
 
@@ -69,7 +72,7 @@ int main(int argc, char* argv[]) {
 
   if (model_tag.get() == "DeepSeek-R1-Distill-Qwen-1.5B-fp32") {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(model_vocab_path.get());
-    mllm::models::QWenConfig cfg;
+    mllm::models::QWenConfig cfg(model_config_path.get());
     mllm::models::QWenForCausalLM llm(cfg);
     llm.print();
     auto loader = mllm::load(model_param_path.get());

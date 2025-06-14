@@ -23,8 +23,6 @@
 #include "mllm/Nn/Module.hpp"
 #include "mllm/Models/ds_qwen2/configuration_ds_qwen2.hpp"
 
-#include "mllm/Utils/Dbg.hpp"
-
 namespace mllm::models {
 
 class QWenMLP final : public nn::Module {
@@ -37,10 +35,13 @@ class QWenMLP final : public nn::Module {
   QWenMLP() = default;
   explicit QWenMLP(const std::string& name, const QWenConfig& cfg) {
     selfAssignName(name);
-    gate_proj_ = reg<nn::Linear>(cfg.gate_proj_name, cfg.hidden_size, cfg.intermediate_size, false);
+    gate_proj_ = reg<nn::Linear>(cfg.gate_proj_name, cfg.hidden_size, cfg.intermediate_size, false,
+                                 false, cfg.linear_impl_type);
     silu_ = reg<nn::SiLU>("act");
-    up_proj_ = reg<nn::Linear>(cfg.up_proj_name, cfg.hidden_size, cfg.intermediate_size, false);
-    down_proj_ = reg<nn::Linear>(cfg.down_proj_name, cfg.intermediate_size, cfg.hidden_size, false);
+    up_proj_ = reg<nn::Linear>(cfg.up_proj_name, cfg.hidden_size, cfg.intermediate_size, false,
+                               false, cfg.linear_impl_type);
+    down_proj_ = reg<nn::Linear>(cfg.down_proj_name, cfg.intermediate_size, cfg.hidden_size, false,
+                                 false, cfg.linear_impl_type);
   }
 
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
@@ -82,14 +83,14 @@ class QWenAttention final : public nn::Module {
     head_dim_ = hidden_size_ / num_attention_heads_;
     num_key_value_groups_ = num_attention_heads_ / num_key_value_heads_;
 
-    q_proj_ =
-        reg<nn::Linear>(cfg.q_proj_name, hidden_size_, head_dim_ * num_attention_heads_, true);
-    k_proj_ =
-        reg<nn::Linear>(cfg.k_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true);
-    v_proj_ =
-        reg<nn::Linear>(cfg.v_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true);
-    o_proj_ =
-        reg<nn::Linear>(cfg.o_proj_name, head_dim_ * num_attention_heads_, hidden_size_, false);
+    q_proj_ = reg<nn::Linear>(cfg.q_proj_name, hidden_size_, head_dim_ * num_attention_heads_, true,
+                              false, cfg.linear_impl_type);
+    k_proj_ = reg<nn::Linear>(cfg.k_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true,
+                              false, cfg.linear_impl_type);
+    v_proj_ = reg<nn::Linear>(cfg.v_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true,
+                              false, cfg.linear_impl_type);
+    o_proj_ = reg<nn::Linear>(cfg.o_proj_name, head_dim_ * num_attention_heads_, hidden_size_,
+                              false, false, cfg.linear_impl_type);
     q_rope_ = reg<nn::RoPE>(cfg.q_rope_name, RoPETypes::kLlama2, cfg.rope_theta,
                             cfg.max_position_embeddings, head_dim_);
     k_rope_ = reg<nn::RoPE>(cfg.k_rope_name, RoPETypes::kLlama2, cfg.rope_theta,

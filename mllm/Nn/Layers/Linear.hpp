@@ -18,7 +18,7 @@ class Linear : public Layer {
  public:
   Linear();
 
-  Linear(int32_t in_channels, int32_t out_channels, bool bias = true, bool transpose = false);
+  Linear(int32_t in_channels, int32_t out_channels, bool bias = true, bool transpose = false,  LinearOpImplType impl_type = LinearOpImplType::kDefault);
 
   explicit Linear(const LinearOpCargo& cargo);
 

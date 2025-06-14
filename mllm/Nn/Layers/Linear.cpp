@@ -14,11 +14,13 @@ namespace mllm::nn {
 
 Linear::Linear() : Layer(OpType::kLinear, LinearOpCargo{}) {}
 
-Linear::Linear(int32_t in_channels, int32_t out_channels, bool bias, bool transpose)
+Linear::Linear(int32_t in_channels, int32_t out_channels, bool bias, bool transpose,
+               LinearOpImplType impl_type)
     : Layer(OpType::kLinear, LinearOpCargo{.in_channels = in_channels,
                                            .out_channels = out_channels,
                                            .bias = bias,
-                                           .transpose = transpose}) {}
+                                           .transpose = transpose,
+                                           .impl_type_ = impl_type}) {}
 
 Linear::Linear(const LinearOpCargo& cargo) : Layer(OpType::kLinear, cargo) {}
 

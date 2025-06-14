@@ -18,13 +18,13 @@
 #include "mllm/Backends/X86/X86Backend.hpp"
 #endif
 
-#include "mllm/Models/ds_qwen2/modeling_ds_qwen2_fa2_fp16.hpp"
+#include "mllm/Models/ds_qwen2/modeling_ds_qwen2.hpp"
 #include "mllm/Models/ds_qwen2/tokenization_ds_qwen2.hpp"
-#include "mllm/Models/ds_qwen2/configuration_ds_qwen2_fp16.hpp"
+#include "mllm/Models/ds_qwen2/configuration_ds_qwen2.hpp"
 
 #include "mllm/Utils/Argparse.hpp"
 
-using namespace mllm;
+using namespace mllm;  // NOLINT
 
 int main(int argc, char* argv[]) {
   auto& help = Argparse::add<bool>("-h|--help").help("Show help message.");
@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
                           .meta("FILE")
                           .positional();
   auto& se_json_fp = Argparse::add<std::string>("-j|--json").help("SentencePiece json file path.");
+  auto& model_cfg_path = Argparse::add<std::string>("-c|--cfg").help("Model config file path.");
   auto& perf = Argparse::add<bool>("-p|--perf").help("perf this example.");
 
   Argparse::parse(argc, argv);
@@ -44,6 +45,12 @@ int main(int argc, char* argv[]) {
 
   if (!model_files.isSet()) {
     MLLM_ERROR_EXIT(kError, "No input model file provided");
+    Argparse::printHelp();
+    return -1;
+  }
+
+  if (!model_cfg_path.isSet()) {
+    MLLM_ERROR_EXIT(kError, "No input model config file provided");
     Argparse::printHelp();
     return -1;
   }
@@ -72,7 +79,7 @@ int main(int argc, char* argv[]) {
 
   {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(se_json_fp.get());
-    mllm::models::QWenConfig cfg;
+    mllm::models::QWenConfig cfg(model_cfg_path.get());
     mllm::models::AutoLLM<mllm::models::QWenForCausalLM> auto_llm(cfg);
     auto_llm.model()->print();
 

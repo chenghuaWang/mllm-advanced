@@ -139,7 +139,7 @@ class MllmThreadPool {
 #define MLLM_PARALLEL_FOR_STEP(var, start, end, step) \
     MllmThreadPool::instance().parallelFor(start, end, step, [&](int var)
 
-#define MLLM_PARALLEL_FOR_CHUNK(var, start, end, step) \
+#define MLLM_PARALLEL_FOR_WO_CHUNK(var, start, end, step) \
     MllmThreadPool::instance().parallelForWoChunk(start, end, step, [&](int var)
 
 #define MLLM_PARALLEL_FOR_END )

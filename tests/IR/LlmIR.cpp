@@ -14,7 +14,7 @@
 
 #include "mllm/Utils/Argparse.hpp"
 
-using namespace mllm;
+using namespace mllm;  // NOLINT
 int main(int argc, char* argv[]) {
   auto& ctx = MllmEngineCtx::instance();
 #if defined(MLLM_ON_X86)
@@ -27,14 +27,15 @@ int main(int argc, char* argv[]) {
   ctx.mem()->initOC(kCPU);
 
   auto& model_files = Argparse::add<std::string>("-m|--model")
-                          .help("Input model ile path")
+                          .help("Input model file path")
                           .meta("FILE")
                           .positional();
+  auto& model_cfg_path = Argparse::add<std::string>("-c|--cfg").help("Model config file path.");
 
   Argparse::parse(argc, argv);
 
   {
-    mllm::models::QWenConfig cfg;
+    mllm::models::QWenConfig cfg(model_cfg_path.get());
     mllm::models::QWenForCausalLM llm(cfg);
     llm.load(mllm::load(model_files.get()));
     llm.to(kCPU);

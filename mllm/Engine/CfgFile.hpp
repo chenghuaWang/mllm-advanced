@@ -64,7 +64,7 @@ class MllmModelCfg {
 
   [[nodiscard]] std::vector<std::string> opNames() const;
 
- private:
+ protected:
   nlohmann::json json_;
 };
 

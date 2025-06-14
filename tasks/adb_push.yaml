@@ -13,13 +13,15 @@ AdbPushTask:
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-OpCallTest"
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-ComplexIndexTest"
     - "build-android-arm64-v8a/tests/Arm/Mllm-ArmTest"
-    - "build-android-arm64-v8a/examples/Models/demo_ds_qwen2"
-    - "build-android-arm64-v8a/examples/Models/demo_ds_qwen2_fa2_fp16"
     - "build-android-arm64-v8a/tests/IR/Mllm-IR-LlmIRTest"
     - "build-android-arm64-v8a/tools/PowerCounter/mllm-power-counter"
     - "build-android-arm64-v8a/tools/MllmRunner/mllm-runner"
     - "build-android-arm64-v8a/tests/Utils/Mllm-Utils-MllmThreadPool"
     - "build-android-arm64-v8a/tests/OpenCL/Mllm-OpenCL-DetectTest"
+
+    # Examples
+    - "build-android-arm64-v8a/examples/Models/DeepSeekDistillQwen2/demo_ds_qwen2"
+    - "build-android-arm64-v8a/examples/Models/DeepSeekDistillQwen2/demo_ds_qwen2_fa2_fp16"
 
     # QNN
     - "build-android-arm64-v8a-qnn/tests/QNN/Mllm-Qnn-DetectTest"

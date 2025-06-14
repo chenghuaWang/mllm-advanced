@@ -24,3 +24,5 @@ GENERATE_LATEX         = NO
 GENERATE_RTF           = NO
 GENERATE_MAN           = NO
 GENERATE_DOCBOOK       = NO
+PREDEFINED = __restrict__= 
+PREDEFINED += __restrict= 

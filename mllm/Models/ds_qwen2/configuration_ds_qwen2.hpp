@@ -9,11 +9,40 @@
  */
 #pragma once
 
+#include <cstdint>
 #include <string>
+#include "mllm/Core/AOps/LinearOp.hpp"
 #include "mllm/Core/DataTypes.hpp"
+#include "mllm/Engine/CfgFile.hpp"
 
 namespace mllm::models {
-struct QWenConfig {
+
+struct QWenConfig : protected MllmModelCfg {
+  explicit QWenConfig(const std::string& cfg_file_path) : MllmModelCfg(cfg_file_path) {
+    num_attention_heads = json_["num_attention_heads"].get<int>();
+    num_hidden_layers = json_["num_hidden_layers"].get<int>();
+    num_key_value_heads = json_["num_key_value_heads"].get<int>();
+    hidden_size = json_["hidden_size"].get<int>();
+    intermediate_size = json_["intermediate_size"].get<int>();
+    rope_theta = json_["rope_theta"].get<float>();
+    max_position_embeddings = json_["max_position_embeddings"].get<int>();
+    rms_norm_eps = json_["rms_norm_eps"].get<float>();
+    vocab_size = json_["vocab_size"].get<int>();
+    max_cache_length = json_["max_cache_length"].get<int>();
+
+    eos_token_id = json_["eos_token_id"].get<int64_t>();
+
+    auto kv_cache_dtype_str = json_["kv_cache_dtype"].get<std::string>();
+    if (kv_cache_dtype_str == "Fp32") {
+      kv_cache_dtype = DataTypes::kFp32;
+    } else if (kv_cache_dtype_str == "Fp16") {
+      kv_cache_dtype = DataTypes::kFp16;
+    }
+
+    auto linear_impl_type_str = json_["linear_impl_type"].get<std::string>();
+    linear_impl_type = LinearOpCargo::parseLinearOpImplTypeStr(linear_impl_type_str);
+  }
+
   std::string gate_proj_name = "gate_proj";
   std::string up_proj_name = "up_proj";
   std::string down_proj_name = "down_proj";
@@ -53,7 +82,8 @@ struct QWenConfig {
   int max_cache_length = 1024;
 
   DataTypes kv_cache_dtype = kFp32;
+  LinearOpImplType linear_impl_type = LinearOpImplType::kDefault;
 
-  long eos_token_id = 151643;
+  int64_t eos_token_id = 151643;
 };
 }  // namespace mllm::models

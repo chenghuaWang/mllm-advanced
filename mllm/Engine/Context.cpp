@@ -12,6 +12,7 @@
 #include "mllm/Engine/MemManager.hpp"
 #include "mllm/Engine/Thread.hpp"
 #include "mllm/Utils/Log.hpp"
+#include "mllm/Utils/ThreadPool.hpp"
 #include <chrono>
 #include <memory>
 
@@ -23,6 +24,9 @@ MllmEngineCtx::MllmEngineCtx() : dispatcher_manager_(this) {
   thread_map_.insert({main_thread_->threadId(), main_thread_});
   dispatcher_manager_.registerDispatcher("cpu:0:eager", std::make_shared<EagerDispatcher>(), 255,
                                          false);
+
+  // MLLM Thread Pool
+  MLLM_THREAD_POOL_INIT(4);
 }
 
 bool MllmEngineCtx::traceMode() const { return trace_mode_; }

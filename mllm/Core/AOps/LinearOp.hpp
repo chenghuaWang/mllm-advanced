@@ -59,6 +59,8 @@ struct LinearOpCargo : public BaseOpCargo<LinearOpCargo> {
   bool bias = true;
   bool transpose = false;
 
+  static LinearOpImplType parseLinearOpImplTypeStr(const std::string& type_str);
+
   // linear impl type.
   LinearOpImplType impl_type_ = LinearOpImplType::kDefault;
 };

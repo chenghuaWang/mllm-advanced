@@ -87,7 +87,7 @@ void KaiLinear_fp16_fp16_fp16p_mxk_kxn::matmul(float16_t* __restrict__ dst,
   const int m_step = ukernel_.get_m_step();  // Scheduling along M
   const int n_step = ukernel_.get_n_step();  // Scheduling along N
 
-  MLLM_PARALLEL_FOR_CHUNK(i_m_step, 0, M, m_step) {
+  MLLM_PARALLEL_FOR_WO_CHUNK(i_m_step, 0, M, m_step) {
     for (int i_n_step = 0; i_n_step < N; i_n_step += n_step) {
       // Support functions return offset in bytes
       const uint8_t* lhs_ptr =
@@ -362,7 +362,7 @@ void KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk::matmul(
     const int m_step = ukernels_[tile_cfg].get_m_step();  // Scheduling along M
     const int n_step = ukernels_[tile_cfg].get_n_step();  // Scheduling along N
 
-    MLLM_PARALLEL_FOR_CHUNK(i_m_step, 0, M, m_step) {
+    MLLM_PARALLEL_FOR_WO_CHUNK(i_m_step, 0, M, m_step) {
       for (int i_n_step = 0; i_n_step < N; i_n_step += n_step) {
         // Support functions return offset in bytes
         const void* lhs_ptr =
@@ -569,7 +569,7 @@ void KaiLinear_f32_qai8dxp_qsi4c32p_mxk_kxn::matmul(
     const int m_step = ukernels_[tile_cfg].get_m_step();  // Scheduling along M
     const int n_step = ukernels_[tile_cfg].get_n_step();  // Scheduling along N
 
-    MLLM_PARALLEL_FOR_CHUNK(i_m_step, 0, M, m_step) {
+    MLLM_PARALLEL_FOR_WO_CHUNK(i_m_step, 0, M, m_step) {
       for (int i_n_step = 0; i_n_step < N; i_n_step += n_step) {
         // Support functions return offset in bytes
         const void* lhs_ptr =

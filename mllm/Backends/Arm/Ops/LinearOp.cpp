@@ -7,8 +7,8 @@
  * @copyright Copyright (c) 2025
  *
  */
-#include "mllm/Backends/Arm/Ops/LinearOp.hpp"
 #include "mllm/Core/AOps/LinearOp.hpp"
+#include "mllm/Backends/Arm/Ops/LinearOp.hpp"
 #include "mllm/Backends/Arm/Kernels/sgemm.hpp"
 #include "mllm/Backends/Arm/Kernels/hgemm.hpp"
 
@@ -175,6 +175,33 @@ void ArmLinearOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
 
     return;
   }
+}
+
+void ArmLinearOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+  const auto& i = inputs[0];
+  auto i_shape = i.shape();
+
+  MLLM_RT_ASSERT_EQ(i_shape[i_shape.size() - 1], cargo_.in_channels);
+
+  auto o_shape = i_shape;
+  o_shape[o_shape.size() - 1] = cargo_.out_channels;
+
+  DataTypes o_dtype = i.dtype();
+
+  switch (cargo_.impl_type_) {
+    case LinearOpImplType::kKaiLinear_fp16_fp16_fp16p_mxk_kxn: o_dtype = kFp16; break;
+    case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x8_qsi4c32p4x8_1x4x32:
+    case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x8_qsi4c32p8x8_1x8x32:
+    case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p4x8_8x4x32:
+    case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p4x8_16x4x32:
+    case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p8x8_4x8x32:
+    case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x4_qsi4c32p4x4_1x4:
+      o_dtype = kFp32;
+      break;
+    default: o_dtype = i.dtype();
+  }
+
+  outputs.emplace_back(Tensor::empty(o_shape, o_dtype, i.device()));
 }
 
 }  // namespace mllm::arm

@@ -17,6 +17,8 @@ class ArmLinearOp final : public LinearOp {
   explicit ArmLinearOp(const LinearOpCargo& cargo);
 
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+
+  void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
 class ArmLinearOpFactory : public TypedOpFactory<OpType::kLinear, LinearOpCargo> {

@@ -1,8 +1,25 @@
-👋 Welcome to MLLM
-==================
+.. raw:: html
+
+   <h1 align="center">
+   MLLM
+   </h1>
+
+   <h3 align="center">
+   <span style="color:#2563eb">M</span>obile x <span style="color:#8b5cf6">M</span>ultimodal
+   </h3>
+ 
+   <p align="center">
+   Fast and lightweight LLM inference engine for mobile and edge devices
+   </p>
+
+   <p align="center">
+   | Arm CPU | X86 CPU | Qualcomm NPU(QNN) |
+   </p>
 
 Install
 --------
+
+👋 Welcome to MLLM
 
 Build Python Package
 ~~~~~~~~~~~~~~~~~~~~
@@ -22,8 +39,6 @@ You should first clone the repository using the following command:
 .. code-block:: shell
 
    git clone --recursive https://github.com/chenghuaWang/mllm-advanced.git
-
-Mllm also provide docker file to help you build mllm. TODO
 
 Build Android Target
 ^^^^^^^^^^^^^^^^^^^^
@@ -68,6 +83,62 @@ Then you can build the document with a single command:
 
    python task.py tasks/build_doc.yaml
 
+
+Using Docker or vscode devcontainer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To simplify developers' experience with MLLM, we provide ready-to-use Dockerfile and DevContainer configurations.
+
+**Use docker:**
+
+.. code-block:: shell
+
+   git clone --recursive https://github.com/chenghuaWang/mllm-advanced
+   cd mllm-advanced/docker
+   docker build -t mllm_advanced_arm -f Dockerfile.arm .
+   docker run -it --cap-add=SYS_ADMIN --network=host --cap-add=SYS_PTRACE --shm-size=4G --security-opt seccomp=unconfined --security-opt apparmor=unconfined --name mllm_a_arm_dev mllm_advanced_arm bash
+
+
+Important Notes:
+
+1. Dockerfile.arm includes NDK downloads. By using this image, you agree to NDK's additional terms.
+2. QNN SDK contains proprietary licensing terms. We don't bundle it in Dockerfile.qnn - please configure QNN SDK manually.
+
+**Use devcontainer:**
+
+To set up with VS Code Dev Containers:
+
+1. Install prerequisites:
+   - Docker
+   - VS Code
+   - Dev Containers extension
+
+2. Clone repository with submodules:
+
+.. code-block:: shell
+
+   git clone --recursive https://github.com/chenghuaWang/mllm-advanced
+   
+
+3. Open project in VS Code:
+
+.. code-block:: shell
+   code mllm-advanced
+   
+
+4. When prompted:
+
+   "Folder contains a Dev Container configuration file. Reopen in container?"
+   Click Reopen in Container
+
+   (Alternatively: Press F1 → "Dev Containers: Reopen in Container")
+
+The container will automatically build and launch with:
+
+* All dependencies pre-installed
+* Correct environment configuration
+* Shared memory and security settings applied
+
 Contents
 --------
 
@@ -77,6 +148,13 @@ Contents
    :numbered:
 
    CoreComponents/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Quantization
+   :numbered:
+
+   Quantization/index
 
 .. toctree::
    :maxdepth: 3
@@ -104,38 +182,17 @@ Contents
 
 .. toctree::
    :maxdepth: 1
-   :caption: CONTRIBUTE
+   :caption: Contribute
    :numbered:
 
    Contribute/CodeConventions
    Contribute/Roadmap
 
-CPP API
--------
-
 .. toctree::
    :maxdepth: 2
-   :numbered:
+   :caption: C++ API
 
    CppAPI/library_root
-
-
-Translation
------------
-
-.. toctree::
-   :maxdepth: 3
-   :caption: ARM 后端
-
-   ArmBackend/Design_zh
-   ArmBackend/Benchmark/index
-
-.. toctree::
-   :maxdepth: 3
-   :caption: CUDA 后端
-
-   CudaBackend/Design_zh
-   CudaBackend/Kernels/index
 
 Indices and tables
 ------------------

@@ -18,13 +18,13 @@
 #include "mllm/Backends/X86/X86Backend.hpp"
 #endif
 
-#include "mllm/Models/ds_qwen2/modeling_ds_qwen2.hpp"
+#include "mllm/Models/ds_qwen2/modeling_ds_qwen2_fa2_fp16.hpp"
 #include "mllm/Models/ds_qwen2/tokenization_ds_qwen2.hpp"
-#include "mllm/Models/ds_qwen2/configuration_ds_qwen2.hpp"
+#include "mllm/Models/ds_qwen2/configuration_ds_qwen2_fp16.hpp"
 
 #include "mllm/Utils/Argparse.hpp"
 
-using namespace mllm;
+using namespace mllm;  // NOLINT
 
 int main(int argc, char* argv[]) {
   auto& help = Argparse::add<bool>("-h|--help").help("Show help message.");
