@@ -26,6 +26,10 @@
 #include "mllm/Engine/ParameterReader.hpp"
 #include "mllm/Utils/Argparse.hpp"
 #include "mllm/IR/Passes/PassManager.hpp"
+#include "mllm/IR/Passes/QuantizePass.hpp"
+#include "mllm/IR/Graph/Op.hpp"
+#include "mllm/IR/Tensor/Op.hpp"
+#include "mllm/IR/Tensor/Value.hpp"
 #include "tools/Quantizer/FlatModuleBuilder.hpp"
 
 using namespace mllm;  // NOLINT
@@ -106,12 +110,27 @@ int main(int argc, char* argv[]) {
 #define MLLM_ON_X86
 // Create other passes
 #endif
+    pm.reg(ir::createCommonParamQuantizePass(cfg));
     pm.run();
 
     // Update paramloader
     for (auto& op_quantized : mllm_quantized_ops) {
       auto this_op_params = op_quantized->params();
       for (auto& kv : this_op_params) { loader->params()[kv.first] = kv.second.impl(); }
+    }
+
+    {
+      auto init_params_graph =
+          ir_ctx->lookupSymbolTable("init_params")->cast_<ir::graph::SubGraphOp>();
+      auto r = ir::IRWriter(ir_ctx, init_params_graph->getTopRegion());
+      r.walk<ir::tensor::AllocGlobalOp>(
+          [&](ir::IRWriter& reader,
+              const ir::tensor::AllocGlobalOp::self_ptr_t& op) -> ir::IRWriter::WalkResult {
+            auto param_tensor = (op->outputs().front())->cast_<ir::tensor::TensorValue>();
+            auto param_tensor_name = param_tensor->getSymbolAttr()->str();
+            loader->params()[param_tensor_name] = param_tensor->tensor_.impl();
+            return ir::IRWriter::WalkResult::WALK_CONTINUE;
+          });
     }
 
     mllm::write(write_to_file_path.get(), loader->params(), cfg.modelName());

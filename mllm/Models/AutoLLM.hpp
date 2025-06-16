@@ -32,18 +32,18 @@ template<typename T>
 class AutoLLM {
  public:
   template<typename... Args>
-  AutoLLM(Args&&... args) {
+  explicit AutoLLM(Args&&... args) {
     llm_ = std::make_shared<T>(std::forward<Args>(args)...);
   }
 
-  void generate(Tensor inputs, int max_length, long eos_token, const std::function<void(long)> func,
-                float top_p = 0.9) {
+  void generate(Tensor inputs, int max_length, int64_t eos_token,
+                const std::function<void(int64_t)> func, float top_p = 0.9) {
     // The inputs should be 2 dimension and Currently support Int64 only.
     MLLM_RT_ASSERT_EQ(inputs.shape().size(), 2);
     MLLM_RT_ASSERT_EQ(inputs.dtype(), kInt64);
 
     int cur_length = 0;
-    long pass_to_func;
+    int64_t pass_to_func;
 
     Tensor tmp = inputs;
 
@@ -67,14 +67,14 @@ class AutoLLM {
   std::shared_ptr<T> model() { return llm_; }
 
  private:
-  long _greedy_search(Tensor inputs) {
+  int64_t _greedy_search(Tensor inputs) {
     auto S = inputs.shape()[1];
     auto D = inputs.shape()[2];
     switch (inputs.dtype()) {
       case kFp32: {
         auto _ptr = inputs.ptr<float>() + (S - 1) * D;
         float max = -1e10f;
-        long pos = 0;
+        int64_t pos = 0;
         for (int i = 0; i < D; ++i) {
           auto value = _ptr[i];
           if (value > max) {
@@ -88,7 +88,7 @@ class AutoLLM {
       case kFp16: {
         auto _ptr = inputs.ptr<half_float::half>() + (S - 1) * D;
         half_float::half max_value(-60000);
-        long pos = 0;
+        int64_t pos = 0;
         for (int i = 0; i < D; ++i) {
           auto value = _ptr[i];
           if (value > max_value) {
@@ -104,7 +104,7 @@ class AutoLLM {
     return 0;
   }
 
-  long _top_p_sampling(Tensor inputs, float top_p) {
+  int64_t _top_p_sampling(Tensor inputs, float top_p) {
     auto argmax = [](const std::vector<float>& vec) -> unsigned int {
       return std::distance(vec.begin(), std::max_element(vec.begin(), vec.end()));
     };
@@ -161,7 +161,7 @@ class AutoLLM {
     return ret;
   }
 
-  long _top_k_sampling(Tensor inputs) {
+  int64_t _top_k_sampling(Tensor inputs) {
     NYI("Top K Sampling");
     return 0;
   }

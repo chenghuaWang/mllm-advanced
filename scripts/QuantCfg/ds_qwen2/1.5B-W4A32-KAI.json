@@ -29,5 +29,19 @@
             "type": "Linear",
             "implType": "KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk:qai8dxp4x8_qsi4c32p4x8_8x4x32"
         }
+    },
+    "Params": {
+        "^model\\.layers\\.\\d+\\.post_attention_layernorm\\.weight$": {
+            "dtype": "Fp16"
+        },
+        "^model\\.layers\\.\\d+\\.input_layernorm\\.weight$": {
+            "dtype": "Fp16"
+        },
+        "^model.norm.weight$": {
+            "dtype": "Fp16"
+        },
+        "^lm_head.weight$": {
+            "dtype": "Fp16"
+        }
     }
 }

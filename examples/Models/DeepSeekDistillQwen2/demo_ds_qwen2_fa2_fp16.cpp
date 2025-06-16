@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
                           .meta("FILE")
                           .positional();
   auto& se_json_fp = Argparse::add<std::string>("-j|--json").help("SentencePiece json file path.");
+  auto& model_cfg_path = Argparse::add<std::string>("-c|--cfg").help("Model config file path.");
   auto& perf = Argparse::add<bool>("-p|--perf").help("perf this example.");
 
   Argparse::parse(argc, argv);
@@ -40,6 +41,12 @@ int main(int argc, char* argv[]) {
   if (help.isSet()) {
     Argparse::printHelp();
     return 0;
+  }
+
+  if (!model_cfg_path.isSet()) {
+    MLLM_ERROR_EXIT(kError, "No input model config file provided");
+    Argparse::printHelp();
+    return -1;
   }
 
   if (!model_files.isSet()) {
@@ -72,7 +79,7 @@ int main(int argc, char* argv[]) {
 
   {
     mllm::models::DeepSeekQwen2Tokenizer tokenizer(se_json_fp.get());
-    mllm::models::QWenConfig cfg;
+    mllm::models::QWenFa2Fp16Config cfg(model_cfg_path.get());
     mllm::models::AutoLLM<mllm::models::QWenForCausalLM> auto_llm(cfg);
     auto_llm.model()->print();
 

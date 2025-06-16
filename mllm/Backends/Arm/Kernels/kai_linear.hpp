@@ -51,6 +51,9 @@
 // for f16_qsi8d32p_qai4c32p
 #include "kai_matmul_clamp_f16_qsi8d32p_qai4c32p_interface.h"
 
+// mllm
+#include "mllm/Core/DataTypes.hpp"
+
 namespace mllm::arm {
 
 struct KaiLinear_fp16_fp16_fp16p_mxk_kxn {
@@ -158,19 +161,58 @@ struct KaiLinear_f32_qai8dxp_qsi4c32p_mxk_kxn {
   static std::unordered_map<Tiles, kai_matmul_clamp_f32_qai8dxp_qsi4c32p_ukernel> ukernels_;
 };
 
-struct KaiLinear_f16_qsi8d32p_qai4c32p_mxk_kxn {
+struct KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk {
  public:
   enum class Tiles : uint8_t {
-
+    qsi8d32p1x8_qai4c32p4x8_1x4,
+    qsi8d32p4x4_qai4c32p4x4_8x4,
+    qsi8d32p4x8_qai4c32p4x8_8x4_i8mm,
   };
 
-  inline bool need_pack_lhs() { return false; }
+  inline bool need_pack_lhs() { return true; }
 
   inline bool need_pack_rhs() { return true; }
 
-  // TODO
+  size_t workspace_size(int M, int K, DataTypes lhs_dtype,
+                        KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles tile_cfg);
+
+  size_t quant_pack_rhs_size(int N, int K, KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles tile_cfg);
+
+  void quant_pack_rhs_offline(uint8_t* __restrict__ packed_weight, const float* __restrict__ rhs,
+                              const float* __restrict__ bias, int K, int N,
+                              KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles tile_cfg);
+
+  void matmul(float16_t* __restrict__ dst, const float* __restrict__ lhs_fp32,
+              const uint8_t* packed_weight_bias, void* workspace, int M, int K, int N,
+              KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles tile_cfg);
+
+  void matmul(float16_t* __restrict__ dst, const float16_t* __restrict__ lhs_fp16,
+              const uint8_t* packed_weight_bias, void* workspace, int M, int K, int N,
+              KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles tile_cfg);
 
  private:
+  inline int32_t round_nearest_from_fp32_2_int32(const float v) {
+    int32_t result;
+    asm volatile("fcvtns %w[res], %s[val]\n" : [res] "=r"(result) : [val] "w"(v));
+    return result;
+  }
+
+  inline size_t roundup(size_t a, size_t b) { return ((a + b - 1) / b) * b; }
+
+  inline size_t get_num_blocks_per_row(size_t k, size_t bl) { return roundup(k, bl) / bl; }
+
+  inline size_t get_rhs_native_stride(size_t x) { return roundup(x, 2) / 2; }
+
+  inline size_t get_rhs_scale_stride(size_t k, size_t bl) {
+    // NOTE:
+    // Scale should be float type.
+    const size_t num_blocks_per_row = get_num_blocks_per_row(k, bl);
+    return num_blocks_per_row * sizeof(float);
+  }
+
+  void quant_nxk_qai4c32_f32(size_t n, size_t k, size_t bl, const float* rhs_f32,
+                             uint8_t* rhs_qai4c32, float* rhs_zeros_fp32, float* rhs_scales_fp32);
+
   static std::unordered_map<Tiles, kai_matmul_clamp_f16_qsi8d32p_qai4c32p_ukernel> ukernels_;
 };
 

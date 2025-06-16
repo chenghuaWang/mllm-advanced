@@ -52,6 +52,15 @@ struct KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn final : public KaiQuantizationBas
   KaiLinear_f32_qai8dxp_qsi4c32p_mxk_kxn kai_helper_;
 };
 
+struct KQP_linear_f16_qsi8d32p_qai4c32p_mxk_nxk final : public KaiQuantizationBasePattern {
+  bool match(const ir::op_ptr_t& op, const MllmModelCfg& cfg) override;
+  bool quantize(const ir::op_ptr_t& op, const MllmModelCfg& cfg) override;
+
+  static std::shared_ptr<KQP_linear_f16_qsi8d32p_qai4c32p_mxk_nxk> create();
+
+  KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk kai_helper_;
+};
+
 class KaiQuantizationPass : public ir::Pass {
  public:
   explicit KaiQuantizationPass(const MllmModelCfg& cfg);

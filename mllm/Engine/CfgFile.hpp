@@ -17,6 +17,7 @@
 
 #include <nlohmann/json.hpp>
 #include <vector>
+#include "mllm/Core/DataTypes.hpp"
 
 namespace mllm {
 
@@ -63,6 +64,10 @@ class MllmModelCfg {
   [[nodiscard]] std::string opType(const std::string& op_name) const;
 
   [[nodiscard]] std::vector<std::string> opNames() const;
+
+  [[nodiscard]] std::vector<std::string> paramNames() const;
+
+  [[nodiscard]] DataTypes paramDtype(const std::string& param_name) const;
 
  protected:
   nlohmann::json json_;

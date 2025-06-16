@@ -21,7 +21,6 @@
 #include "mllm/Nn/Layers/SiLU.hpp"
 #include "mllm/Nn/Module.hpp"
 #include "mllm/Models/ds_qwen2/configuration_ds_qwen2_fp16.hpp"
-#include "mllm/Utils/Dbg.hpp"
 
 #include <arm_neon.h>
 
@@ -35,12 +34,15 @@ class QWenMLP final : public nn::Module {
 
  public:
   QWenMLP() = default;
-  explicit QWenMLP(const std::string& name, const QWenConfig& cfg) {
+  explicit QWenMLP(const std::string& name, const QWenFa2Fp16Config& cfg) {
     selfAssignName(name);
-    gate_proj_ = reg<nn::Linear>(cfg.gate_proj_name, cfg.hidden_size, cfg.intermediate_size, false);
+    gate_proj_ = reg<nn::Linear>(cfg.gate_proj_name, cfg.hidden_size, cfg.intermediate_size, false,
+                                 false, cfg.linear_impl_type);
     silu_ = reg<nn::SiLU>("act");
-    up_proj_ = reg<nn::Linear>(cfg.up_proj_name, cfg.hidden_size, cfg.intermediate_size, false);
-    down_proj_ = reg<nn::Linear>(cfg.down_proj_name, cfg.intermediate_size, cfg.hidden_size, false);
+    up_proj_ = reg<nn::Linear>(cfg.up_proj_name, cfg.hidden_size, cfg.intermediate_size, false,
+                               false, cfg.linear_impl_type);
+    down_proj_ = reg<nn::Linear>(cfg.down_proj_name, cfg.intermediate_size, cfg.hidden_size, false,
+                                 false, cfg.linear_impl_type);
   }
 
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
@@ -73,7 +75,7 @@ class QWenAttention final : public nn::Module {
  public:
   QWenAttention() = default;
 
-  QWenAttention(const std::string& name, const QWenConfig& cfg) {
+  QWenAttention(const std::string& name, const QWenFa2Fp16Config& cfg) {
     selfAssignName(name);
     hidden_size_ = cfg.hidden_size;
     num_attention_heads_ = cfg.num_attention_heads;
@@ -81,14 +83,14 @@ class QWenAttention final : public nn::Module {
     head_dim_ = hidden_size_ / num_attention_heads_;
     num_key_value_groups_ = num_attention_heads_ / num_key_value_heads_;
 
-    q_proj_ =
-        reg<nn::Linear>(cfg.q_proj_name, hidden_size_, head_dim_ * num_attention_heads_, true);
-    k_proj_ =
-        reg<nn::Linear>(cfg.k_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true);
-    v_proj_ =
-        reg<nn::Linear>(cfg.v_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true);
-    o_proj_ =
-        reg<nn::Linear>(cfg.o_proj_name, head_dim_ * num_attention_heads_, hidden_size_, false);
+    q_proj_ = reg<nn::Linear>(cfg.q_proj_name, hidden_size_, head_dim_ * num_attention_heads_, true,
+                              false, cfg.linear_impl_type);
+    k_proj_ = reg<nn::Linear>(cfg.k_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true,
+                              false, cfg.linear_impl_type);
+    v_proj_ = reg<nn::Linear>(cfg.v_proj_name, hidden_size_, head_dim_ * num_key_value_heads_, true,
+                              false, cfg.linear_impl_type);
+    o_proj_ = reg<nn::Linear>(cfg.o_proj_name, head_dim_ * num_attention_heads_, hidden_size_,
+                              false, false, cfg.linear_impl_type);
     q_rope_ = reg<nn::RoPE>(cfg.q_rope_name, RoPETypes::kLlama2, cfg.rope_theta,
                             cfg.max_position_embeddings, head_dim_, RoPEOpCargo::kBSHD);
     k_rope_ = reg<nn::RoPE>(cfg.k_rope_name, RoPETypes::kLlama2, cfg.rope_theta,
@@ -143,7 +145,7 @@ class QWenDecoder final : public nn::Module {
  public:
   QWenDecoder() = default;
 
-  QWenDecoder(const std::string& name, const QWenConfig& cfg) {
+  QWenDecoder(const std::string& name, const QWenFa2Fp16Config& cfg) {
     selfAssignName(name);
     self_attn_ = reg<QWenAttention>(cfg.attn_base_name, cfg);
     mlp_ = reg<QWenMLP>(cfg.ffn_base_name, cfg);
@@ -170,7 +172,7 @@ class QWenForCausalLM final : public nn::Module {
  public:
   QWenForCausalLM() = default;
 
-  explicit QWenForCausalLM(const QWenConfig& cfg) {
+  explicit QWenForCausalLM(const QWenFa2Fp16Config& cfg) {
     selfAssignName(cfg.top_module_name);
     decode_blocks_ =
         reg<nn::ModuleList<QWenDecoder>>(cfg.layers_base_name, cfg.num_hidden_layers, cfg);

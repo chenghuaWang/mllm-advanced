@@ -16,10 +16,38 @@
    | Arm CPU | X86 CPU | Qualcomm NPU(QNN) |
    </p>
 
+Using MLLM
+-----
+
+MLLM is a library designed for multimodal inference, enabling users to rapidly develop their own applications. While MLLM provides auxiliary programs like `mllm-runner` and `demo_xxx` to demonstrate its capabilities, these tools are limited to demo purposes. We recommend utilizing the MLLM C++ API as the primary framework for application development.
+
+The MLLM library is extremely easy to use. Taking the deployment of DeepSeek Qwen2 on Arm CPU as an example, you can create an LLM instance with just a few lines of code:
+
+.. code-block:: cpp
+
+   auto& ctx = MllmEngineCtx::instance();
+   ctx.registerBackend(mllm::arm::createArmBackend());
+   ctx.mem()->initBuddyCtx(kCPU);
+   mllm::models::DeepSeekQwen2Tokenizer tokenizer(tokenizer_file_path);
+   mllm::models::QWenConfig cfg(cfg_file_path);
+   mllm::models::AutoLLM<mllm::models::QWenForCausalLM> auto_llm(cfg);
+   auto loader = mllm::load(model_files_path);
+   auto_llm.model()->load(loader);
+
+With this setup, you can now feed data to the model:
+
+.. code-block:: cpp
+
+   auto input = tokenizer.convert2Ids(
+        tokenizer.tokenize("<｜begin▁of▁sentence｜>You are a helpful assistant.<｜User｜>hello, "
+                           "what's u name?<｜Assistant｜>"));
+   auto_llm.generate(input, 1024, cfg.eos_token_id, [&](int64_t pos) -> void {
+   std::wcout << tokenizer.detokenize(pos) << std::flush;
+   });
+
 Install
 --------
 
-👋 Welcome to MLLM
 
 Build Python Package
 ~~~~~~~~~~~~~~~~~~~~
@@ -138,6 +166,11 @@ The container will automatically build and launch with:
 * All dependencies pre-installed
 * Correct environment configuration
 * Shared memory and security settings applied
+
+Preparing Model and Tokenizer
+-----------------------------
+
+TODO
 
 Contents
 --------

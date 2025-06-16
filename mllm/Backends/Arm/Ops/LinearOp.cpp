@@ -132,6 +132,61 @@ void ArmLinearOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
                         KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk::Tiles::qai8dxp1x4_qsi4c32p4x4_1x4);
       return;
     }
+    case LinearOpImplType::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_qsi8d32p1x8_qai4c32p4x8_1x4: {
+      auto M = i.shape()[i.shape().size() - 2];
+      auto K = cargo_.in_channels;
+      auto N = cargo_.out_channels;
+
+      KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk kai_helper;
+
+      // FIXME:
+      // Can be optimized for better performance.
+      int32_t work_space_size = kai_helper.workspace_size(
+          M, K, i.dtype(),
+          KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::qsi8d32p1x8_qai4c32p4x8_1x4);
+      auto workspace = Tensor::empty({work_space_size}, kInt8, kCPU).alloc();
+      kai_helper.matmul(
+          o.ptr<float16_t>(), i.ptr<float16_t>(), weight_.ptr<uint8_t>(), workspace.ptr<void>(), M,
+          K, N, KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::qsi8d32p1x8_qai4c32p4x8_1x4);
+      return;
+    }
+    case LinearOpImplType::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_qsi8d32p4x4_qai4c32p4x4_8x4: {
+      auto M = i.shape()[i.shape().size() - 2];
+      auto K = cargo_.in_channels;
+      auto N = cargo_.out_channels;
+
+      KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk kai_helper;
+
+      // FIXME:
+      // Can be optimized for better performance.
+      int32_t work_space_size = kai_helper.workspace_size(
+          M, K, i.dtype(),
+          KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::qsi8d32p4x4_qai4c32p4x4_8x4);
+      auto workspace = Tensor::empty({work_space_size}, kInt8, kCPU).alloc();
+      kai_helper.matmul(
+          o.ptr<float16_t>(), i.ptr<float16_t>(), weight_.ptr<uint8_t>(), workspace.ptr<void>(), M,
+          K, N, KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::qsi8d32p4x4_qai4c32p4x4_8x4);
+      return;
+    }
+    case LinearOpImplType::
+        KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_qsi8d32p4x8_qai4c32p4x8_8x4_i8mm: {
+      auto M = i.shape()[i.shape().size() - 2];
+      auto K = cargo_.in_channels;
+      auto N = cargo_.out_channels;
+
+      KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk kai_helper;
+
+      // FIXME:
+      // Can be optimized for better performance.
+      int32_t work_space_size = kai_helper.workspace_size(
+          M, K, i.dtype(),
+          KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::qsi8d32p4x8_qai4c32p4x8_8x4_i8mm);
+      auto workspace = Tensor::empty({work_space_size}, kInt8, kCPU).alloc();
+      kai_helper.matmul(
+          o.ptr<float16_t>(), i.ptr<float16_t>(), weight_.ptr<uint8_t>(), workspace.ptr<void>(), M,
+          K, N, KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::qsi8d32p4x8_qai4c32p4x8_8x4_i8mm);
+      return;
+    }
     default:
       // Fallback to mllm's self linear op impl.
       break;
@@ -189,7 +244,12 @@ void ArmLinearOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>
   DataTypes o_dtype = i.dtype();
 
   switch (cargo_.impl_type_) {
-    case LinearOpImplType::kKaiLinear_fp16_fp16_fp16p_mxk_kxn: o_dtype = kFp16; break;
+    case LinearOpImplType::kKaiLinear_fp16_fp16_fp16p_mxk_kxn:
+    case LinearOpImplType::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_qsi8d32p1x8_qai4c32p4x8_1x4:
+    case LinearOpImplType::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_qsi8d32p4x4_qai4c32p4x4_8x4:
+    case LinearOpImplType::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_qsi8d32p4x8_qai4c32p4x8_8x4_i8mm:
+      o_dtype = kFp16;
+      break;
     case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x8_qsi4c32p4x8_1x4x32:
     case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp1x8_qsi4c32p8x8_1x8x32:
     case LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p4x8_8x4x32:

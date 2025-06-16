@@ -57,4 +57,20 @@ std::vector<std::string> MllmModelCfg::opNames() const {
   return result;
 }
 
+std::vector<std::string> MllmModelCfg::paramNames() const {
+  std::vector<std::string> result;
+  if (json_.contains("Params")) {
+    for (const auto& [key, value] : json_["Params"].items()) { result.push_back(key); }
+  }
+  return result;
+}
+
+DataTypes MllmModelCfg::paramDtype(const std::string& param_name) const {
+  if (json_["Params"].contains(param_name) && json_["Params"][param_name].contains("dtype")) {
+    if (json_["Params"][param_name]["dtype"] == "Fp32") return DataTypes::kFp32;
+    if (json_["Params"][param_name]["dtype"] == "Fp16") return DataTypes::kFp16;
+  }
+  return DataTypes::kFp32;
+}
+
 }  // namespace mllm
