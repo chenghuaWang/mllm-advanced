@@ -35,29 +35,21 @@ bool KQP_linear_fp16_fp16_fp16p_mxk_kxn::quantize(const ir::op_ptr_t& op, const 
   auto out_channels = mllm_op->cargo().out_channels;
   auto has_bias = mllm_op->cargo().bias;
 
-  // FIXME:
-  // If input is fp32, do type casting
   if (original_weight.dtype() != kFp16) {
-    MLLM_WARN("Only support fp16 weight in KQP_linear_fp16_fp16_fp16p_mxk_kxn Pass");
-    return false;
+    original_weight = original_weight.to(kFp16);
+    mllm_op->weight() = original_weight;
   }
 
-  // FIXME:
-  // If input is fp32, do type casting
   if (has_bias && (original_bias.dtype() != kFp16)) {
-    MLLM_WARN("Only support fp16 bias in KQP_linear_fp16_fp16_fp16p_mxk_kxn Pass");
-    return false;
+    original_bias = original_bias.to(kFp16);
+    mllm_op->bias() = original_bias;
   }
 
   auto weight_shape = original_weight.shape();
 
-  // FIXME:
-  // If input is not KxN Tensor, transpose it.
   if (weight_shape[0] != in_channels) {
-    MLLM_WARN(
-        "Only support in_channels x out_channels weight in KQP_linear_fp16_fp16_fp16p_mxk_kxn "
-        "Pass, but found out_channels x in_channels weight");
-    return false;
+    original_weight = original_weight.transpose(0, 1);
+    mllm_op->weight() = original_weight;
   }
 
   // pack_rhs_size return byte size.

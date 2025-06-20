@@ -16,8 +16,12 @@
 
 namespace mllm::arm {
 
+void transpose_hw_wh(const float* __restrict X, float* __restrict Y, size_t H, size_t W);
+
 void transpose_bshd_bhsd(const float* __restrict X, float* __restrict Y, size_t B, size_t S,
                          size_t H, size_t D);
+
+void transpose_hw_wh_fp16(const float16_t* __restrict X, float16_t* __restrict Y, size_t H, size_t W);
 
 void transpose_bshd_bhsd_fp16(const float16_t* __restrict X, float16_t* __restrict Y, size_t B,
                               size_t S, size_t H, size_t D);

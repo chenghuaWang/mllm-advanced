@@ -28,6 +28,10 @@ MllmThreadPool::~MllmThreadPool() {
 }
 
 void MllmThreadPool::initialize(int num_threads) {
+  if (!initialized_) {
+    MLLM_WARN("The thread pool has been initialized. Skip this initialization.");
+  }
+
   stop_ = false;
   num_threads_ = num_threads;
   if (num_threads_ > std::thread::hardware_concurrency()) {
@@ -44,6 +48,8 @@ void MllmThreadPool::initialize(int num_threads) {
       workLoop();
     });
   }
+
+  initialized_ = true;
 }
 
 void MllmThreadPool::setAffinity(pid_t handle, int cpu_id_mask) {

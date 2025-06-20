@@ -1,4 +1,4 @@
-# Qnn lowering pipeline
+# Linalg Dialect
 
 :::{note}
 author: chenghua.wang

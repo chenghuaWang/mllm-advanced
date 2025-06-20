@@ -1,6 +1,11 @@
 Mllm Quantize Tool
 ==================
 
+.. note:: 
+
+   author: chenghua.wang
+   date: 2025-06-19
+
 .. toctree::
    :numbered:
 

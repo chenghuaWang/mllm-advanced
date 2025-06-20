@@ -1,4 +1,4 @@
-# Qnn lowering pipeline
+# Graph Dialect
 
 :::{note}
 author: chenghua.wang

@@ -86,3 +86,5 @@ html_context = {
     "github_version": "main/docs/",
     "theme_vcs_pageview_mode": "edit",
 }
+# == latex
+latex_engine = "xelatex"

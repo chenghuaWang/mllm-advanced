@@ -714,6 +714,8 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::quant_nxk_qai4c32_f32(size_t n, si
                                                                     float* rhs_scales_fp32) {
   constexpr int INT4_MIN = -8;
   constexpr int INT4_MAX = 7;
+  constexpr float INT4_MIN_IN_FP32 = -8;
+  constexpr float INT4_MAX_IN_FP32 = 7;
 
   const size_t num_blocks_row = get_num_blocks_per_row(k, bl);
   const size_t rhs_qs4c32_stride = get_rhs_native_stride(k);
@@ -730,8 +732,8 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::quant_nxk_qai4c32_f32(size_t n, si
 
     // Loop each blocks in this row.
     for (size_t block_idx = 0; block_idx < num_blocks_row; ++block_idx) {
-      auto this_block_min_value = FLT_MAX;
-      auto this_block_max_value = -FLT_MAX;
+      auto this_block_min_value = std::numeric_limits<float>::max();
+      auto this_block_max_value = std::numeric_limits<float>::lowest();
 
       // Find min and max
       for (size_t b = 0; b < bl; ++b) {
@@ -747,16 +749,16 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::quant_nxk_qai4c32_f32(size_t n, si
       if (this_block_min_value > 0) { this_block_min_value = 0; }
       if (this_block_max_value < 0) { this_block_max_value = 0; }
 
-      const float inv_scale =
-          this_block_max_value != this_block_min_value
-              ? (INT4_MAX - INT4_MIN) / (this_block_max_value - this_block_min_value)
-              : 1.0F;
+      const float inv_scale = this_block_max_value != this_block_min_value
+                                  ? (INT4_MAX_IN_FP32 - INT4_MIN_IN_FP32)
+                                        / (this_block_max_value - this_block_min_value)
+                                  : 1.0F;
       const float scale = 1.0F / inv_scale;
       const float scaled_min = this_block_min_value / scale;
       const float scaled_max = this_block_max_value / scale;
-      const float zero_point_f = -(scaled_min + INT4_MIN) < scaled_max + INT4_MAX
-                                     ? scaled_min - INT4_MIN
-                                     : scaled_max - INT4_MAX;
+      const float zero_point_f = -(scaled_min + INT4_MIN_IN_FP32) < scaled_max + INT4_MAX_IN_FP32
+                                     ? scaled_min - INT4_MIN_IN_FP32
+                                     : scaled_max - INT4_MAX_IN_FP32;
       const int32_t zero_point = -round_nearest_from_fp32_2_int32(zero_point_f);
 
       // Store the scale and zero point in the dedicated buffer
@@ -771,7 +773,9 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::quant_nxk_qai4c32_f32(size_t n, si
         if (x >= k) { break; }
 
         const auto value_f = src_ptr[x];
-        int32_t value_q_i32 = round_nearest_from_fp32_2_int32(value_f * inv_scale) + zero_point;
+        const auto this_inv_scale = scale != 0 ? 1.0F / scale : 0.0F;
+        int32_t value_q_i32 =
+            round_nearest_from_fp32_2_int32(value_f * this_inv_scale) + zero_point;
 
         value_q_i32 = std::max(value_q_i32, INT4_MIN);
         value_q_i32 = std::min(value_q_i32, INT4_MAX);
@@ -782,7 +786,7 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::quant_nxk_qai4c32_f32(size_t n, si
         // Combine s0(int4) and s1(int4) into one int8 value
         const size_t dst_addr = (x / 2) + row_idx * rhs_qs4c32_stride;
         uint8_t rhs_v0 = rhs_qai4c32[dst_addr];
-        if ((row_idx % 2) == 0) {
+        if ((x % 2) == 0) {
           rhs_v0 = value_q_u8;
         } else {
           rhs_v0 |= (value_q_u8 << 4);
@@ -790,6 +794,25 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::quant_nxk_qai4c32_f32(size_t n, si
         rhs_qai4c32[dst_addr] = rhs_v0;
       }
     }
+  }
+
+  // rescale zero point
+  int zeros_scales_block_cnt = 0;
+  for (size_t row_idx = 0; row_idx < n; ++row_idx) {
+    for (size_t block_idx = 0; block_idx < num_blocks_row; ++block_idx) {
+      rhs_zeros_fp32[zeros_scales_block_cnt] =
+          (-rhs_zeros_fp32[zeros_scales_block_cnt]) * rhs_scales_fp32[zeros_scales_block_cnt];
+      zeros_scales_block_cnt++;
+    }
+  }
+
+  // The value in rhs_qai4c32 is s1 s0 right now. We need to change it to s0 s1
+  for (int idx = 0; idx < n * rhs_qs4c32_stride; ++idx) {
+    uint8_t v = rhs_qai4c32[idx];
+    uint8_t v_low = v & 0x0F;  // 0000 1111
+    uint8_t v_high = v >> 4;   // 1111 0000
+    uint8_t v_s0s1 = (v_low << 4) | v_high;
+    rhs_qai4c32[idx] = v_s0s1;
   }
 }
 
@@ -870,7 +893,7 @@ void KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::matmul(
                                        dst_ptr,                // DST
                                        dst_stride,             // DST stride (row)
                                        sizeof(float16_t),      // DST stride (col)
-                                       -FLT_MAX, FLT_MAX);
+                                       -65504, 65504);
       }
     }
     MLLM_PARALLEL_FOR_END;

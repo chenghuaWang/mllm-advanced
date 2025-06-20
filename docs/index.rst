@@ -16,6 +16,17 @@
    | Arm CPU | X86 CPU | Qualcomm NPU(QNN) |
    </p>
 
+.. note:: 
+
+   This website corresponds to the `advanced` branch of mllm. The `advanced` branch is currently under active development and significantly differs from the `main` branch. It incorporates more experimental features.
+   
+   Key distinctions between the main and advanced branches include:
+   
+   1. The `advanced` branch implements a more generalized operator dispatching mechanism.
+   2. It introduces a universal Graph-Level Intermediate Representation (IR).
+   3. The `advanced` branch features a modern architectural design with well-defined project logic.
+   4. It is designed and engineered to support LLM concurrency capabilities.
+
 Using MLLM
 -----
 
@@ -181,6 +192,13 @@ Contents
    :numbered:
 
    CoreComponents/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: MLLM IR
+   :numbered:
+
+   IR/index
 
 .. toctree::
    :maxdepth: 2

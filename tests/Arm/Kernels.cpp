@@ -90,6 +90,8 @@ TEST_F(KaiLinear_fp16_fp16_fp16p_mxk_kxn_Test, _4threads) {
 
 TEST_F(KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_Test, _4threads) { EXPECT_EQ(Compare(4), true); }
 
+TEST_F(KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_Test, _4threads) { EXPECT_EQ(Compare(4), true); }
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

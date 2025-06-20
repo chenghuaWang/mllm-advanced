@@ -1,4 +1,4 @@
-# Qnn lowering pipeline
+# Tensor Dialect
 
 :::{note}
 author: chenghua.wang

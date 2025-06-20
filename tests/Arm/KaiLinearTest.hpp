@@ -3,8 +3,10 @@
 // https://gitlab.arm.com/kleidi/kleidiai/-/blob/main/examples/matmul_clamp_f32_qai8dxp_qsi4c32p/matmul_clamp_f32_qai8dxp_qsi4c32p.cpp
 
 #include <gtest/gtest.h>
+#include <cstdint>
 #include <cstdlib>
 #include <cmath>
+#include "mllm/Core/DataTypes.hpp"
 #include "mllm/Utils/Dbg.hpp"
 #include "mllm/Utils/ThreadPool.hpp"
 #include "mllm/Backends/Arm/Kernels/mem.hpp"
@@ -457,5 +459,122 @@ class KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_Test : public testing::Test {
   int M = 1;
   int K = 1024;
   int N = 1024;
+  int bl = 32;
+};
+
+class KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_Test : public testing::Test {
+ protected:
+  KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_Test() = default;
+
+  ~KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_Test() override = default;
+
+  void fill_uniform_random(size_t num_rows, size_t num_cols, float* dst, size_t seed) {
+    std::srand(seed);
+
+    // Fill the array with random values between -1 and 1
+    for (size_t i = 0; i < num_rows * num_cols; i++) {
+      dst[i] = (float)((double)std::rand() / RAND_MAX) * 2 - 1;
+    }
+  }
+
+  void fill_uniform_random(size_t num_rows, size_t num_cols, float16_t* dst, size_t seed) {
+    std::srand(seed);
+
+    // Fill the array with random values between -1 and 1
+    for (size_t i = 0; i < num_rows * num_cols; i++) {
+      dst[i] = (float16_t)((double)std::rand() / RAND_MAX) * 2 - 1;
+    }
+  }
+
+  bool Compare(int threads = 0) {
+    using mllm::MllmThreadPool;
+    MLLM_THREAD_POOL_INIT(threads);
+
+    const size_t seed_lhs = 4568;
+    const size_t seed_rhs = seed_lhs + 4;
+    const size_t seed_bias = seed_lhs + 8;
+
+    // Alloc memory
+    auto lhs_native_mtx_f16 = new float16_t[M * K];
+    auto rhs_native_mtx_f32 = new float[N * K];
+    auto dst_mtx_fp16 = new float16_t[M * N];
+    auto ref_dst_mtx_fp16 = new float16_t[M * N];
+    auto bias_mtx_fp32 = new float[N];
+
+    fill_uniform_random(M, K, lhs_native_mtx_f16, seed_lhs);
+    fill_uniform_random(N, K, rhs_native_mtx_f32, seed_rhs);
+    fill_uniform_random(N, 1, bias_mtx_fp32, seed_bias);
+
+    auto rhs_quant_size =
+        kai_linear.quant_pack_rhs_size(N, K,
+                                       mllm::arm::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::
+                                           qsi8d32p4x8_qai4c32p4x8_8x4_i8mm);
+
+    auto rhs_quant_data = new uint8_t[rhs_quant_size];
+    kai_linear.quant_pack_rhs_offline(rhs_quant_data, rhs_native_mtx_f32, bias_mtx_fp32, K, N,
+                                      mllm::arm::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::
+                                          qsi8d32p4x8_qai4c32p4x8_8x4_i8mm);
+
+    auto workspace_size =
+        kai_linear.workspace_size(M, K, mllm::kFp16,
+                                  mllm::arm::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::
+                                      qsi8d32p4x8_qai4c32p4x8_8x4_i8mm);
+    auto workspace = new uint8_t[workspace_size];
+
+    kai_linear.matmul(dst_mtx_fp16, lhs_native_mtx_f16, rhs_quant_data, workspace, M, K, N,
+                      mllm::arm::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk::Tiles::
+                          qsi8d32p4x8_qai4c32p4x8_8x4_i8mm);
+
+    // Calculate reference: (M x K) * (N x K)^T = M x N
+    for (int m_idx = 0; m_idx < M; ++m_idx) {
+      for (int n_idx = 0; n_idx < N; ++n_idx) {
+        float16_t sum = 0.0f;
+        for (int k_idx = 0; k_idx < K; ++k_idx) {
+          // (m_idx, k_idx)
+          float16_t lhs_val = lhs_native_mtx_f16[m_idx * K + k_idx];
+          // (n_idx, k_idx)
+          float16_t rhs_val = static_cast<float16_t>(rhs_native_mtx_f32[n_idx * K + k_idx]);
+
+          sum += lhs_val * rhs_val;
+
+          sum = std::max(sum, static_cast<float16_t>(-65504.0f));
+          sum = std::min(sum, static_cast<float16_t>(65504.0f));
+        }
+        sum += static_cast<float16_t>(bias_mtx_fp32[n_idx]);
+        sum = std::max(sum, static_cast<float16_t>(-65504.0f));
+        sum = std::min(sum, static_cast<float16_t>(65504.0f));
+        ref_dst_mtx_fp16[m_idx * N + n_idx] = sum;
+      }
+    }
+
+    // All close ?
+    bool is_valid = true;
+    for (size_t i = 0; i < M * N; ++i) {
+      const auto imp_value = dst_mtx_fp16[i];
+      const auto ref_value = ref_dst_mtx_fp16[i];
+      const auto rel_error =
+          ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+      if (rel_error > 0.01F) {
+        const size_t x = i % N;
+        const size_t y = i / N;
+        Dbg(x, y, ref_dst_mtx_fp16[i], dst_mtx_fp16[i], rel_error);
+        is_valid = false;
+        break;
+      }
+    }
+
+    delete[] lhs_native_mtx_f16;
+    delete[] rhs_native_mtx_f32;
+    delete[] dst_mtx_fp16;
+    delete[] ref_dst_mtx_fp16;
+    delete[] rhs_quant_data;
+    delete[] bias_mtx_fp32;
+    return is_valid;
+  }
+
+  mllm::arm::KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk kai_linear;
+  int M = 32;
+  int K = 64;
+  int N = 64;
   int bl = 32;
 };

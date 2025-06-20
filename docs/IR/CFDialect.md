@@ -1,4 +1,4 @@
-# Qnn lowering pipeline
+# Control Flow Dialect
 
 :::{note}
 author: chenghua.wang

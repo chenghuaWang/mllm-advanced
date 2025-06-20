@@ -1,0 +1,16 @@
+{
+    "ModelName": "DeepSeek-R1-Distill-Qwen2-1.5B",
+    "num_attention_heads": 12,
+    "num_hidden_layers": 28,
+    "num_key_value_heads": 2,
+    "hidden_size": 1536,
+    "intermediate_size": 8960,
+    "rope_theta": 10000.0,
+    "max_position_embeddings": 131072,
+    "rms_norm_eps": 1e-06,
+    "vocab_size": 151936,
+    "max_cache_length": 1024,
+    "kv_cache_dtype": "Fp16",
+    "linear_impl_type": "KaiLinear_fp16_fp16_fp16p_mxk_kxn",
+    "eos_token_id": 151643
+}

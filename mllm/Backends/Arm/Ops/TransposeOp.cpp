@@ -43,6 +43,17 @@ void ArmTransposeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tens
         transpose_bshd_bhsd(i.ptr<float>(), o.ptr<float>(), B, S, H, D);
         return;
       }
+
+      if (i.shape().size() == 2 && o.shape().size() == 2
+          && ((cargo_.transpose_dim_x == 1 && cargo_.transpose_dim_y == 0)
+              || (cargo_.transpose_dim_x == 0 && cargo_.transpose_dim_y == 1))) {
+        auto shape = i.shape();
+        auto H = shape[0];
+        auto W = shape[1];
+
+        transpose_hw_wh(i.ptr<float>(), o.ptr<float>(), H, W);
+        return;
+      }
       break;
     }
     case kFp16: {
@@ -63,6 +74,17 @@ void ArmTransposeOp::forward(const std::vector<Tensor>& inputs, std::vector<Tens
         }
 
         transpose_bshd_bhsd_fp16(i.ptr<float16_t>(), o.ptr<float16_t>(), B, S, H, D);
+        return;
+      }
+
+      if (i.shape().size() == 2 && o.shape().size() == 2
+          && ((cargo_.transpose_dim_x == 1 && cargo_.transpose_dim_y == 0)
+              || (cargo_.transpose_dim_x == 0 && cargo_.transpose_dim_y == 1))) {
+        auto shape = i.shape();
+        auto H = shape[0];
+        auto W = shape[1];
+
+        transpose_hw_wh_fp16(i.ptr<float16_t>(), o.ptr<float16_t>(), H, W);
         return;
       }
       break;

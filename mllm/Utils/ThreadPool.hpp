@@ -23,6 +23,7 @@
 namespace mllm {
 
 class MllmThreadPool {
+  bool initialized_ = false;
   int num_threads_;
   std::vector<std::thread> workers_;
   std::vector<pid_t> system_workers_pid_;
