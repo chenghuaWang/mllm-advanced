@@ -40,6 +40,10 @@ class QnnIRGraph {
 
   void setupOutputs(const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs);
 
+  void setupInputsFromBinary(const std::vector<Qnn_Tensor_t>& inputs);
+
+  void setupOutputsFromBinary(const std::vector<Qnn_Tensor_t>& outputs);
+
   inline std::vector<Qnn_Tensor_t>& getInputs() { return qnn_input_tensors_; }
 
   inline std::vector<Qnn_Tensor_t>& getOutputs() { return qnn_output_tensors_; }
@@ -80,6 +84,8 @@ class QnnIRGraph {
   inline const QnnFuncSymbols& qnnFuncSymbols() { return qnn_func_symbols_; }
 
   inline Qnn_GraphHandle_t qnnGraphHandle() { return qnn_graph_handle_; }
+
+  inline Qnn_GraphHandle_t* qnnGraphHandlePtr() { return &qnn_graph_handle_; }
 
  private:
   // freezed

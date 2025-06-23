@@ -21,33 +21,42 @@ class KaiLinear_fp16_fp16_fp16p_mxk_kxn_Test : public testing::Test {
   // If the constructor and destructor are not enough for setting up
   // and cleaning up each test, you can define the following methods:
 
+  void fill_uniform_random(size_t num_rows, size_t num_cols, float16_t* dst, size_t seed) {
+    std::srand(seed);
+
+    // Fill the array with random values between -1 and 1
+    for (size_t i = 0; i < num_rows * num_cols; i++) {
+      dst[i] = (float16_t)((double)std::rand() / RAND_MAX) * 2 - 1;
+    }
+  }
+
   void SetUp() override {
-    // A: 1xK
-    mllm::arm::arm_align_alloc(&A, K * 2, 16);
-    // B: NxK
+    // A: MxK
+    mllm::arm::arm_align_alloc(&A, M * K * 2, 16);
+    // B: KxN
     mllm::arm::arm_align_alloc(&B, N * K * 2, 16);
-    // C: 1xN
-    mllm::arm::arm_align_alloc(&C, N * 2, 16);
+    // C: MxN
+    mllm::arm::arm_align_alloc(&C, M * N * 2, 16);
     // BIAS: 1xN
     mllm::arm::arm_align_alloc(&BIAS, N * 2, 16);
 
-    // C: 1xN
-    mllm::arm::arm_align_alloc(&Cfp16, N * 2, 16);
+    // C: MxN
+    mllm::arm::arm_align_alloc(&Cfp16, M * N * 2, 16);
 
     auto a_ptr = reinterpret_cast<float16_t*>(A);
     auto b_ptr = reinterpret_cast<float16_t*>(B);
     auto bias_ptr = reinterpret_cast<float16_t*>(BIAS);
 
-    for (int i = 0; i < K; ++i) { a_ptr[i] = float16_t(i * 0.1); }
-    for (int i = 0; i < N * K; ++i) { b_ptr[i] = float16_t(i * 0.1); }
-    for (int i = 0; i < N; ++i) { bias_ptr[i] = float16_t(i * 10); }
+    fill_uniform_random(M, K, a_ptr, 0);
+    fill_uniform_random(K, N, b_ptr, 1);
+    fill_uniform_random(1, N, bias_ptr, 2);
 
-    mllm::arm::arm_align_alloc(&PackedB, kai_linear.pack_rhs_size(K, N) * 2, 16);
+    mllm::arm::arm_align_alloc(&PackedB, kai_linear.pack_rhs_size(K, N), 16);
     kai_linear.pack_rhs_offline((float16_t*)PackedB, (float16_t*)B, (float16_t*)BIAS, K, N);
   }
 
   void CalculateRef() {
-    auto m = 1;
+    auto m = M;
     auto k = K;
     auto n = N;
     auto scalar_min = -FLT_MAX;
@@ -62,6 +71,9 @@ class KaiLinear_fp16_fp16_fp16p_mxk_kxn_Test : public testing::Test {
 
         for (size_t k_idx = 0; k_idx < k; ++k_idx) {
           acc += lhs[row_idx * k + k_idx] * rhs[col_idx + n * k_idx];
+
+          acc = std::max(acc, static_cast<float16_t>(scalar_min));
+          acc = std::min(acc, static_cast<float16_t>(scalar_max));
         }
         acc = std::max(acc, static_cast<float16_t>(scalar_min));
         acc = std::min(acc, static_cast<float16_t>(scalar_max));
@@ -74,17 +86,18 @@ class KaiLinear_fp16_fp16_fp16p_mxk_kxn_Test : public testing::Test {
   void Calculate(int threads = 0) {
     using mllm::MllmThreadPool;
     MLLM_THREAD_POOL_INIT(threads);
-    kai_linear.matmul((float16_t*)C, (float16_t*)A, (float16_t*)PackedB, 1, K, N);
+    kai_linear.matmul((float16_t*)C, (float16_t*)A, (float16_t*)PackedB, M, K, N);
   }
 
   bool Compare() {
     auto c_ptr = reinterpret_cast<float16_t*>(C);
     auto rc_ptr = reinterpret_cast<float16_t*>(Cfp16);
-    for (int n = 0; n < N; ++n) {
-      const auto imp_value = rc_ptr[n];
-      const auto ref_value = c_ptr[n];
-      const auto rel_error = std::fabs(imp_value - ref_value);
-      if (rel_error > 0.0001F) {
+    for (int n = 0; n < M * N; ++n) {
+      const auto imp_value = c_ptr[n];
+      const auto ref_value = rc_ptr[n];
+      const auto abs_error = std::abs(imp_value - ref_value);
+      const auto rel_error = ref_value != 0 ? abs_error / std::abs(ref_value) : 0.0F;
+      if (abs_error > 0.001F && rel_error > 0.001F) {
         Dbg(n, rel_error);
         return false;
       }
@@ -103,6 +116,7 @@ class KaiLinear_fp16_fp16_fp16p_mxk_kxn_Test : public testing::Test {
 
   mllm::arm::KaiLinear_fp16_fp16_fp16p_mxk_kxn kai_linear;
 
+  size_t M = 1024;
   size_t K = 1024;
   size_t N = 1024;
   void *BIAS = nullptr, *A = nullptr, *B = nullptr, *C = nullptr;
@@ -552,8 +566,8 @@ class KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk_Test : public testing::Test {
     for (size_t i = 0; i < M * N; ++i) {
       const auto imp_value = dst_mtx_fp16[i];
       const auto ref_value = ref_dst_mtx_fp16[i];
-      const auto rel_error =
-          ref_value != 0 ? std::abs((imp_value - ref_value) / ref_value) : std::abs(imp_value);
+      const auto abs_error = std::abs(imp_value - ref_value);
+      const auto rel_error = ref_value != 0 ? abs_error / std::abs(ref_value) : 0.0F;
       if (rel_error > 0.01F) {
         const size_t x = i % N;
         const size_t y = i / N;

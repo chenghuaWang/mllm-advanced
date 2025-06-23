@@ -51,6 +51,138 @@ Qnn_Tensor_t QnnTensorTransform::transform(const ir::tensor::TensorValue::self_p
   return transformV2(tensor_ir);
 }
 
+Qnn_Tensor_t QnnTensorTransform::deepCopy(Qnn_Tensor_t* src_tensor) {
+  if (!src_tensor) { MLLM_ERROR_EXIT(kError, "src_tensor is nullptr!"); }
+
+  if (src_tensor->version != QNN_TENSOR_VERSION_2) {
+    MLLM_ERROR_EXIT(kError, "The QNN Tensor Version is not supported for DeepCopy in mllm yet. "
+                            "Trying to use Qnn Tensor V2");
+  }
+
+  Qnn_Tensor_t ret{
+      .version = QNN_TENSOR_VERSION_2,
+      .v2 = QNN_TENSOR_V2_INIT,
+  };
+  QnnTensorTransformMetaInfo mllm_handled_qnn_tensor_meta_info;
+
+  // Things we need to copy
+  //
+  //   {
+  //       0u,                                 /*id*/
+  //       NULL,                               /*name*/
+  //       QNN_TENSOR_TYPE_UNDEFINED,          /*type*/
+  //       QNN_TENSOR_DATA_FORMAT_FLAT_BUFFER, /*dataFormat*/
+  //       QNN_DATATYPE_UNDEFINED,             /*dataType*/
+  //       QNN_QUANTIZE_PARAMS_INIT,           /*quantizeParams*/
+  //       0u,                                 /*rank*/
+  //       NULL,                               /*dimensions*/
+  //       QNN_TENSORMEMTYPE_UNDEFINED,        /*memType*/
+  //       {
+  //           QNN_CLIENT_BUFFER_INIT /*clientBuf*/
+  //       },
+  //       NULL,                   /*isDynamicDimension*/
+  //       QNN_SPARSE_PARAMS_INIT, /*sparseParams*/
+  //       0u                      /*isProduced*/
+  //   }
+
+  // == ID
+  { HELP_QNN_TENSOR_SET_ID(ret, HELP_QNN_TENSOR_GET_ID(src_tensor)); }
+
+  // == Name
+  {
+    auto name_ptr = strdup(HELP_QNN_TENSOR_GET_NAME(src_tensor));
+    mllm_handled_qnn_tensor_meta_info.anonymous_trash_.emplace_back(name_ptr);
+    HELP_QNN_TENSOR_SET_NAME(ret, name_ptr);
+  }
+
+  // == Type
+  { HELP_QNN_TENSOR_SET_TYPE(ret, HELP_QNN_TENSOR_GET_TYPE(src_tensor)); }
+
+  // == Dataformat
+  { HELP_QNN_TENSOR_SET_DATA_FORMAT(ret, HELP_QNN_TENSOR_GET_DATA_FORMAT(src_tensor)); }
+
+  // == DataType
+  { HELP_QNN_TENSOR_SET_DATA_TYPE(ret, HELP_QNN_TENSOR_GET_DATA_TYPE(src_tensor)); }
+
+  // == QuantizeParams
+  {
+    auto src_quant_cfg = HELP_QNN_TENSOR_GET_QUANT_PARAMS(src_tensor);
+    Qnn_QuantizeParams_t ret_quant_cfg = QNN_QUANTIZE_PARAMS_INIT;
+    ret_quant_cfg.encodingDefinition = src_quant_cfg.encodingDefinition;
+    ret_quant_cfg.quantizationEncoding = QNN_QUANTIZATION_ENCODING_UNDEFINED;
+
+    switch (ret_quant_cfg.quantizationEncoding) {
+      case QNN_QUANTIZATION_ENCODING_SCALE_OFFSET: {
+        ret_quant_cfg.quantizationEncoding = src_quant_cfg.quantizationEncoding;
+        ret_quant_cfg.scaleOffsetEncoding = src_quant_cfg.scaleOffsetEncoding;
+        break;
+      }
+      case QNN_QUANTIZATION_ENCODING_AXIS_SCALE_OFFSET: {
+        ret_quant_cfg.quantizationEncoding = src_quant_cfg.quantizationEncoding;
+        ret_quant_cfg.axisScaleOffsetEncoding.axis = src_quant_cfg.axisScaleOffsetEncoding.axis;
+        ret_quant_cfg.axisScaleOffsetEncoding.numScaleOffsets =
+            src_quant_cfg.axisScaleOffsetEncoding.numScaleOffsets;
+
+        if (src_quant_cfg.axisScaleOffsetEncoding.numScaleOffsets > 0) {
+          ret_quant_cfg.axisScaleOffsetEncoding.scaleOffset = (Qnn_ScaleOffset_t*)malloc(
+              src_quant_cfg.axisScaleOffsetEncoding.numScaleOffsets * sizeof(Qnn_ScaleOffset_t));
+          mllm_handled_qnn_tensor_meta_info.anonymous_trash_.emplace_back(
+              ret_quant_cfg.axisScaleOffsetEncoding.scaleOffset);
+          if (ret_quant_cfg.axisScaleOffsetEncoding.scaleOffset) {
+            for (size_t idx = 0; idx < src_quant_cfg.axisScaleOffsetEncoding.numScaleOffsets;
+                 idx++) {
+              ret_quant_cfg.axisScaleOffsetEncoding.scaleOffset[idx].scale =
+                  src_quant_cfg.axisScaleOffsetEncoding.scaleOffset[idx].scale;
+              ret_quant_cfg.axisScaleOffsetEncoding.scaleOffset[idx].offset =
+                  src_quant_cfg.axisScaleOffsetEncoding.scaleOffset[idx].offset;
+            }
+          }
+        }
+        break;
+      }
+      default: {
+        MLLM_ERROR_EXIT(kError, "This type's Quantization Encoding is not implemented yet.");
+      }
+    }
+    HELP_QNN_TENSOR_SET_QUANT_PARAMS(ret, ret_quant_cfg);
+  }
+
+  // == Rank
+  { HELP_QNN_TENSOR_SET_RANK(ret, HELP_QNN_TENSOR_GET_RANK(src_tensor)); }
+
+  // == Dimensions
+  {
+    auto _dim_ptr = HELP_QNN_TENSOR_GET_DIMENSIONS(src_tensor);
+    auto dim_ptr = (uint32_t*)malloc(HELP_QNN_TENSOR_GET_RANK(src_tensor) * sizeof(uint32_t));
+    mllm_handled_qnn_tensor_meta_info.anonymous_trash_.emplace_back(dim_ptr);
+    auto rank = HELP_QNN_TENSOR_GET_RANK(src_tensor);
+    for (size_t i = 0; i < rank; i++) { dim_ptr[i] = _dim_ptr[i]; }
+    HELP_QNN_TENSOR_SET_DIMENSIONS(ret, dim_ptr);
+  }
+
+  // == MemType
+  { HELP_QNN_TENSOR_SET_MEM_TYPE(ret, HELP_QNN_TENSOR_GET_MEM_TYPE(src_tensor)); }
+
+  // == ClientBuf
+  { HELP_QNN_TENSOR_SET_CLIENT_BUF(ret, HELP_QNN_TENSOR_GET_CLIENT_BUF(src_tensor)); }
+
+  // == Is Dynamic Dimension
+  {
+    // TODO
+  }
+
+  // == SparseParams
+  {
+    // TODO
+  }
+
+  // == Is Produced
+  {
+    // TODO
+  }
+  return ret;
+}
+
 Qnn_Tensor_t QnnTensorTransform::transformV1(const ir::tensor::TensorValue::self_ptr_t& tensor_ir) {
   Qnn_Tensor_t ret_qnn_tensor;
   NYI("v1 Qnn_Tensor_t is legacy. Why not try v2 of Qnn_Tensor_t");

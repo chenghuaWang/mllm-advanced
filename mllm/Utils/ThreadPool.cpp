@@ -28,8 +28,9 @@ MllmThreadPool::~MllmThreadPool() {
 }
 
 void MllmThreadPool::initialize(int num_threads) {
-  if (!initialized_) {
+  if (initialized_) {
     MLLM_WARN("The thread pool has been initialized. Skip this initialization.");
+    return;
   }
 
   stop_ = false;

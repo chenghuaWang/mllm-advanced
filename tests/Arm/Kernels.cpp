@@ -58,6 +58,18 @@ TEST_F(TransposeTest, BSHD2BHSD) {
   EXPECT_EQ(Compare(), true);
 }
 
+TEST_F(TransposeHWFp32Test, HW2WH) {
+  CalculateRef();
+  Calculate(4);
+  EXPECT_EQ(Compare(), true);
+}
+
+TEST_F(TransposeHWFp16Test, HW2WH) {
+  CalculateRef();
+  Calculate(4);
+  EXPECT_EQ(Compare(), true);
+}
+
 TEST_F(Sgemm_MK_NK_MN_V1_Test, Sgemm_MK_NK_MN_V1) {
   CalculateRef();
   Calculate(0);

@@ -65,6 +65,32 @@ void QnnIRGraph::setupOutputs(const std::vector<ir::tensor::TensorValue::self_pt
   }
 }
 
+void QnnIRGraph::setupInputsFromBinary(const std::vector<Qnn_Tensor_t>& inputs) {
+  for (auto& i : inputs) {
+    qnn_tensor_map_.insert({HELP_QNN_TENSOR_GET_NAME(i), i});
+    switch (HELP_QNN_TENSOR_GET_TYPE(i)) {
+      case QNN_TENSOR_TYPE_APP_WRITE: qnn_input_tensors_.push_back(i); break;
+      case QNN_TENSOR_TYPE_APP_READ: qnn_output_tensors_.push_back(i); break;
+      default:
+        MLLM_ERROR_EXIT(kError, "only [QNN_TENSOR_TYPE_APP_WRITE|QNN_TENSOR_TYPE_APP_READ] can be "
+                                "saved as input and output");
+    }
+  }
+}
+
+void QnnIRGraph::setupOutputsFromBinary(const std::vector<Qnn_Tensor_t>& outputs) {
+  for (auto& o : outputs) {
+    qnn_tensor_map_.insert({HELP_QNN_TENSOR_GET_NAME(o), o});
+    switch (HELP_QNN_TENSOR_GET_TYPE(o)) {
+      case QNN_TENSOR_TYPE_APP_WRITE: qnn_input_tensors_.push_back(o); break;
+      case QNN_TENSOR_TYPE_APP_READ: qnn_output_tensors_.push_back(o); break;
+      default:
+        MLLM_ERROR_EXIT(kError, "only [QNN_TENSOR_TYPE_APP_WRITE|QNN_TENSOR_TYPE_APP_READ] can be "
+                                "saved as input and output");
+    }
+  }
+}
+
 std::shared_ptr<QnnIRGraph> QnnIRGraph::build(const std::string& name,
                                               const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
                                               const QnnFuncSymbols& qnn_func_symbols,

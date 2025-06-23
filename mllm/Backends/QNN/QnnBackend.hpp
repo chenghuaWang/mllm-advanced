@@ -37,6 +37,10 @@ class QnnBackend final : public BackendBase {
 
   std::shared_ptr<QnnIRGraph> getCompiledQnnGraph(const std::string& name);
 
+  void saveHtpContextToBinaryFile(const std::string& file_path);
+
+  void loadHtpContextFromBinaryFile(const std::string& file_path);
+
  private:
   QnnBackendDevice qnn_htp_backend_;
   QnnFuncSymbols qnn_htp_func_symbols_;

@@ -51,6 +51,8 @@ class QnnTensorTransform {
   Qnn_Tensor_t transform(const ir::tensor::TensorValue::self_ptr_t& tensor_ir,
                          Qnn_TensorVersion_t version);
 
+  Qnn_Tensor_t deepCopy(Qnn_Tensor_t* src_tensor);
+
  private:
   Qnn_Tensor_t transformV1(const ir::tensor::TensorValue::self_ptr_t& tensor_ir);
 
