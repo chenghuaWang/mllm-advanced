@@ -3,8 +3,15 @@
 #include "SoftmaxTest.hpp"
 #include "TransposeTest.hpp"
 #include "SgemmTest.hpp"
+#include "FlashAtten2Test.hpp"
 #include "KaiLinearTest.hpp"
 #include <gtest/gtest.h>
+
+TEST_F(FA2Mma0Test, mma0) {
+  CalculateRef();
+  Calculate();
+  Compare();
+}
 
 TEST_F(HgemvTest, Hgemv) {
   CalculateRef();
