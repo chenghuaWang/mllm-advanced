@@ -193,6 +193,22 @@ class CMakeBuildTask(Task):
             os.system(sub_command)
 
 
+class CMakeInstallTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+        self.CMAKE_COMMAND = [
+            "cmake",
+            "--install",
+            os.path.join(PROJECT_ROOT_PATH, self.config.get("cmake_cfg_path", "build")),
+        ]
+
+    def run(self):
+        logging.info("Ninja install Task Start...")
+        sub_command = self.make_command_str(self.CMAKE_COMMAND)
+        logging.info(sub_command)
+        os.system(sub_command)
+
+
 class AdbPushTask(Task):
     def __init__(self, config):
         super().__init__(config)
@@ -375,8 +391,9 @@ class BuildPythonCLibTask(Task):
             f"-DCMAKE_BUILD_TYPE=Release",
             "-DMLLM_ENABLE_PY_MLLM=ON",
             "-D_GLIBCXX_USE_CXX11_ABI=1",
-            "-DCMAKE_C_COMPILER=clang",
-            "-DCMAKE_CXX_COMPILER=clang++",
+            # FIXME: Use clang and gcc is all ok.
+            # "-DCMAKE_C_COMPILER=clang",
+            # "-DCMAKE_CXX_COMPILER=clang++",
             "-DHWY_ENABLE_TESTS=OFF",
             "-DHWY_ENABLE_EXAMPLES=OFF",
             "-DHWY_ENABLE_CONTRIB=OFF",
@@ -442,6 +459,7 @@ TASKS = {
     "CMakeConfigTask": CMakeConfigTask,
     "CMakeFormatTask": CMakeFormatTask,
     "CMakeBuildTask": CMakeBuildTask,
+    "CMakeInstallTask": CMakeInstallTask,
     "AdbPushTask": AdbPushTask,
     "ArmKernelBenchmarkTask": ArmKernelBenchmarkTask,
     "GenPybind11StubsTask": GenPybind11StubsTask,

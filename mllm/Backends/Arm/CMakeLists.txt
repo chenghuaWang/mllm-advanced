@@ -1,5 +1,6 @@
 file(GLOB_RECURSE MLLM_ARM_BACKEND_SRC_OP ${CMAKE_CURRENT_LIST_DIR}/Ops/*.cpp)
-file(GLOB_RECURSE MLLM_ARM_BACKEND_SRC_PASSES ${CMAKE_CURRENT_LIST_DIR}/Passes/*.cpp)
+file(GLOB_RECURSE MLLM_ARM_BACKEND_SRC_PASSES
+     ${CMAKE_CURRENT_LIST_DIR}/Passes/*.cpp)
 file(GLOB_RECURSE MLLM_ARM_BACKEND_SRC_KERNELS
      ${CMAKE_CURRENT_LIST_DIR}/Kernels/*.cpp)
 file(GLOB_RECURSE MLLM_ARM_BACKEND_ASM_KERNELS
@@ -11,12 +12,19 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/Vendors/kleidiai EXCLUDE_FROM_ALL)
 set(kleidiai_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/Vendors/kleidiai)
 
 set(MLLM_KAI_INCLUDE_DIRS
-    ${kleidiai_SOURCE_DIR}/
-    ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f16_f16_f16p/
-    ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f32_f32_f32p/
-    ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f32_qai8dxp_qsi4c32p/
-    ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f16_qsi8d32p_qai4c32p/
-    ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/pack/)
+    $<BUILD_INTERFACE:${kleidiai_SOURCE_DIR}/>
+    $<BUILD_INTERFACE:${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f16_f16_f16p/>
+    $<BUILD_INTERFACE:${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f32_f32_f32p/>
+    $<BUILD_INTERFACE:${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f32_qai8dxp_qsi4c32p/>
+    $<BUILD_INTERFACE:${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f16_qsi8d32p_qai4c32p/>
+    $<BUILD_INTERFACE:${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/pack/>
+    $<INSTALL_INTERFACE:include/mllm/Backends/Arm/Vendors/kleidiai/>
+    $<INSTALL_INTERFACE:include/mllm/Backends/Arm/Vendors/kleidiai/kai/ukernels/matmul/matmul_clamp_f16_f16_f16p>
+    $<INSTALL_INTERFACE:include/mllm/Backends/Arm/Vendors/kleidiai/kai/ukernels/matmul/matmul_clamp_f32_f32_f32p>
+    $<INSTALL_INTERFACE:include/mllm/Backends/Arm/Vendors/kleidiai/kai/ukernels/matmul/matmul_clamp_f32_qai8dxp_qsi4c32p>
+    $<INSTALL_INTERFACE:include/mllm/Backends/Arm/Vendors/kleidiai/kai/ukernels/matmul/matmul_clamp_f16_qsi8d32p_qai4c32p>
+    $<INSTALL_INTERFACE:include/mllm/Backends/Arm/Vendors/kleidiai/kai/ukernels/matmul/pack>
+)
 
 set(KAI_SOURCES
     ${kleidiai_SOURCE_DIR}/kai/ukernels/matmul/matmul_clamp_f16_f16_f16p/kai_matmul_clamp_f16_f16_f16p16x1biasf16_6x16x8_neon_mla.c
@@ -83,11 +91,25 @@ add_library(
   ${MLLM_ARM_BACKEND_SRC_KERNELS}
   ${KAI_SOURCES}
   ${MLLM_ARM_BACKEND_ASM_KERNELS}
-  ${KAI_HEADERS}
   ArmAllocator.cpp
   ArmBackend.cpp
   ArmQuantizerHelper.cpp)
 target_include_directories(MllmArmBackend PUBLIC ${MLLM_KAI_INCLUDE_DIRS})
-target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp mafa2)
+target_link_libraries(MllmArmBackend PUBLIC MllmRT -fopenmp)
+target_link_libraries(MllmArmBackend PRIVATE mafa2)
 target_compile_options(MllmArmBackend PUBLIC ${MLLM_ARM_BACKEND_COMPILE_OPTIONS}
                                              -fopenmp)
+
+install(
+  TARGETS MllmArmBackend
+  EXPORT MllmTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin)
+
+install(
+  DIRECTORY ${kleidiai_SOURCE_DIR}
+  DESTINATION include/mllm/Backends/Arm/Vendors
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp")

@@ -16,17 +16,22 @@ option(MLLM_ENABLE_PY_MLLM "Enable mllm python binding" OFF)
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")
 
-if((CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang") AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "i686|i386|x86_64"))
+if((CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+   AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "i686|i386|x86_64"))
   add_compile_options(-Wno-nan-infinity-disabled)
 endif()
 
 set(MLLM_INCLUDE_DIR
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include/)
-set(MLLM_JSON_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/json/)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include>
+    $<INSTALL_INTERFACE:include/mllm>
+    $<INSTALL_INTERFACE:include/third_party/>)
+set(MLLM_JSON_INCLUDE_DIR
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/json>
+    $<INSTALL_INTERFACE:include/third_party/>)
 
-add_subdirectory(third_party/fmt EXCLUDE_FROM_ALL)
+add_subdirectory(third_party/fmt)
 
 add_subdirectory(mllm)
 
@@ -50,6 +55,77 @@ add_subdirectory(tools/TokenizeChecker)
 add_subdirectory(tools/PowerCounter)
 add_subdirectory(tools/MllmRunner)
 
+# == Install mllm main runtime
+set(INSTALL_MLLM_VERSION ${PROJECT_VERSION})
+set(INCLUDE_INSTALL_DIR
+    "${CMAKE_INSTALL_INCLUDEDIR}"
+    CACHE PATH "Installation directory for headers")
+install(
+  TARGETS MllmRT
+  EXPORT MllmTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/mllm/
+  DESTINATION include/mllm
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp"
+  PATTERN "Vendors/*" EXCLUDE)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt
+        DESTINATION packages)
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb/include/
+  DESTINATION include/third_party/
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp")
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/half/include/
+  DESTINATION include/third_party/
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp")
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/json/
+  DESTINATION include/third_party/
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.hpp")
+
+install(TARGETS mllm-quantizer mllm-tokenize-checker mllm-power-counter
+                mllm-runner RUNTIME DESTINATION bin)
+
+install(
+  EXPORT MllmTargets
+  FILE MllmTargets.cmake
+  NAMESPACE mllm::
+  DESTINATION lib/cmake/)
+
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/mllmConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mllmConfig.cmake
+  INSTALL_DESTINATION lib/cmake/
+  PATH_VARS INCLUDE_INSTALL_DIR)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/mllmConfigVersion.cmake
+  VERSION ${INSTALL_MLLM_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mllmConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/mllmConfigVersion.cmake
+        DESTINATION lib/cmake/)
+
+# == Build python binding library
 if(MLLM_ENABLE_PY_MLLM)
   target_compile_options(MllmRT PRIVATE -fPIC)
 

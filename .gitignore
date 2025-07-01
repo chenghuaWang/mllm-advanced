@@ -3,6 +3,7 @@
 .tmp/
 tasks/mllmteam*
 build*/
+install*/
 temp/
 .cspell/
 pymllm.egg-info/
@@ -10,6 +11,7 @@ py-build-out/
 stubs/
 ncu-report/
 docs/build/
+_C.cpython-310-x86_64-linux-gnu.so
 _C.cpython-312-x86_64-linux-gnu.so
 __pycache__/
 autotuner.log

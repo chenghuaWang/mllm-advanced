@@ -4,3 +4,4 @@ from ._C import *
 from . import core
 from . import utils
 from . import cuda_kernel
+from . import utils

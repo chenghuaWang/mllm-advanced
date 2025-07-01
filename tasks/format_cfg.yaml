@@ -11,3 +11,4 @@ CMakeFormatTask:
     - "mllm/Backends/X86/Vendors"
     - "mllm/Backends/CUDA/Vendors/cutlass"
     - "mllm/Backends/CUDA/Vendors/cccl"
+    - "playground/ScheduleTimeBtCpuNpu"
