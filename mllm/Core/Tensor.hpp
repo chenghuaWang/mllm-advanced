@@ -343,6 +343,13 @@ class Tensor {
     printData<T>();
   }
 
+  /**
+   * @brief return how many bytes this tensor alloced.
+   *
+   * @return size_t
+   */
+  size_t bytes();
+
  private:
   /**
    * @brief Internal helper for formatted data printing.

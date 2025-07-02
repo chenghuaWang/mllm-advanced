@@ -10,6 +10,7 @@
  */
 #include "mllm/Backends/QNN/Runtime/QnnTensorTransform.hpp"
 #include "mllm/IR/Linalg/Op.hpp"
+#include "mllm/Utils/Common.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
 
 namespace mllm::qnn {
@@ -53,10 +54,10 @@ std::pair<OpType, std::shared_ptr<QnnBaseOpPattern>> QnnMatMulOpPattern::create(
 QnnMatMulOp::QnnMatMulOp(const MatMulOpCargo& cargo) : MatMulOp(cargo) {}
 
 void QnnMatMulOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  // left it empty
+  MLLM_EMPTY_SCOPE;
 }
 
 void QnnMatMulOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  // left it empty
+  MLLM_EMPTY_SCOPE;
 }
 }  // namespace mllm::qnn

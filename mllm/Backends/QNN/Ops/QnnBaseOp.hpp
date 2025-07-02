@@ -27,7 +27,10 @@ class QnnBaseOpPattern {
                        const std::vector<ir::tensor::TensorValue::self_ptr_t>& inputs,
                        const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs) = 0;
 
- private:
+  void setIRCtx(const std::shared_ptr<ir::IRContext>& ctx);
+
+ protected:
+  std::shared_ptr<ir::IRContext> ctx_ = nullptr;
 };
 
 }  // namespace mllm::qnn

@@ -254,7 +254,13 @@ Qnn_Tensor_t QnnTensorTransform::transformV2(const ir::tensor::TensorValue::self
 
   // == Client Buf
   {
-    // TODO
+    // Only mllm's tensor who has kParams memtype should init client buf
+    if (tensor_ir->tensor_.memType() == kParams) {
+      Qnn_ClientBuffer_t cb = QNN_CLIENT_BUFFER_INIT;
+      cb.data = tensor_ir->tensor_.ptr<void>();
+      cb.dataSize = tensor_ir->tensor_.bytes();
+      HELP_QNN_TENSOR_SET_CLIENT_BUF(ret_qnn_tensor, cb);
+    }
   }
 
   // == Is Dynamic Dimensions
@@ -284,6 +290,8 @@ Qnn_TensorType_t QnnTensorTransform::autoQnnTensorType(
   } else if (tensor_ir->getAttr("is_graph_input") != nullptr) {
     return QNN_TENSOR_TYPE_APP_WRITE;
   }
+
+  if (tensor_ir->tensor_.memType() == kParams) { return QNN_TENSOR_TYPE_STATIC; }
 
   // FIXME: Handle Static and changeable Qnn quantized tensors.
 

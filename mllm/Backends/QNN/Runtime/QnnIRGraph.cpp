@@ -255,9 +255,7 @@ bool QnnIRGraph::addTensor(const std::string& node_name, Qnn_Tensor_t* qnn_tenso
     switch (HELP_QNN_TENSOR_GET_TYPE(qnn_tensor_ptr)) {
       case QNN_TENSOR_TYPE_APP_WRITE: qnn_input_tensors_.push_back(*qnn_tensor_ptr); break;
       case QNN_TENSOR_TYPE_APP_READ: qnn_output_tensors_.push_back(*qnn_tensor_ptr); break;
-      default:
-        MLLM_ERROR_EXIT(kError, "only [QNN_TENSOR_TYPE_APP_WRITE|QNN_TENSOR_TYPE_APP_READ] can be "
-                                "saved as input and output");
+      default: break;
     }
 
     qnn_tensor_map_.insert({HELP_QNN_TENSOR_GET_NAME(qnn_tensor_ptr), *qnn_tensor_ptr});

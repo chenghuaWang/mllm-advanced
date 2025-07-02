@@ -10,4 +10,8 @@
  */
 #include "mllm/Backends/QNN/Ops/QnnBaseOp.hpp"
 
-namespace mllm::qnn {}
+namespace mllm::qnn {
+
+void QnnBaseOpPattern::setIRCtx(const std::shared_ptr<ir::IRContext>& ctx) { ctx_ = ctx; }
+
+}  // namespace mllm::qnn

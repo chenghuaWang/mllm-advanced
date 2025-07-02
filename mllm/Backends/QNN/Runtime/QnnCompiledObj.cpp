@@ -85,6 +85,7 @@ Tensor QnnCompiledObj::qnnTensorDescriptorToMllmTensor(const Qnn_Tensor_t& qnn_t
 
   switch (HELP_QNN_TENSOR_GET_DATA_TYPE(qnn_tensor)) {
     case QNN_DATATYPE_FLOAT_32: mllm_tensor_dtype = DataTypes::kFp32; break;
+    case QNN_DATATYPE_FLOAT_16: mllm_tensor_dtype = DataTypes::kFp16; break;
     default: NYI("QNN data type not supported") break;
   }
 

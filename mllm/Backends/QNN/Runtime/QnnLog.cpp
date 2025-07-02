@@ -27,7 +27,7 @@ void __mllmLoggerCallback4QnnLogger(const char* fmt, QnnLog_Level_t level, uint6
   double ms = (double)times_tamp / 1000000.0;
 
   {
-    fprintf(stdout, "QnnLogger(%8.1fms) %s: ", ms, level_str);
+    fprintf(stdout, "QnnLogger(%8.1fms, %ld) %s: ", ms, times_tamp, level_str);
     vfprintf(stdout, fmt, argp);
   }
 }

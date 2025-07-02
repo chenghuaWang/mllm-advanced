@@ -13,6 +13,8 @@
 
 #define MLLM_NAMESPACE_ANONYMOUS
 
+#define MLLM_EMPTY_SCOPE
+
 #define MLLM_ENABLE_RT_ASSERT 1
 
 namespace mllm {

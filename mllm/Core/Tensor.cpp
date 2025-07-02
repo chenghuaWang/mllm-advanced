@@ -265,6 +265,8 @@ char* Tensor::offsettedRawPtr(const std::vector<int32_t>& offsets) {
   return impl_->offsettedRawPtr(offsets);
 }
 
+size_t Tensor::bytes() { return impl_->size(); }
+
 Affine::Affine(const std::string& sym_exp_str, std::unordered_map<std::string, float>& co)
     : expr_(sym_exp_str), co_(co) {}
 

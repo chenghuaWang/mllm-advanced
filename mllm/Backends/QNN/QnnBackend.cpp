@@ -11,7 +11,10 @@
 #include <memory>
 #include <fstream>
 #include "mllm/Backends/QNN/QnnBackend.hpp"
+#include "mllm/Backends/QNN/Ops/ElewiseOp.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
+#include "mllm/Backends/QNN/Ops/LinearOp.hpp"
+#include "mllm/Backends/QNN/Ops/SiLUOp.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLoader.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLog.hpp"
 #include "mllm/Backends/QNN/QnnAllocator.hpp"
@@ -28,7 +31,8 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
   allocator_ = std::make_shared<QnnAllocator>(qnn_htp_func_symbols_, qnn_htp_backend_);
 
   // TODO
-  regOpFactory<QnnMatMulOpFactory>();
+  regOpFactory<QnnMatMulOpFactory, QnnLinearOpFactory, QnnSiLUOpFactory, QnnAddOpFactory,
+               QnnSubOpFactory, QnnMulOpFactory, QnnDivOpFactory>();
 }
 
 QnnBackend::~QnnBackend() {

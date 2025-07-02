@@ -9,7 +9,10 @@
  *
  */
 #include "mllm/Backends/QNN/Passes/QnnGraphBuildPass.hpp"
+#include "mllm/Backends/QNN/Ops/ElewiseOp.hpp"
+#include "mllm/Backends/QNN/Ops/LinearOp.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
+#include "mllm/Backends/QNN/Ops/SiLUOp.hpp"
 #include "mllm/Backends/QNN/QnnBackend.hpp"
 #include "mllm/Engine/Context.hpp"
 #include "mllm/IR/Builtin/Op.hpp"
@@ -17,16 +20,21 @@
 #include "mllm/IR/Linalg/Op.hpp"
 #include "mllm/IR/Tensor/Value.hpp"
 #include "mllm/Utils/Common.hpp"
-#include "mllm/Utils/Dbg.hpp"
 
 #include <algorithm>
 #include <memory>
 
 namespace mllm::qnn {
 
-QnnGraphBuildPass::QnnGraphBuildPass() { regPattern<QnnMatMulOpPattern>(); }
+QnnGraphBuildPass::QnnGraphBuildPass() {
+  regPattern<QnnMatMulOpPattern, QnnLinearOpPattern, QnnSiLUOpPattern, QnnAddOpPattern,
+             QnnSubOpPattern, QnnMulOpPattern, QnnDivOpPattern>();
+}
 
 uint8_t QnnGraphBuildPass::run(const ir::node_ptr_t& op) {
+  // Give pattern the context pointer
+  for (auto& p : patterns_) { p.second->setIRCtx(getCtx()); }
+
   // The top op should be ModuleOp
   MLLM_RT_ASSERT(op->isa_<ir::ModuleOp>());
 

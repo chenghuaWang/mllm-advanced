@@ -26,6 +26,14 @@ void LLMEmbeddingTokenOp::trace(void* trace_context, const std::vector<Tensor>& 
   auto i_irs = ir::tensor::wrapTensors2TensorIR(ctx, inputs);
   auto o_irs = ir::tensor::wrapTensors2TensorIR(ctx, outputs);
   ctx->create<ir::linalg::LLMEmbeddingTokenOp>(shared_from_this(), i_irs, o_irs);
+
+  // Save parameters to global look up table
+  for (auto& p : this->params()) {
+    MLLM_RT_ASSERT_EQ(p.second.name(), p.first);
+    auto v = ctx->create<ir::tensor::TensorValue>(p.second);
+    v->name() = p.first;
+    ctx->addToSymbolTable(v, p.first);
+  }
 }
 
 void LLMEmbeddingTokenOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {

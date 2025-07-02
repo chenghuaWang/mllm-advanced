@@ -83,6 +83,8 @@ class MappedFile {
 
 class ParameterLoader {
  public:
+  ParameterLoader() = default;
+
   explicit ParameterLoader(const std::string& file_name);
 
   std::shared_ptr<TensorViewImpl> operator[](const std::string& name);
