@@ -40,18 +40,18 @@ class SplitOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
-  class class_name : public LinalgIROp {                                           \
+  class class_name final : public LinalgIROp {                                     \
    public:                                                                         \
     DEFINE_SPECIFIC_IR_CLASS(class_name);                                          \
     ~class_name() override;                                                        \
     class_name();                                                                  \
-    explicit class_name(std::shared_ptr<BaseOp> aop);                              \
+    explicit class_name(const std::shared_ptr<BaseOp>& aop);                       \
     ::mllm::class_name* getOp() { return (::mllm::class_name*)(op_.get()); }       \
     static inline bool classof(const Node* node) {                                 \
       RTTI_RK_OP_LINALGIROP_##rtti_name##_IMPL(node);                              \
     }                                                                              \
     static std::shared_ptr<::mllm::ir::linalg::class_name> build(                  \
-        IRContext* ctx, std::shared_ptr<BaseOp> aop,                               \
+        IRContext* ctx, const std::shared_ptr<BaseOp>& aop,                        \
         const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ins,  \
         const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ous); \
     void dump(IRPrinter& p) override;                                              \
@@ -59,12 +59,12 @@ class SplitOp;
 
 #define LINALG_AOPS_DECL(op_type, class_name)                                     \
   class_name::~class_name() = default;                                            \
-  class_name::class_name(std::shared_ptr<BaseOp> aop)                             \
+  class_name::class_name(const std::shared_ptr<BaseOp>& aop)                      \
       : LinalgIROp(RK_Op_LinalgIROp_##class_name) {                               \
     setAOp(op_type, aop);                                                         \
   }                                                                               \
   std::shared_ptr<::mllm::ir::linalg::class_name> class_name::build(              \
-      IRContext* ctx, std::shared_ptr<BaseOp> aop,                                \
+      IRContext* ctx, const std::shared_ptr<BaseOp>& aop,                         \
       const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ins,   \
       const std::vector<std::shared_ptr<::mllm::ir::tensor::TensorValue>>& ous) { \
     auto op = std::make_shared<::mllm::ir::linalg::class_name>(aop);              \

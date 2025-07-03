@@ -18,15 +18,21 @@ namespace mllm::ir {
 
 Node::Node(const NodeKind& kind) : kind_(kind) {}
 
-std::list<node_ptr_t>& Node::inputs() { return inputs_; }
+std::list<node_weak_ptr_t>& Node::inputs() { return inputs_; }
 
-std::list<node_ptr_t>& Node::outputs() { return outputs_; }
+std::list<node_weak_ptr_t>& Node::outputs() { return outputs_; }
 
-node_ptr_t Node::prevOp() { return prev_op_node_; }
+node_weak_ptr_t Node::prevOp() { return prev_op_node_; }
 
-node_ptr_t Node::nextOp() { return next_op_node_; }
+void Node::setPrevOp(const node_ptr_t& node) { prev_op_node_ = node; }
 
-node_ptr_t Node::belongsTo() { return belongs_to_parent_; }
+node_weak_ptr_t Node::nextOp() { return next_op_node_; }
+
+void Node::setNextOp(const node_ptr_t& node) { next_op_node_ = node; }
+
+node_weak_ptr_t Node::belongsTo() { return belongs_to_parent_; }
+
+void Node::setBelongsTo(const node_ptr_t& node) { belongs_to_parent_ = node; }
 
 void Node::setAttr(const std::string& str, const attr_ptr_t& attr) { attrs_.insert({str, attr}); }
 
@@ -43,7 +49,7 @@ std::list<val_ptr_t>& Region::inputs() { return inputs_; }
 
 std::list<val_ptr_t>& Region::outputs() { return outputs_; }
 
-op_ptr_t& Region::belongsTo() { return belongs_to_; }
+node_weak_ptr_t& Region::belongsTo() { return belongs_to_; }
 
 void Region::dump(IRPrinter& p) {
   // inputs

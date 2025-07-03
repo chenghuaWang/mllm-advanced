@@ -16,8 +16,6 @@
 #include <mllm/Backends/QNN/Runtime/QnnCompiledObj.hpp>
 #include <mllm/Backends/QNN/Passes/QnnLoweringPipeline.hpp>
 
-#include <chrono>
-
 using namespace mllm;  // NOLINT
 
 struct FakePayloadConfig {
@@ -79,6 +77,7 @@ int main() {
 
     // 3. Trace IR
     auto ir_ctx = mllm::ir::trace(net, Tensor::empty({1, 1536}, kFp16, kQNN));
+
     auto dump_printer = IRPrinter();
     ir_ctx->topLevelOp()->dump(dump_printer);
 
@@ -103,6 +102,12 @@ int main() {
     net_obj.allocRuntime();
     net_obj.forward();
     net_obj.freeRuntime();
+
+    // 8. Set Params to normall for auto free memory.
+    param_loader->params()["mlp.gate_proj.weight"]->storage()->mem_type_ = kNormal;
+    param_loader->params()["mlp.up_proj.weight"]->storage()->mem_type_ = kNormal;
+    param_loader->params()["mlp.down_proj.weight"]->storage()->mem_type_ = kNormal;
+    param_loader->params().clear();
   }
 
   ctx.shutdown();

@@ -37,6 +37,7 @@ std::shared_ptr<IRContext> trace(NnModule& nn_module, Args&&... args) {
   ctx.setTraceMode(true);
   nn_module.trace(std::forward<Args>(args)...);
   ctx.setTraceMode(false);
+  ctx.ir_context_ = nullptr;
   return ir_ctx;
 }
 

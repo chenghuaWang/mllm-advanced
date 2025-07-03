@@ -72,15 +72,13 @@ void MemManager::alloc(const std::shared_ptr<Storage>& s) {
   s->ptr_ = omb->ptr;
 
   st_.reg(s->custom_32bit_uuid_, omb);
-
-  if (s->type_ == Storage::kTensor && !std::static_pointer_cast<TensorStorage>(s)->name_.empty()) {
-    named_tensor_st_.reg(std::static_pointer_cast<TensorStorage>(s)->name_, omb);
-  }
 }
 
 void MemManager::free(Storage* s) {
   auto allocator = allocators_st_[s->device_];
   auto try_to_alloc_size = allocator->allocSize(s);
+
+  if (s->ptr_ == nullptr) { return; }
 
   // NOTE:
   // For device:
@@ -103,9 +101,6 @@ void MemManager::free(Storage* s) {
   }
 
   st_.remove(s->custom_32bit_uuid_);
-  if (s->type_ == Storage::kTensor && !((TensorStorage*)(s))->name_.empty()) {
-    named_tensor_st_.remove(((TensorStorage*)(s))->name_);
-  }
 }
 
 void MemManager::regAllocator(DeviceTypes device, const std::shared_ptr<Allocator>& allocator) {
@@ -393,10 +388,6 @@ void MemManager::_alloc_really_large(const std::shared_ptr<Storage>& s) {
       .buddy_order = 0,
       .allocated = true,
   };
-  if (s->type_ == Storage::kTensor && !std::static_pointer_cast<TensorStorage>(s)->name_.empty()) {
-    named_tensor_st_.reg(std::static_pointer_cast<TensorStorage>(s)->name_, obj_mem_block);
-  }
-
   st_.reg(s->custom_32bit_uuid_, obj_mem_block);
 }
 
@@ -406,9 +397,6 @@ void MemManager::_free_really_large(Storage* s) {
 
   auto obj_mem_block = st_[s->custom_32bit_uuid_];
   st_.remove(s->custom_32bit_uuid_);
-  if (s->type_ == Storage::kTensor && !((TensorStorage*)(s))->name_.empty()) {
-    named_tensor_st_.remove(((TensorStorage*)(s))->name_);
-  }
   delete obj_mem_block;
 }
 

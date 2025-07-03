@@ -22,6 +22,7 @@
 // include auto generated rtti kinds.
 #include "mllm/IR/GeneratedRTTIKind.hpp"
 #include "mllm/IR/NodeRTTIClassOfImpl.hpp"
+#include "mllm/Utils/WeakPtrHelper.hpp"
 
 #define DEFINE_SPECIFIC_IR_CLASS(_Type) using self_ptr_t = std::shared_ptr<_Type>
 
@@ -33,19 +34,27 @@ class Op;
 class Val;
 class Node;
 
-typedef std::shared_ptr<Node> node_ptr_t;
+using node_ptr_t = std::shared_ptr<Node>;
 
-typedef std::shared_ptr<Op> op_ptr_t;
+using node_weak_ptr_t = WeakOwner<Node>;
 
-typedef std::shared_ptr<Val> val_ptr_t;
+using op_ptr_t = std::shared_ptr<Op>;
 
-typedef std::shared_ptr<Attr> attr_ptr_t;
+using op_weak_ptr_t = WeakOwner<Op>;
+
+using val_ptr_t = std::shared_ptr<Val>;
+
+using val_weak_ptr_t = WeakOwner<Val>;
+
+using attr_ptr_t = std::shared_ptr<Attr>;
+
+using attr_weak_ptr_t = std::shared_ptr<Attr>;
 
 class Node : public std::enable_shared_from_this<Node> {
  public:
   Node() = default;
   explicit Node(const NodeKind& kind);
-  virtual ~Node() {};
+  virtual ~Node() = default;
 
   virtual void dump(IRPrinter& p) { p.print("<InvalidNodePrinter NIY>"); };
 
@@ -62,15 +71,21 @@ class Node : public std::enable_shared_from_this<Node> {
     return *rhs;
   }
 
-  std::list<node_ptr_t>& inputs();
+  std::list<node_weak_ptr_t>& inputs();
 
-  std::list<node_ptr_t>& outputs();
+  std::list<node_weak_ptr_t>& outputs();
 
-  node_ptr_t prevOp();
+  node_weak_ptr_t prevOp();
 
-  node_ptr_t nextOp();
+  void setPrevOp(const node_ptr_t& node);
 
-  node_ptr_t belongsTo();
+  node_weak_ptr_t nextOp();
+
+  void setNextOp(const node_ptr_t& node);
+
+  node_weak_ptr_t belongsTo();
+
+  void setBelongsTo(const node_ptr_t& node);
 
   void setAttr(const std::string& str, const attr_ptr_t& attr);
 
@@ -88,11 +103,11 @@ class Node : public std::enable_shared_from_this<Node> {
 
  private:
   NodeKind kind_ = RK_None;
-  node_ptr_t prev_op_node_ = nullptr;
-  node_ptr_t next_op_node_ = nullptr;
-  node_ptr_t belongs_to_parent_ = nullptr;
-  std::list<node_ptr_t> inputs_;
-  std::list<node_ptr_t> outputs_;
+  node_weak_ptr_t prev_op_node_ = nullptr;
+  node_weak_ptr_t next_op_node_ = nullptr;
+  node_weak_ptr_t belongs_to_parent_ = nullptr;
+  std::list<node_weak_ptr_t> inputs_;
+  std::list<node_weak_ptr_t> outputs_;
   std::unordered_map<std::string, attr_ptr_t> attrs_;
 };
 
@@ -106,12 +121,12 @@ class Region : public std::enable_shared_from_this<Region> {
 
   std::list<val_ptr_t>& outputs();
 
-  op_ptr_t& belongsTo();
+  node_weak_ptr_t& belongsTo();
 
   void dump(IRPrinter& p);
 
  private:
-  op_ptr_t belongs_to_ = nullptr;
+  node_weak_ptr_t belongs_to_ = nullptr;
   std::list<op_ptr_t> ops_;
   std::list<val_ptr_t> inputs_;
   std::list<val_ptr_t> outputs_;
@@ -224,13 +239,13 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
       cur_insert_region_->ops().push_back(created_node->template cast_<Op>());
 
       // belongsto
-      created_node->belongsTo() = top_level_op_;
+      created_node->setBelongsTo(top_level_op_);
 
       // set prev op
-      created_node->prevOp() = prev_op;
+      created_node->setPrevOp(prev_op);
 
       // set next op
-      if (prev_op) prev_op->nextOp() = created_node;
+      if (prev_op) prev_op->setNextOp(created_node);
     }
 
     // Value: add to symbol table. Giving them names.
@@ -322,13 +337,13 @@ class IRWriter {
       cur_region_->ops().push_back(created_node->template cast_<Op>());
 
       // belongsto
-      created_node->belongsTo() = ctx_->topLevelOp();
+      created_node->setBelongsTo(ctx_->topLevelOp());
 
       // set prev op
-      created_node->prevOp() = prev_op;
+      created_node->setPrevOp(prev_op);
 
       // set next op
-      if (prev_op) prev_op->nextOp() = created_node;
+      if (prev_op) prev_op->setNextOp(created_node);
     }
 
     // Value: add to symbol table. Giving them names.
@@ -368,9 +383,9 @@ class IRWriter {
           pos_op_iter++;
           auto next_op = *pos_op_iter;
 
-          pre_op->nextOp() = created_node;
-          created_node->prevOp() = pre_op;
-          if (next_op) next_op->prevOp() = created_node;
+          pre_op->setNextOp(created_node);
+          created_node->setPrevOp(pre_op);
+          if (next_op) next_op->setPrevOp(created_node);
 
           cur_op_iter_ = ops.insert(pos_op_iter, created_node);
           break;
@@ -381,9 +396,9 @@ class IRWriter {
           pos_op_iter--;
           auto pre_op = *pos_op_iter;
 
-          if (pre_op) pre_op->nextOp() = created_node;
-          created_node->prevOp() = pre_op;
-          next_op->prevOp() = created_node;
+          if (pre_op) pre_op->setNextOp(created_node);
+          created_node->setPrevOp(pre_op);
+          next_op->setPrevOp(created_node);
 
           break;
         }
@@ -427,13 +442,13 @@ class IRWriter {
       cur_region_->ops().push_back(created_node->template cast_<Op>());
 
       // belongsto
-      created_node->belongsTo() = ctx_->topLevelOp();
+      created_node->setBelongsTo(ctx_->topLevelOp());
 
       // set prev op
-      created_node->prevOp() = prev_op;
+      created_node->setPrevOp() = prev_op;
 
       // set next op
-      if (prev_op) prev_op->nextOp() = created_node;
+      if (prev_op) prev_op->setNextOp(created_node);
     }
 
     auto& ops = cur_region_->ops();

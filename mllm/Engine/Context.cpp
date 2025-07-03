@@ -187,11 +187,21 @@ std::vector<Tensor> MllmEngineCtx::sendAsyncTask2DispatcherAndWait(
 void MllmEngineCtx::shutdown() {
   thread_map_.clear();
   main_thread_.reset();
+
+  // Shutdown all backends
+  // NOTE: The release sequence is important
+  // 1st, QNN
+  // last, CPU
+  if (backends_table_.has(kQNN)) { backends_table_.remove(kQNN); }
+
   main_thread_mem_->clearGlobalTensor();
   main_thread_mem_->report();
 
   // we should reset before some dynamic lib unload.(such as cuda rt)
   main_thread_mem_.reset();
+
+  if (backends_table_.has(kCUDA)) { backends_table_.remove(kCUDA); }
+  if (backends_table_.has(kCPU)) { backends_table_.remove(kCPU); }
 }
 
 }  // namespace mllm

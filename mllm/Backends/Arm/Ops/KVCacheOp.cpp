@@ -22,14 +22,14 @@ ArmKVCacheOp::ArmKVCacheOp(const KVCacheOpCargo& cargo) : KVCacheOp(cargo) {
       cache_ = Tensor::empty({1, cargo_.head_repeat_times * cargo_.heads_num, cur_kv_cache_limits_,
                               cargo_.dim_per_head},
                              cargo_.cached_elements_dtype, kCPU)
-                   .setMemType(kGlobal)
+                   .setMemType(kNormal)
                    .alloc();
       break;
     case KVCacheOpCargo::KVCacheLayoutType::kBSHD_NO_REPEAT:
       // init cache: [B, S, H, D]
       cache_ = Tensor::empty({1, cur_kv_cache_limits_, cargo_.heads_num, cargo_.dim_per_head},
                              cargo_.cached_elements_dtype, kCPU)
-                   .setMemType(kGlobal)
+                   .setMemType(kNormal)
                    .alloc();
       break;
   }

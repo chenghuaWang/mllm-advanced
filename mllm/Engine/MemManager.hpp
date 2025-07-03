@@ -128,7 +128,6 @@ class MemManager {
 
   // symbol table.
   SymbolTable<uint32_t, ObjMemBlock*> st_;
-  SymbolTable<std::string, ObjMemBlock*> named_tensor_st_;
   SymbolTable<std::string, Tensor> global_tensor_st_;
 
   // make manager thread safe.
