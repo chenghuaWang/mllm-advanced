@@ -34,6 +34,8 @@ node_weak_ptr_t Node::belongsTo() { return belongs_to_parent_; }
 
 void Node::setBelongsTo(const node_ptr_t& node) { belongs_to_parent_ = node; }
 
+void Node::setBelongsTo(const node_weak_ptr_t& node) { belongs_to_parent_ = node; }
+
 void Node::setAttr(const std::string& str, const attr_ptr_t& attr) { attrs_.insert({str, attr}); }
 
 attr_ptr_t Node::getAttr(const std::string& str) {
@@ -231,6 +233,41 @@ void IRWriter::removeOp(const op_ptr_t& op) {
 void IRWriter::replaceOp(const op_ptr_t& old_op, const op_ptr_t& new_op) {
   auto& ops = cur_region_->ops();
   std::replace(ops.begin(), ops.end(), old_op, new_op->template cast_<Op>());
+}
+
+void IRWriter::insertOpAtPos(const op_ptr_t& pos_op, Position pos, const op_ptr_t& new_op) {
+  // find the pos_op iter in region
+  auto& ops = cur_region_->ops();
+  auto pos_op_iter = std::find(ops.begin(), ops.end(), pos_op);
+
+  new_op->setBelongsTo(pos_op->belongsTo());
+
+  switch (pos) {
+    case AFTER: {
+      auto pre_op = *pos_op_iter;
+      pos_op_iter++;
+      auto next_op = *pos_op_iter;
+
+      pre_op->setNextOp(new_op);
+      new_op->setPrevOp(pre_op);
+      if (next_op) next_op->setPrevOp(new_op);
+
+      cur_op_iter_ = ops.insert(pos_op_iter, new_op);
+      break;
+    }
+    case BEFORE: {
+      auto next_op = *pos_op_iter;
+      cur_op_iter_ = ops.insert(pos_op_iter, new_op);
+      pos_op_iter--;
+      auto pre_op = *pos_op_iter;
+
+      if (pre_op) pre_op->setNextOp(new_op);
+      new_op->setPrevOp(pre_op);
+      next_op->setPrevOp(new_op);
+
+      break;
+    }
+  }
 }
 
 }  // namespace mllm::ir

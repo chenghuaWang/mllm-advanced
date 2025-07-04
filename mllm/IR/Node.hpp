@@ -87,6 +87,8 @@ class Node : public std::enable_shared_from_this<Node> {
 
   void setBelongsTo(const node_ptr_t& node);
 
+  void setBelongsTo(const node_weak_ptr_t& node);
+
   void setAttr(const std::string& str, const attr_ptr_t& attr);
 
   attr_ptr_t getAttr(const std::string& str);
@@ -219,6 +221,27 @@ class IRContext : public std::enable_shared_from_this<IRContext> {
     addToSymbolTable(created_node, "main");
 
     cur_insert_region_ = created_node->template cast_<Op>()->getTopRegion();
+
+    return created_node;
+  }
+
+  template<typename T, typename... Args>
+  std::shared_ptr<T> createTemporaryValue(Args&&... args) {
+    auto _this = shared_from_this();
+
+    std::shared_ptr<T> created_node = T::build(_this.get(), std::forward<Args>(args)...);
+
+    // set device
+    created_node->template cast_<Val>()->setDevice(getDevice());
+
+    if (created_node->template cast_<Val>()->name().empty()) {
+      setValueName(created_node->template cast_<Val>(), getAutoIndexedValueName());
+      created_node->template cast_<Val>()->name() =
+          value_names_[created_node->template cast_<Val>()];
+    } else {
+      setValueName(created_node->template cast_<Val>(),
+                   created_node->template cast_<Val>()->name());
+    }
 
     return created_node;
   }
@@ -360,6 +383,9 @@ class IRWriter {
 
     return created_node;
   }
+
+  // insert already exists op at
+  void insertOpAtPos(const op_ptr_t& pos_op, Position pos, const op_ptr_t& new_op);
 
   // create op before an op
   template<typename T, typename... Args>

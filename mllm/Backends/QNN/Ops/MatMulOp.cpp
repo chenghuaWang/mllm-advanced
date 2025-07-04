@@ -20,6 +20,7 @@ bool QnnMatMulOpPattern::match(const ir::op_ptr_t& op) { return op->isa_<ir::lin
 bool QnnMatMulOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
                                  const std::vector<ir::tensor::TensorValue::self_ptr_t>& inputs,
                                  const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs) {
+  // 1. Prepare inputs
   std::vector<std::string> input_names;
   input_names.reserve(inputs.size());
   for (auto& input_tensor_ir : inputs) {
@@ -27,22 +28,40 @@ bool QnnMatMulOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
     input_names.emplace_back(input_tensor_ir->name());
   }
 
-  auto mllm_matmul_op = (QnnMatMulOp*)(op->cast_<ir::linalg::MatMulOp>()->getAOp());
-  if (!mllm_matmul_op->transposeA() && !mllm_matmul_op->transposeB()) {
-    std::vector<Qnn_Tensor_t> output_tensors;
-
-    // Transform output tensor ir to qnn tensor
-    for (auto& out : op->outputs()) {
-      output_tensors.emplace_back(QnnTensorTransform::instance().transform(
-          out->cast_<ir::tensor::TensorValue>(), QNN_TENSOR_VERSION_2));
-    }
-
-    // Add Node to Qnn Graph.
-    graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_matmul_op->name(), QnnIRGraph::QTI_AISW_OP_PACKAGE,
-                "MatMul", {}, input_names, output_tensors);
-  } else {
-    NYI("Not support transpose LHS or RHS in QnnMatMulOp");
+  // 2. Prepare outputs
+  // Transform output tensor ir to qnn tensor
+  std::vector<Qnn_Tensor_t> output_tensors;
+  for (auto& out : op->outputs()) {
+    output_tensors.emplace_back(QnnTensorTransform::instance().transform(
+        out->cast_<ir::tensor::TensorValue>(), QNN_TENSOR_VERSION_2));
   }
+
+  // 3. Get mllm's qnn matmul op
+  auto mllm_matmul_op = (QnnMatMulOp*)(op->cast_<ir::linalg::MatMulOp>()->getAOp());
+
+  // 4. Make Param_t for transpose
+  std::vector<Qnn_Param_t*> params;
+  if (mllm_matmul_op->transposeA()) {
+    auto param_transpose_in0 =
+        new Qnn_Param_t{.paramType = QNN_PARAMTYPE_SCALAR,
+                        .name = "transpose_in0",
+                        .scalarParam = Qnn_Scalar_t{QNN_DATATYPE_BOOL_8, {.bool8Value = true}}};
+    params.emplace_back(param_transpose_in0);
+  }
+  if (mllm_matmul_op->transposeB()) {
+    auto param_transpose_in1 =
+        new Qnn_Param_t{.paramType = QNN_PARAMTYPE_SCALAR,
+                        .name = "transpose_in1",
+                        .scalarParam = Qnn_Scalar_t{QNN_DATATYPE_BOOL_8, {.bool8Value = true}}};
+    params.emplace_back(param_transpose_in1);
+  }
+
+  // 5. Add Node to Qnn Graph.
+  graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_matmul_op->name(), QnnIRGraph::QTI_AISW_OP_PACKAGE,
+              "MatMul", params, input_names, output_tensors);
+
+  // 6. Delete template values
+  for (auto p : params) { delete p; }
 
   return true;
 }

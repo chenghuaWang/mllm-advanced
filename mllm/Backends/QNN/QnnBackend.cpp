@@ -15,6 +15,7 @@
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
 #include "mllm/Backends/QNN/Ops/LinearOp.hpp"
 #include "mllm/Backends/QNN/Ops/SiLUOp.hpp"
+#include "mllm/Backends/QNN/Ops/ViewOp.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLoader.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLog.hpp"
 #include "mllm/Backends/QNN/QnnAllocator.hpp"
@@ -32,7 +33,7 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
 
   // TODO
   regOpFactory<QnnMatMulOpFactory, QnnLinearOpFactory, QnnSiLUOpFactory, QnnAddOpFactory,
-               QnnSubOpFactory, QnnMulOpFactory, QnnDivOpFactory>();
+               QnnSubOpFactory, QnnMulOpFactory, QnnDivOpFactory, QnnViewOpFactory>();
 }
 
 QnnBackend::~QnnBackend() {

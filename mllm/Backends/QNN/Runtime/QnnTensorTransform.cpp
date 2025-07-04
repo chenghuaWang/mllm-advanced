@@ -311,6 +311,7 @@ Qnn_DataType_t QnnTensorTransform::autoQnnTensorDataType(
   auto& mllm_tensor = tensor_ir->tensor_;
 
   switch (mllm_tensor.dtype()) {
+    case kInt32: ret_qnn_dtype = QNN_DATATYPE_INT_32; break;
     case kFp32: ret_qnn_dtype = QNN_DATATYPE_FLOAT_32; break;
     case kFp16: ret_qnn_dtype = QNN_DATATYPE_FLOAT_16; break;
     case kPTInt8_Sym: ret_qnn_dtype = QNN_DATATYPE_SFIXED_POINT_8; break;
@@ -327,6 +328,7 @@ Qnn_QuantizeParams_t QnnTensorTransform::autoQnnTensorQuantParams(
   auto& mllm_tensor = tensor_ir->tensor_;
 
   switch (mllm_tensor.dtype()) {
+    case kInt32:
     case kFp32:
     case kFp16: break;
     case kPTInt8_Sym: {

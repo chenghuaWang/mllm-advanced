@@ -32,6 +32,8 @@ class ViewOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
+  inline std::vector<int32_t> toWhichShape() { return cargo_.to_shape_; }
+
  protected:
   ViewOpCargo cargo_;
 };

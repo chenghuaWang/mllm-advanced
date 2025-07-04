@@ -64,6 +64,7 @@ void ArmFillOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
           std::fill(t.ptr<float16_t>(), t.ptr<float16_t>() + t.numel(),
                     static_cast<float16_t>(1.f));
           break;
+        case kInt32: std::fill(t.ptr<int32_t>(), t.ptr<int32_t>() + t.numel(), 1); break;
         default: NYI("ArmFillOp type=0, dtype={}.", dataTypes2Str(dtype));
       }
       break;

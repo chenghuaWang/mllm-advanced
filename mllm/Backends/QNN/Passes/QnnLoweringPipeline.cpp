@@ -9,6 +9,7 @@
  *
  */
 #include "mllm/Backends/QNN/Passes/QnnGraphBuildPass.hpp"
+#include "mllm/Backends/QNN/Passes/QnnGraphInlinePass.hpp"
 #include "mllm/Backends/QNN/Passes/QnnMarkIOTensorPass.hpp"
 #include "mllm/Backends/QNN/Passes/QnnTensorNamingPass.hpp"
 #include "mllm/Backends/QNN/Passes/QnnAnonymousOpNamingPass.hpp"
@@ -22,10 +23,15 @@ std::vector<std::shared_ptr<ir::Pass>> createQnnLoweringPipeline(
 
   if (cfg.tensor_readable_rename) { ret.emplace_back(createQnnTensorNamingPass()); }
 
+  // NOTE: Notice the Pass execution order !!!
+  // NOTE: Notice the Pass execution order !!!
+  // NOTE: Notice the Pass execution order !!!
+
+  ret.emplace_back(createQnnGraphInlinePass(cfg.graphs_need_to_be_compiled));
   ret.emplace_back(createQnnAnonymousOpNamingPass());
-  ret.emplace_back(createQnnMarkIOTensorPass());
 
   // Do final compile
+  ret.emplace_back(createQnnMarkIOTensorPass());  // After all graph modification
   ret.emplace_back(createQnnGraphBuildPass(cfg.graphs_need_to_be_compiled));
 
   return ret;
