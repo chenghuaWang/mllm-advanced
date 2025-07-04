@@ -128,6 +128,30 @@ class Tensor {
                      DeviceTypes device = kCPU);
 
   /**
+   * @brief Creates a tensor with evenly spaced values within a specified range.
+   * @param start
+   * @param end
+   * @param step
+   * @param dtype
+   * @param device
+   * @return Tensor
+   */
+  static Tensor arange(float start, float end, float step, DataTypes dtype = kFp32,
+                       DeviceTypes device = kCPU);
+
+  /**
+   * @brief Creates a tensor with random values within a specified range.
+   * @param shape
+   * @param start
+   * @param end
+   * @param dtype
+   * @param device
+   * @return Tensor
+   */
+  static Tensor random(const std::vector<int32_t>& shape, float start = -1.f, float end = 1.f,
+                       DataTypes dtype = kFp32, DeviceTypes device = kCPU);
+
+  /**
    * @brief Creates a shallow view (slice) of the tensor.
    * @param slice_index Slice specification.
    * @return New tensor view referencing the sliced data.

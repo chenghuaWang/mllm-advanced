@@ -19,7 +19,7 @@ namespace mllm {
 // 1 -> ones
 // 2 -> specific
 // 3 -> random
-// 4 -> arrange
+// 4 -> arange
 // 5 -> make input tensor contiguous
 struct FillOpCargo : public BaseOpCargo<FillOpCargo> {
   size_t type = 0;

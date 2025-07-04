@@ -188,9 +188,9 @@ int main() {
       auto gate_name = "model.mlp." + id + ".gate_proj.weight";
       auto up_name = "model.mlp." + id + ".up_proj.weight";
       auto down_name = "model.mlp." + id + ".down_proj.weight";
-      param_loader->params()[gate_name] = Tensor::zeros({8960, 1536}, kFp16, kCPU).setMemType(kParams).setName(gate_name).impl();
-      param_loader->params()[up_name] = Tensor::zeros({8960, 1536}, kFp16, kCPU).setMemType(kParams).setName(up_name).impl();
-      param_loader->params()[down_name] = Tensor::zeros({1536, 8960}, kFp16, kCPU).setMemType(kParams).setName(down_name).impl();
+      param_loader->params()[gate_name] = Tensor::random({8960, 1536}, -1.f, 1.f, kFp16, kCPU).setMemType(kParams).setName(gate_name).impl();
+      param_loader->params()[up_name] = Tensor::random({8960, 1536}, -1.f, 1.f, kFp16, kCPU).setMemType(kParams).setName(up_name).impl();
+      param_loader->params()[down_name] = Tensor::random({1536, 8960}, -1.f, 1.f, kFp16, kCPU).setMemType(kParams).setName(down_name).impl();
     }
     // param_loader->params()["model.self_attn.q_proj.weight"] = Tensor::zeros({1536, 1536}, kFp16, kCPU).setMemType(kParams).setName("model.self_attn.q_proj.weight").impl();
     // param_loader->params()["model.self_attn.k_proj.weight"] = Tensor::zeros({1536, 1536}, kFp16, kCPU).setMemType(kParams).setName("model.self_attn.k_proj.weight").impl();
@@ -200,7 +200,7 @@ int main() {
     // clang-format on
 
     // 3. Trace IR
-    auto ir_ctx = mllm::ir::trace(net, Tensor::empty({512, 1536}, kFp16, kQNN));
+    auto ir_ctx = mllm::ir::trace(net, Tensor::empty({1024, 1536}, kFp16, kQNN));
 
     auto dump_printer = IRPrinter();
     ir_ctx->topLevelOp()->dump(dump_printer);
@@ -224,9 +224,11 @@ int main() {
 
     // 7. Run Qnn Object
     net_obj.allocRuntime();
+    auto i1 = net_obj.getInputsTensor()[0];
+    for (int i = 0; i < i1.numel(); ++i) { *(i1.ptr<uint16_t>() + i) = i / 100; }
     int64_t total_time = 0;
     auto test_start_time = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1024 / 512; ++i) { net_obj.forward(); }
+    for (int i = 0; i < 1024 / 1024; ++i) { net_obj.forward(); }
     // net_obj.forward();
     auto test_end_time = std::chrono::high_resolution_clock::now();
     total_time =

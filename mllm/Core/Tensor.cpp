@@ -57,6 +57,25 @@ Tensor Tensor::ones(const std::vector<int32_t>& shape, DataTypes dtype, DeviceTy
                                             {Tensor(impl)})[0];
 }
 
+Tensor Tensor::arange(float start, float end, float step, DataTypes dtype, DeviceTypes device) {
+  std::vector<int32_t> shape = {static_cast<int32_t>((end - start) / step)};
+  auto storage = TensorStorage::create(shape, dtype, device);
+  auto impl = TensorViewImpl::create(shape, storage);
+  MllmEngineCtx::instance().mem()->alloc(storage);
+  return MllmEngineCtx::instance().dispatch(
+      OpType::kFill, FillOpCargo{.type = 4, .start = start, .end = end, .step = step},
+      {Tensor(impl)})[0];
+}
+
+Tensor Tensor::random(const std::vector<int32_t>& shape, float start, float end, DataTypes dtype,
+                      DeviceTypes device) {
+  auto storage = TensorStorage::create(shape, dtype, device);
+  auto impl = TensorViewImpl::create(shape, storage);
+  MllmEngineCtx::instance().mem()->alloc(storage);
+  return MllmEngineCtx::instance().dispatch(
+      OpType::kFill, FillOpCargo{.type = 3, .start = start, .end = end}, {Tensor(impl)})[0];
+}
+
 Tensor& Tensor::alloc() {
   if (impl_->storage()->ptr_) {
     MLLM_WARN("Tensor already allocated. Tensor uuid is <{}> name is <{}>", impl_->uuid(),
