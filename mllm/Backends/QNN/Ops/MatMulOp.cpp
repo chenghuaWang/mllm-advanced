@@ -25,7 +25,7 @@ bool QnnMatMulOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
   input_names.reserve(inputs.size());
   for (auto& input_tensor_ir : inputs) {
     // Use ir value name instead of tensor's name !!!
-    input_names.emplace_back(input_tensor_ir->name());
+    input_names.emplace_back(graph.checkTensorName(input_tensor_ir));
   }
 
   // 2. Prepare outputs

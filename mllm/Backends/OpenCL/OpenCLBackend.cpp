@@ -12,6 +12,9 @@
 #include "mllm/Backends/OpenCL/OpenCLBackend.hpp"
 #include "mllm/Backends/OpenCL/Runtime/OpenCLLoader.hpp"
 
+// OpenCL Kernels
+#include "mllm/Backends/OpenCL/Kernels/Core.hpp"
+
 namespace mllm::opencl {
 OpenCLBackend::OpenCLBackend() : BackendBase(kOpenCL) {
   allocator_ = nullptr;

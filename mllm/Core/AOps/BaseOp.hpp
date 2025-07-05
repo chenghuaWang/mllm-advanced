@@ -52,6 +52,8 @@ enum class OpType : int32_t {  // NOLINT
 
   kFlashAttention_2,
 
+  kRepeat,
+
   kOpType_End,
 };
 
@@ -79,6 +81,7 @@ inline const char* opType2Str(OpType type) {
     case OpType::kSplit: return "kSplit";
     case OpType::kView: return "kView";
     case OpType::kFlashAttention_2: return "kFlashAttention_2";
+    case OpType::kRepeat: return "kRepeat";
     case OpType::kOpType_End: return "kOpType_End";
     default: return "Unknown";
   }

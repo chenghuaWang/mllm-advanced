@@ -207,6 +207,19 @@ inline std::tuple<uint32_t, uint32_t> dataTypesBitsAndLanes(DataTypes type) {
   }
 }
 
+template<DataTypes _MLLM_DTYPE>
+struct FloatInfo;
+
+template<>
+struct FloatInfo<kFp16> {
+  using self_t = half_float::half;
+  using ptr_t = half_float::half*;
+  using const_ptr_t = const half_float::half*;
+
+  static constexpr float min = -65504.f;
+  static constexpr float max = 65504.f;
+};
+
 // FIXME: Impl this struct. compatible with dlpack's definition
 struct DataType {
   DataType(DataTypes data_type_code)  // NOLINT: google-explicit-constructor

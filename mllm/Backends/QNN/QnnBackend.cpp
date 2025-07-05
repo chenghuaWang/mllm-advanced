@@ -14,6 +14,7 @@
 #include "mllm/Backends/QNN/Ops/ElewiseOp.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
 #include "mllm/Backends/QNN/Ops/LinearOp.hpp"
+#include "mllm/Backends/QNN/Ops/RepeatOp.hpp"
 #include "mllm/Backends/QNN/Ops/SiLUOp.hpp"
 #include "mllm/Backends/QNN/Ops/ViewOp.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnLoader.hpp"
@@ -31,9 +32,9 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
   // NOTE: Init HTP memory allocator AFTER HTPBackend is inited.
   allocator_ = std::make_shared<QnnAllocator>(qnn_htp_func_symbols_, qnn_htp_backend_);
 
-  // TODO
   regOpFactory<QnnMatMulOpFactory, QnnLinearOpFactory, QnnSiLUOpFactory, QnnAddOpFactory,
-               QnnSubOpFactory, QnnMulOpFactory, QnnDivOpFactory, QnnViewOpFactory>();
+               QnnSubOpFactory, QnnMulOpFactory, QnnDivOpFactory, QnnViewOpFactory,
+               QnnRepeatOpFactory>();
 }
 
 QnnBackend::~QnnBackend() {

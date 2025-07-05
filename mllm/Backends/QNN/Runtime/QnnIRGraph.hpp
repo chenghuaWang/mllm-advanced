@@ -71,6 +71,8 @@ class QnnIRGraph {
   void getTensor(const std::string& node_name, const std::string& tensor_name,
                  Qnn_Tensor_t& tensor);
 
+  std::string checkTensorName(const ir::tensor::TensorValue::self_ptr_t& ptr);
+
   void compile();
 
   void free();

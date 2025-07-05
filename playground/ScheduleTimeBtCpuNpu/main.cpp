@@ -31,7 +31,7 @@ struct FakePayloadConfig {
   int hidden_size = 1536;
   int intermediate_size = 8960;
   int heads_num = 12;
-  int layers = 8;
+  int layers = 1;
 };
 
 class FakePayloadMLP final : public nn::Module {
@@ -200,7 +200,7 @@ int main() {
     // clang-format on
 
     // 3. Trace IR
-    auto ir_ctx = mllm::ir::trace(net, Tensor::empty({1024, 1536}, kFp16, kQNN));
+    auto ir_ctx = mllm::ir::trace(net, Tensor::empty({64, 1536}, kFp16, kQNN));
 
     auto dump_printer = IRPrinter();
     ir_ctx->topLevelOp()->dump(dump_printer);
@@ -228,7 +228,7 @@ int main() {
     for (int i = 0; i < i1.numel(); ++i) { *(i1.ptr<uint16_t>() + i) = i / 100; }
     int64_t total_time = 0;
     auto test_start_time = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1024 / 1024; ++i) { net_obj.forward(); }
+    for (int i = 0; i < 1024 / 64; ++i) { net_obj.forward(); }
     // net_obj.forward();
     auto test_end_time = std::chrono::high_resolution_clock::now();
     total_time =

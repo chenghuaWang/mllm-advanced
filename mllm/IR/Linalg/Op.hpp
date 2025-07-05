@@ -37,6 +37,8 @@ class D2HOp;
 class H2DOp;
 class ViewOp;
 class SplitOp;
+class FlashAttention2Op;
+class RepeatOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
@@ -127,5 +129,8 @@ LINALG_AOPS_DEFINE(D2HOp, D2HOP);
 
 LINALG_AOPS_DEFINE(ViewOp, VIEWOP);
 LINALG_AOPS_DEFINE(SplitOp, SPLITOP);
+
+LINALG_AOPS_DEFINE(FlashAttention2Op, FLASHATTENTION2OP);
+LINALG_AOPS_DEFINE(RepeatOp, REPEATOP);
 
 }  // namespace mllm::ir::linalg

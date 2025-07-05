@@ -1,0 +1,20 @@
+@main () -> (){
+    graph.CallGraphOp @mma0 (%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %2.mma0.v.1:tensor<[6, 15, 128], Fp16, QNN>, %3.mma0.v.2:tensor<[6, 64, 128], Fp16, QNN>, %4.mma0.v.3:tensor<[6, 64, 128], Fp16, QNN>, %5.mma0.v.4:tensor<[6, 64, 128], Fp16, QNN>, %6.mma0.v.5:tensor<[6, 64, 128], Fp16, QNN>) -> (%12.kMatMul.v.0:tensor<[12, 64, 15], Fp16, QNN>, %13.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %14.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %15.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %16.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %18.kAdd.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+    graph.SubGraphOp @mma0 <QNN>{
+        (%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %2.mma0.v.1:tensor<[6, 15, 128], Fp16, QNN>, %3.mma0.v.2:tensor<[6, 64, 128], Fp16, QNN>, %4.mma0.v.3:tensor<[6, 64, 128], Fp16, QNN>, %5.mma0.v.4:tensor<[6, 64, 128], Fp16, QNN>, %6.mma0.v.5:tensor<[6, 64, 128], Fp16, QNN>) -> (%12.kMatMul.v.0:tensor<[12, 64, 15], Fp16, QNN>, %13.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %14.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %15.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %16.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %18.kAdd.v.0:tensor<[12, 64, 64], Fp16, QNN>){
+            linalg.QNN.RepeatOp(%2.mma0.v.1:tensor<[6, 15, 128], Fp16, QNN>) -> (%7.kRepeat.v.0:tensor<[12, 15, 128], Fp16, QNN>)
+            linalg.QNN.RepeatOp(%3.mma0.v.2:tensor<[6, 64, 128], Fp16, QNN>) -> (%8.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>)
+            linalg.QNN.RepeatOp(%4.mma0.v.3:tensor<[6, 64, 128], Fp16, QNN>) -> (%9.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>)
+            linalg.QNN.RepeatOp(%5.mma0.v.4:tensor<[6, 64, 128], Fp16, QNN>) -> (%10.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>)
+            linalg.QNN.RepeatOp(%6.mma0.v.5:tensor<[6, 64, 128], Fp16, QNN>) -> (%11.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>)
+            linalg.QNN.MatMulOp(%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %7.kRepeat.v.0:tensor<[12, 15, 128], Fp16, QNN>) -> (%12.kMatMul.v.0:tensor<[12, 64, 15], Fp16, QNN>)
+            linalg.QNN.MatMulOp(%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %8.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>) -> (%13.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+            linalg.QNN.MatMulOp(%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %9.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>) -> (%14.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+            linalg.QNN.MatMulOp(%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %10.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>) -> (%15.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+            linalg.QNN.MatMulOp(%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %11.kRepeat.v.0:tensor<[12, 64, 128], Fp16, QNN>) -> (%16.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+            linalg.QNN.MatMulOp(%1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>, %1.mma0.v.0:tensor<[12, 64, 128], Fp16, QNN>) -> (%17.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+            linalg.QNN.AddOp(%17.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %0:tensor<[64, 64], Fp16, CPU>[@mma0.causal_mask]) -> (%18.kAdd.v.0:tensor<[12, 64, 64], Fp16, QNN>)
+            cf.ReturnOp(%12.kMatMul.v.0:tensor<[12, 64, 15], Fp16, QNN>, %13.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %14.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %15.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %16.kMatMul.v.0:tensor<[12, 64, 64], Fp16, QNN>, %18.kAdd.v.0:tensor<[12, 64, 64], Fp16, QNN>) -> ()
+        }
+    }
+}

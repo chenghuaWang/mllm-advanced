@@ -37,7 +37,9 @@
                                 const std::vector<ir::tensor::TensorValue::self_ptr_t>& outputs) { \
     std::vector<std::string> input_names;                                                          \
     input_names.reserve(inputs.size());                                                            \
-    for (auto& input_tensor_ir : inputs) { input_names.emplace_back(input_tensor_ir->name()); }    \
+    for (auto& input_tensor_ir : inputs) {                                                         \
+      input_names.emplace_back(graph.checkTensorName(input_tensor_ir));                            \
+    }                                                                                              \
     std::vector<Qnn_Tensor_t> output_tensors;                                                      \
     output_tensors.reserve(outputs.size());                                                        \
     for (auto& out : op->outputs()) {                                                              \

@@ -12,6 +12,7 @@
 #include "mllm/Backends/QNN/Ops/ElewiseOp.hpp"
 #include "mllm/Backends/QNN/Ops/LinearOp.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
+#include "mllm/Backends/QNN/Ops/RepeatOp.hpp"
 #include "mllm/Backends/QNN/Ops/SiLUOp.hpp"
 #include "mllm/Backends/QNN/Ops/ViewOp.hpp"
 #include "mllm/Backends/QNN/QnnBackend.hpp"
@@ -29,7 +30,8 @@ namespace mllm::qnn {
 
 QnnGraphBuildPass::QnnGraphBuildPass() {
   regPattern<QnnMatMulOpPattern, QnnLinearOpPattern, QnnSiLUOpPattern, QnnAddOpPattern,
-             QnnSubOpPattern, QnnMulOpPattern, QnnDivOpPattern, QnnViewOpPattern>();
+             QnnSubOpPattern, QnnMulOpPattern, QnnDivOpPattern, QnnViewOpPattern,
+             QnnRepeatOpPattern>();
 }
 
 uint8_t QnnGraphBuildPass::run(const ir::node_ptr_t& op) {

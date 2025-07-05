@@ -306,6 +306,15 @@ class Tensor {
   Tensor view(const std::vector<int>& indicies);
 
   /**
+   * @brief Repeats tensor along a dimension.
+   *
+   * @param multiplier
+   * @param dim
+   * @return Tensor
+   */
+  Tensor repeat(int32_t multiplier, int32_t dim);
+
+  /**
    * @brief Gets raw pointer offset by indices.
    * @param offsets Multi-dimensional indices.
    * @return Raw char pointer to the memory location.

@@ -4,4 +4,5 @@ Before running experiments or other projects in playground. Please make sure you
 
 ## Experiments
 
-1. Schedule overhead between cpu and npu
+1. Schedule overhead between cpu and npu.
+2. Paged Attention using qnn ability.

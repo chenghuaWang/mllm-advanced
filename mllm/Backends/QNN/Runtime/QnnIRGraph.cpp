@@ -275,6 +275,13 @@ void QnnIRGraph::getTensor(const std::string& node_name, const std::string& tens
   tensor = qnn_tensor_map_[tensor_name];
 }
 
+std::string QnnIRGraph::checkTensorName(const ir::tensor::TensorValue::self_ptr_t& ptr) {
+  if (qnn_tensor_map_.count(ptr->name())) { return ptr->name(); }
+  auto t = QnnTensorTransform::instance().transform(ptr, QNN_TENSOR_VERSION_2);
+  addTensor("<EMPTY>", t);
+  return ptr->name();
+}
+
 void QnnIRGraph::compile() {
   MLLM_RT_ASSERT_EQ(freezed_, true);
 
