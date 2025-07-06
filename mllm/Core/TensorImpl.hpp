@@ -18,7 +18,7 @@
 #include <memory>
 #include <string>
 
-#define MLLM_TENSOR_SHAPE_MAX_LEN 8
+#define MLLM_TENSOR_SHAPE_MAX_LEN 16
 
 namespace mllm {
 

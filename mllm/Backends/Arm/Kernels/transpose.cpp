@@ -15,8 +15,6 @@
 
 namespace mllm::arm {
 
-#include <arm_neon.h>
-
 void transpose_hw_wh(const float* __restrict X, float* __restrict Y, size_t H, size_t W) {
   for (size_t i = 0; i + 4 <= H; i += 4) {
     for (size_t j = 0; j + 4 <= W; j += 4) {

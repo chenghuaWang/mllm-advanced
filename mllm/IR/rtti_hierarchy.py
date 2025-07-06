@@ -238,6 +238,7 @@ def define_lianlg_ir(ir: dict):
     op.derive(Cls("SplitOp"))
     op.derive(Cls("FlashAttention2Op"))
     op.derive(Cls("RepeatOp"))
+    op.derive(Cls("PermuteOp"))
 
     # value
 

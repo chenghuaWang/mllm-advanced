@@ -43,5 +43,6 @@ LINALG_AOPS_DECL(OpType::kSplit, SplitOp);
 
 LINALG_AOPS_DECL(OpType::kFlashAttention_2, FlashAttention2Op);
 LINALG_AOPS_DECL(OpType::kRepeat, RepeatOp);
+LINALG_AOPS_DECL(OpType::kPermute, PermuteOp);
 
 }  // namespace mllm::ir::linalg

@@ -22,7 +22,7 @@ Image Image::open(const std::string& fp) {
     MLLM_ERROR_EXIT(kError, "Can't get infomation of image: {}", fp);
   }
 
-  if (ret_image.c_ > 4) {
+  if (ret_image.c_ >= 4) {
     MLLM_WARN("Found image: {} has {} channel. MLLM Image::open method will force convert this "
               "image to RGB.",
               fp, ret_image.c_);
@@ -33,6 +33,9 @@ Image Image::open(const std::string& fp) {
   if (_ptr) {
     ret_image.image_ptr_ = std::make_shared<_ImagePtr>();
     ret_image.image_ptr_->ptr_ = _ptr;
+    ret_image.c_ = 3;
+    MLLM_INFO("Load image: {} success.", fp);
+    MLLM_INFO("Image size: {}x{} in RGB format.", ret_image.h_, ret_image.w_);
   } else {
     MLLM_ERROR_EXIT(kError, "stbi_load load error. Found i_data is empty pointer!");
   }
@@ -49,11 +52,12 @@ Image Image::resize(int new_w, int new_h) {
   unsigned char* output_data = nullptr;
 
   // stb will alloc memory for us
-  stbir_resize_uint8_linear(static_cast<unsigned char*>(image_ptr_->ptr_), w_, h_, 0, output_data,
-                            new_w, new_h, 0, STBIR_RGB);
+  output_data = stbir_resize_uint8_linear(static_cast<unsigned char*>(image_ptr_->ptr_), w_, h_, 0,
+                                          output_data, new_w, new_h, 0, STBIR_RGB);
 
   new_img.image_ptr_ = std::make_shared<_ImagePtr>();
   new_img.image_ptr_->ptr_ = output_data;
+  MLLM_RT_ASSERT(output_data != nullptr);
   return new_img;
 }
 
@@ -79,22 +83,13 @@ void Image::save(const std::string& fp) {
 }
 
 Tensor Image::tensor() {
-  auto ret_tensor = Tensor::empty({c_, h_, w_}, kFp32, kCPU).alloc();
+  MLLM_RT_ASSERT_EQ(c_, 3);
+  auto ret_tensor = Tensor::empty({h_, w_, c_}, kFp32, kCPU).alloc();
 
   auto bare_tensor_ptr = ret_tensor.ptr<float>();
   auto bare_stb_ptr = static_cast<unsigned char*>(image_ptr_->ptr_);
 
-  // H, W, C -> C, H, W
-  for (int i_h = 0; i_h < h_; ++i_h) {
-    for (int i_w = 0; i_w < w_; ++i_w) {
-      int src_index = (i_h * w_ + i_w) * 3;
-      int dst_index = (i_h * w_ + i_w) * 3;
-
-      bare_tensor_ptr[dst_index] = static_cast<float>(bare_stb_ptr[src_index]) / 255.0f;
-      bare_tensor_ptr[dst_index + 1] = static_cast<float>(bare_stb_ptr[src_index + 1]) / 255.0f;
-      bare_tensor_ptr[dst_index + 2] = static_cast<float>(bare_stb_ptr[src_index + 2]) / 255.0f;
-    }
-  }
+  std::copy(bare_stb_ptr, bare_stb_ptr + ret_tensor.numel(), bare_tensor_ptr);
 
   return ret_tensor;
 }

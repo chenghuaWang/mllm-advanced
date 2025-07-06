@@ -12,6 +12,7 @@
 #include "mllm/Core/AOps/D2HOp.hpp"
 #include "mllm/Core/AOps/ElewiseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
+#include "mllm/Core/AOps/PermuteOp.hpp"
 #include "mllm/Core/AOps/RepeatOp.hpp"
 #include "mllm/Core/AOps/TransposeOp.hpp"
 #include "mllm/Core/AOps/ViewOp.hpp"
@@ -282,8 +283,20 @@ Tensor Tensor::view(const std::vector<int>& indicies) {
 }
 
 Tensor Tensor::repeat(int32_t multiplier, int32_t dim) {
+  if (multiplier == 1) { return *this; }
   return MllmEngineCtx::instance().dispatch(
       OpType::kRepeat, RepeatOpCargo{.multiplier = multiplier, .dim = dim}, {*this})[0];
+}
+
+Tensor Tensor::unsqueeze(int32_t dim) {
+  auto this_shape = shape();
+  this_shape.insert(this_shape.begin() + dim, 1);
+  return view(this_shape);
+}
+
+Tensor Tensor::permute(const std::vector<int32_t>& indices) {
+  return MllmEngineCtx::instance().dispatch(OpType::kPermute,
+                                            PermuteOpCargo{.permute_dims = indices}, {*this})[0];
 }
 
 char* Tensor::offsettedRawPtr(const std::vector<int32_t>& offsets) {

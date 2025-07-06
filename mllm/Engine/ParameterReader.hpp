@@ -34,13 +34,13 @@ struct __attribute__((packed)) ParameterDescriptor {
   size_t parameter_size;                    // 8B
   size_t parameter_offset;                  // 8B data_ptr = file_begin + parameter_offset
   size_t shape_len;                         // 8B
-  size_t shape[MLLM_TENSOR_SHAPE_MAX_LEN];  // 64B
+  size_t shape[MLLM_TENSOR_SHAPE_MAX_LEN];  // 128B
   char name[PARAMETER_NAME_LEN];            // 256B
 
   [[nodiscard]] std::string_view _param_name_view() const noexcept {
     return {name, strnlen(name, sizeof(name))};
   }
-};  // 352B in total of ParameterDescriptor
+};  // 416B in total of ParameterDescriptor
 
 // pack to 1B if possible
 struct __attribute__((packed)) ParameterPackHead {
@@ -54,7 +54,7 @@ struct __attribute__((packed)) ParameterPackHead {
 };  // 268B in total of ParameterDescriptor
 
 static_assert(sizeof(ParameterPackHead) == 268, "Invalid ParameterPackHead size");
-static_assert(sizeof(ParameterDescriptor) == 352, "Invalid ParameterDescriptor size");
+static_assert(sizeof(ParameterDescriptor) == 416, "Invalid ParameterDescriptor size");
 
 // ParameterPackHead
 // ParameterDescriptor-0

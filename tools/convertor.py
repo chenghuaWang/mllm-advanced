@@ -8,7 +8,7 @@ from safetensors import safe_open
 
 MLLM_PARAMETER_MAGIC_NUMBER = 0x519ACE0519ACE000
 PARAMETER_NAME_LEN = 256
-MLLM_TENSOR_SHAPE_MAX_LEN = 8
+MLLM_TENSOR_SHAPE_MAX_LEN = 16
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input", type=str, required=True)
@@ -69,6 +69,7 @@ TYPE_MAPPING = {
 
 def transform_dtype(data, dtype):
     if dtype == "BFLOAT16":
+        assert args.bf16_2_fp32 or args.bf16_2_fp16
         if args.bf16_2_fp32:
             return data.to(torch.float32), TYPE_MAPPING["FLOAT32"]
         if args.bf16_2_fp16:
@@ -87,7 +88,7 @@ def convert_safetensor(input_path, output_path):
     with safe_open(input_path, framework="pt", device="cpu") as f:
         tensors = []
         header_size = (
-            268 + len(f.keys()) * 352  # ParameterPackHead + n * ParameterDescriptor
+            268 + len(f.keys()) * 416  # ParameterPackHead + n * ParameterDescriptor
         )
 
         data_offset = header_size
@@ -143,7 +144,7 @@ def convert_safetensor(input_path, output_path):
                 )
 
                 descriptor = struct.pack(
-                    "<IIQQQ8Q256s",
+                    "<IIQQQ16Q256s",
                     desc["parameter_id"],
                     desc["parameter_type"],
                     desc["parameter_size"],

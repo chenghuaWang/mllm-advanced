@@ -10,6 +10,7 @@
 #pragma once
 
 #include "mllm/Utils/Log.hpp"
+#include "mllm/Utils/Dbg.hpp"
 
 #define MLLM_NAMESPACE_ANONYMOUS
 

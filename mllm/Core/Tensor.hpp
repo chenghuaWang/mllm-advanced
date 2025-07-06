@@ -315,6 +315,22 @@ class Tensor {
   Tensor repeat(int32_t multiplier, int32_t dim);
 
   /**
+   * @brief Unsqueeze tensor along a dimension.
+   *
+   * @param dim
+   * @return Tensor
+   */
+  Tensor unsqueeze(int32_t dim);
+
+  /**
+   * @brief Permute tensor to a new shape
+   *
+   * @param indices
+   * @return Tensor
+   */
+  Tensor permute(const std::vector<int32_t>& indices);
+
+  /**
    * @brief Gets raw pointer offset by indices.
    * @param offsets Multi-dimensional indices.
    * @return Raw char pointer to the memory location.

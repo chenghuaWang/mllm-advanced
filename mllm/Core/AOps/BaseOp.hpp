@@ -53,6 +53,7 @@ enum class OpType : int32_t {  // NOLINT
   kFlashAttention_2,
 
   kRepeat,
+  kPermute,
 
   kOpType_End,
 };

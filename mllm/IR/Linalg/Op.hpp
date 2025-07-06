@@ -39,6 +39,7 @@ class ViewOp;
 class SplitOp;
 class FlashAttention2Op;
 class RepeatOp;
+class PermuteOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
@@ -132,5 +133,6 @@ LINALG_AOPS_DEFINE(SplitOp, SPLITOP);
 
 LINALG_AOPS_DEFINE(FlashAttention2Op, FLASHATTENTION2OP);
 LINALG_AOPS_DEFINE(RepeatOp, REPEATOP);
+LINALG_AOPS_DEFINE(PermuteOp, PERMUTEOP);
 
 }  // namespace mllm::ir::linalg

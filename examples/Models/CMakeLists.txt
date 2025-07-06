@@ -1,1 +1,2 @@
 add_subdirectory(DeepSeekDistillQwen2)
+add_subdirectory(Qwen2VL)

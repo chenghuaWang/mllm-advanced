@@ -2,6 +2,7 @@ enable_testing()
 add_subdirectory(Nn)
 add_subdirectory(IR)
 add_subdirectory(Utils)
+add_subdirectory(Preprocessor)
 
 if(MLLM_BUILD_ARM_BACKEND)
   add_subdirectory(Arm)
