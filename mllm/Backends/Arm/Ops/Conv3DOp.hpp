@@ -17,6 +17,8 @@ class ArmConv3DOp final : public Conv3DOp {
  public:
   explicit ArmConv3DOp(const Conv3DOpCargo& cargo);
 
+  void load(const std::shared_ptr<ParameterLoader>& ploader) override;
+
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 

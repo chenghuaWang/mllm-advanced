@@ -13,6 +13,7 @@ AdbPushTask:
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-OpCallTest"
     - "build-android-arm64-v8a/tests/Nn/Mllm-Nn-ComplexIndexTest"
     - "build-android-arm64-v8a/tests/Arm/Mllm-ArmTest"
+    - "build-android-arm64-v8a/tests/Arm/Mllm-ArmTest-SingleConv3DTest"
     - "build-android-arm64-v8a/tests/IR/Mllm-IR-LlmIRTest"
     - "build-android-arm64-v8a/tests/Preprocessor/Mllm-Processor-ImageLoadAndStoreTest"
     - "build-android-arm64-v8a/tools/PowerCounter/mllm-power-counter"

@@ -27,6 +27,8 @@ class MllmEngineCfg {
 
 class MllmModelCfg {
  public:
+  MllmModelCfg() = default;
+
   explicit MllmModelCfg(const std::string& file_path);
 
   [[nodiscard]] std::string modelName() const;
@@ -68,6 +70,8 @@ class MllmModelCfg {
   [[nodiscard]] std::vector<std::string> paramNames() const;
 
   [[nodiscard]] DataTypes paramDtype(const std::string& param_name) const;
+
+  nlohmann::json& rawJson();
 
  protected:
   nlohmann::json json_;

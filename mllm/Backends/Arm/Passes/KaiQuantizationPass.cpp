@@ -27,6 +27,7 @@ namespace mllm::arm {
 // KaiQuantizationPatterns For Linear Op
 //===----------------------------------------------------------------------===//
 bool KQP_linear_fp16_fp16_fp16p_mxk_kxn::match(const ir::op_ptr_t& op, const MllmModelCfg& cfg) {
+  if (!op->isa_<ir::linalg::LinearOp>()) { return false; }
   auto mllm_op = op->cast_<ir::linalg::LinearOp>()->getAOp();
   return cfg.opImplType(mllm_op->name()) == "KaiLinear_fp16_fp16_fp16p_mxk_kxn";
 }
@@ -85,6 +86,7 @@ std::shared_ptr<KQP_linear_fp16_fp16_fp16p_mxk_kxn> KQP_linear_fp16_fp16_fp16p_m
 
 bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::match(const ir::op_ptr_t& op,
                                                     const MllmModelCfg& cfg) {
+  if (!op->isa_<ir::linalg::LinearOp>()) { return false; }
   auto mllm_op = op->cast_<ir::linalg::LinearOp>()->getAOp();
 
   std::string name = cfg.opImplType(mllm_op->name());
@@ -191,6 +193,7 @@ KQP_linear_f32_qai8dxp_qsi4c32p_mxk_nxk::create() {
 
 bool KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::match(const ir::op_ptr_t& op,
                                                     const MllmModelCfg& cfg) {
+  if (!op->isa_<ir::linalg::LinearOp>()) { return false; }
   auto mllm_op = op->cast_<ir::linalg::LinearOp>()->getAOp();
 
   std::string name = cfg.opImplType(mllm_op->name());
@@ -297,6 +300,7 @@ KQP_linear_f32_qai8dxp_qsi4c32p_mxk_kxn::create() {
 
 bool KQP_linear_f16_qsi8d32p_qai4c32p_mxk_nxk::match(const ir::op_ptr_t& op,
                                                      const MllmModelCfg& cfg) {
+  if (!op->isa_<ir::linalg::LinearOp>()) { return false; }
   auto mllm_op = op->cast_<ir::linalg::LinearOp>()->getAOp();
 
   std::string name = cfg.opImplType(mllm_op->name());
@@ -397,6 +401,7 @@ KQP_linear_f16_qsi8d32p_qai4c32p_mxk_nxk::create() {
 //===----------------------------------------------------------------------===//
 bool KQP_conv3d_f32_qai8dxp_qsi4c32p_mxk_nxk::match(const ir::op_ptr_t& op,
                                                     const MllmModelCfg& cfg) {
+  if (!op->isa_<ir::linalg::Conv3DOp>()) { return false; }
   auto mllm_op = op->cast_<ir::linalg::Conv3DOp>()->getAOp();
 
   std::string name = cfg.opImplType(mllm_op->name());
@@ -508,13 +513,13 @@ void visitSubGraph(KaiQuantizationPass* this_pass, const std::shared_ptr<ir::IRC
     // If has call graph op
     if (_op->isa_<ir::graph::CallGraphOp>()) {
       visitCallGraph(this_pass, ir_ctx, _op->cast_<ir::graph::CallGraphOp>(), quant_cfg);
-    } else if (_op->isa_<ir::linalg::LinearOp>()) {
-      // KleidiAI Ops only optimized for linear.
+    } else if (_op->isa_<ir::linalg::LinearOp>() || _op->isa_<ir::linalg::Conv3DOp>()) {
+      // KleidiAI Ops only optimized for linear / matmul-lie / conv.
       // Lookup quant_cfg and see if this linear should be quantized or not.
       if (!this_pass->performPatterns(_op)) {
         MLLM_WARN("Linear Op: {} is not quantized. Failed to match patterns or this Op is config "
                   "with no quantization.",
-                  _op->cast_<ir::linalg::LinearOp>()->getAOp()->name());
+                  _op->cast_<ir::linalg::LinalgIROp>()->getAOp()->name());
       }
     }
     // FIXME:

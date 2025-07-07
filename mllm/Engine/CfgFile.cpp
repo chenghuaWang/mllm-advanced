@@ -73,4 +73,6 @@ DataTypes MllmModelCfg::paramDtype(const std::string& param_name) const {
   return DataTypes::kFp32;
 }
 
+nlohmann::json& MllmModelCfg::rawJson() { return json_; }
+
 }  // namespace mllm

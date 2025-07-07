@@ -19,6 +19,8 @@ namespace mllm::arm {
 void im2col_conv3d_p0_d1_activation_fp32(float* __restrict__ Z, const float* __restrict__ A,
                                          int32_t batch, int32_t in_channels, int32_t time,
                                          int32_t h, int32_t w, int32_t kernel_size_t,
-                                         int32_t kernel_size_h, int32_t kernel_size_w);
+                                         int32_t kernel_size_h, int32_t kernel_size_w,
+                                         int32_t stride_size_t, int32_t stride_size_h,
+                                         int32_t stride_size_w);
 
 }  // namespace mllm::arm
