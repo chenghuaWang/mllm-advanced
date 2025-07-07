@@ -239,6 +239,11 @@ def define_lianlg_ir(ir: dict):
     op.derive(Cls("FlashAttention2Op"))
     op.derive(Cls("RepeatOp"))
     op.derive(Cls("PermuteOp"))
+    op.derive(Cls("Conv1DOp"))
+    op.derive(Cls("Conv2DOp"))
+    op.derive(Cls("Conv3DOp"))
+    op.derive(Cls("GELUOp"))
+    op.derive(Cls("LayerNormOp"))
 
     # value
 

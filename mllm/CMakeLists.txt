@@ -39,3 +39,7 @@ endif()
 if(NOT MLLM_CROSS_COMPILE)
   add_subdirectory(Backends/X86)
 endif()
+
+if(MLLM_ENABLE_JIT)
+  add_subdirectory(JIT)
+endif()

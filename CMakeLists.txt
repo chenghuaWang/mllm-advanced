@@ -12,6 +12,7 @@ option(MLLM_ENABLE_TEST "Enable mllm test" ON)
 option(MLLM_ENABLE_BENCHMARK "Enable mllm benchmark" ON)
 option(MLLM_ENABLE_EXAMPLE "Enable mllm example" ON)
 option(MLLM_ENABLE_PY_MLLM "Enable mllm python binding" OFF)
+option(MLLM_ENABLE_JIT "Enable mllm jit" ON)
 
 message(STATUS "CXX Compiler=${CMAKE_CXX_COMPILER_ID}")
 message(STATUS "CXX Compiler version=${CMAKE_CXX_COMPILER_VERSION}")

@@ -25,6 +25,9 @@ struct KaiQuantizationBasePattern {
   virtual bool quantize(const ir::op_ptr_t& op, const MllmModelCfg& cfg) = 0;
 };
 
+//===----------------------------------------------------------------------===//
+// KaiQuantizationPatterns For Linear Op
+//===----------------------------------------------------------------------===//
 struct KQP_linear_fp16_fp16_fp16p_mxk_kxn final : public KaiQuantizationBasePattern {
   bool match(const ir::op_ptr_t& op, const MllmModelCfg& cfg) override;
   bool quantize(const ir::op_ptr_t& op, const MllmModelCfg& cfg) override;
@@ -59,6 +62,18 @@ struct KQP_linear_f16_qsi8d32p_qai4c32p_mxk_nxk final : public KaiQuantizationBa
   static std::shared_ptr<KQP_linear_f16_qsi8d32p_qai4c32p_mxk_nxk> create();
 
   KaiLinear_f16_qsi8d32p_qai4c32p_mxk_nxk kai_helper_;
+};
+
+//===----------------------------------------------------------------------===//
+// KaiQuantizationPatterns For Conv3D Op
+//===----------------------------------------------------------------------===//
+struct KQP_conv3d_f32_qai8dxp_qsi4c32p_mxk_nxk final : public KaiQuantizationBasePattern {
+  bool match(const ir::op_ptr_t& op, const MllmModelCfg& cfg) override;
+  bool quantize(const ir::op_ptr_t& op, const MllmModelCfg& cfg) override;
+
+  static std::shared_ptr<KQP_conv3d_f32_qai8dxp_qsi4c32p_mxk_nxk> create();
+
+  KaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk kai_helper_;
 };
 
 class KaiQuantizationPass : public ir::Pass {

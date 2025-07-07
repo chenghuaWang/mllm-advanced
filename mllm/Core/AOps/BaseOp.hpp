@@ -55,6 +55,13 @@ enum class OpType : int32_t {  // NOLINT
   kRepeat,
   kPermute,
 
+  kConv3D,
+  kConv2D,
+  kConv1D,
+
+  kGELU,
+  kLayerNorm,
+
   kOpType_End,
 };
 

@@ -45,4 +45,11 @@ LINALG_AOPS_DECL(OpType::kFlashAttention_2, FlashAttention2Op);
 LINALG_AOPS_DECL(OpType::kRepeat, RepeatOp);
 LINALG_AOPS_DECL(OpType::kPermute, PermuteOp);
 
+LINALG_AOPS_DECL(OpType::kConv1D, Conv1DOp);
+LINALG_AOPS_DECL(OpType::kConv2D, Conv2DOp);
+LINALG_AOPS_DECL(OpType::kConv3D, Conv3DOp);
+
+LINALG_AOPS_DECL(OpType::kGELU, GELUOp);
+LINALG_AOPS_DECL(OpType::kLayerNorm, LayerNormOp);
+
 }  // namespace mllm::ir::linalg

@@ -1,4 +1,4 @@
-// Auto generated: 2025-07-06 08:12:52
+// Auto generated: 2025-07-07 05:58:48
 // do not modify this file
 #pragma once
 namespace mllm::ir {
@@ -97,6 +97,22 @@ struct NodeRTTIClassOfImpl {
 #define RTTI_RK_OP_LINALGIROP_PERMUTEOP_IMPL(v)       \
   return (v)->getKind() >= RK_Op_LinalgIROp_PermuteOp \
          && (v)->getKind() <= RK_Op_LinalgIROp_PermuteOp
+
+#define RTTI_RK_OP_LINALGIROP_CONV1DOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_Conv1DOp && (v)->getKind() <= RK_Op_LinalgIROp_Conv1DOp
+
+#define RTTI_RK_OP_LINALGIROP_CONV2DOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_Conv2DOp && (v)->getKind() <= RK_Op_LinalgIROp_Conv2DOp
+
+#define RTTI_RK_OP_LINALGIROP_CONV3DOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_Conv3DOp && (v)->getKind() <= RK_Op_LinalgIROp_Conv3DOp
+
+#define RTTI_RK_OP_LINALGIROP_GELUOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_GELUOp && (v)->getKind() <= RK_Op_LinalgIROp_GELUOp
+
+#define RTTI_RK_OP_LINALGIROP_LAYERNORMOP_IMPL(v)       \
+  return (v)->getKind() >= RK_Op_LinalgIROp_LayerNormOp \
+         && (v)->getKind() <= RK_Op_LinalgIROp_LayerNormOp
 
 #define RTTI_RK_OP_GRAPHIROP_IMPL(v) \
   return (v)->getKind() >= RK_Op_GraphIROp && (v)->getKind() <= RK_Op_GraphIROp_Last

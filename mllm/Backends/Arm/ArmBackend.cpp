@@ -11,9 +11,11 @@
 #include "mllm/Backends/Arm/ArmAllocator.hpp"
 #include "mllm/Backends/Arm/Ops/CastTypeOp.hpp"
 #include "mllm/Backends/Arm/Ops/CausalMaskOp.hpp"
+#include "mllm/Backends/Arm/Ops/Conv3DOp.hpp"
 #include "mllm/Backends/Arm/Ops/ElewiseOps.hpp"
 #include "mllm/Backends/Arm/Ops/FillOp.hpp"
 #include "mllm/Backends/Arm/Ops/FlashAttention2Op.hpp"
+#include "mllm/Backends/Arm/Ops/GELUOp.hpp"
 #include "mllm/Backends/Arm/Ops/KVCacheOp.hpp"
 #include "mllm/Backends/Arm/Ops/LLMEmbeddingTokenOp.hpp"
 #include "mllm/Backends/Arm/Ops/LinearOp.hpp"
@@ -37,7 +39,7 @@ ArmBackend::ArmBackend() : BackendBase(kCPU) {
                ArmSoftmaxOpFactory, ArmMatMulOpFactory, ArmCausalMaskOpFactory, ArmLinearOpFactory,
                ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory, ArmCastTypeOpFactory,
                ArmViewOpFactory, ArmSplitOpFactory, ArmFlashAttn2OpFactory, ArmPermuteOpFactory,
-               ArmRepeatOpFactory>();
+               ArmRepeatOpFactory, ArmConv3DOpFactory, ArmGELUOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

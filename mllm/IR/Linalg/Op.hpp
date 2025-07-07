@@ -40,6 +40,11 @@ class SplitOp;
 class FlashAttention2Op;
 class RepeatOp;
 class PermuteOp;
+class Conv1DOp;
+class Conv2DOp;
+class Conv3DOp;
+class GELUOp;
+class LayerNormOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
@@ -134,5 +139,12 @@ LINALG_AOPS_DEFINE(SplitOp, SPLITOP);
 LINALG_AOPS_DEFINE(FlashAttention2Op, FLASHATTENTION2OP);
 LINALG_AOPS_DEFINE(RepeatOp, REPEATOP);
 LINALG_AOPS_DEFINE(PermuteOp, PERMUTEOP);
+
+LINALG_AOPS_DEFINE(Conv1DOp, CONV1DOP);
+LINALG_AOPS_DEFINE(Conv2DOp, CONV2DOP);
+LINALG_AOPS_DEFINE(Conv3DOp, CONV3DOP);
+
+LINALG_AOPS_DEFINE(GELUOp, GELUOP);
+LINALG_AOPS_DEFINE(LayerNormOp, LAYERNORMOP);
 
 }  // namespace mllm::ir::linalg
