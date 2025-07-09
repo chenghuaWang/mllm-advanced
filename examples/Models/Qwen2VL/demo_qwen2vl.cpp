@@ -81,14 +81,14 @@ int main(int argc, char* argv[]) {
         .img_file_path = img_file_path.get(),
     });
     auto qwen2vl_cfg = models::Qwen2VLConfig();
-    auto vit = models::Qwen2VisionTransformerPretrainedModel("visual", qwen2vl_cfg);
-    vit.load(params);
+    auto qwen2vl = models::Qwen2VLForCausalLM(qwen2vl_cfg);
+
+    qwen2vl.llm.load(params);
+    qwen2vl.visual.load(params);
 
     inputs.grid_thw.print<int>();
 
-    auto img_embedding = vit(inputs.image, inputs.grid_thw)[0];
-
-    img_embedding.print<float>();
+    auto output = qwen2vl(inputs);
   }
 
   ctx.shutdown();

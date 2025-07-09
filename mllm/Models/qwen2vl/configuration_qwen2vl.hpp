@@ -41,7 +41,17 @@ struct Qwen2VLConfig : protected MllmModelCfg {
 
   std::vector<int32_t> mrope_section = {16, 24, 24};
 
+  int64_t vision_token_id = 151654;
+
   float rope_theta = 1000000.0;
+};
+
+struct Qwen2VLForCausalLMOutputPast {
+  Tensor sequence = Tensor::nil();
+  Tensor img = Tensor::nil();
+  Tensor grid_thw = Tensor::nil();
+  Tensor position_ids = Tensor::nil();
+  bool has_visual = false;
 };
 
 }  // namespace mllm::models

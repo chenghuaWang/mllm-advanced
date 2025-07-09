@@ -9,6 +9,7 @@
  *
  */
 #pragma once
+#include "mllm/Models/qwen2vl/configuration_qwen2vl.hpp"
 #include "mllm/Preprocessor/Tokenizers/AutoTokenizer.hpp"
 #include "mllm/Preprocessor/Tokenizers/BPE.hpp"
 
@@ -36,12 +37,6 @@ struct Qwen2VLMessage {
       "prompt}}}<|im_end|>\n<|im_start|>assistant";
 };
 
-struct Qwen2VLMultimodalTensor {
-  Tensor image;
-  Tensor grid_thw;
-  Tensor sequence;
-};
-
 class Qwen2VLTokenizer final : public mllm::preprocessor::AutoTokenizer {
  public:
   explicit Qwen2VLTokenizer(const std::string& file_path, int32_t min_patches = 56 * 56,
@@ -57,7 +52,7 @@ class Qwen2VLTokenizer final : public mllm::preprocessor::AutoTokenizer {
 
   Tensor convert2Ids(const std::vector<std::wstring>& strs) override;
 
-  Qwen2VLMultimodalTensor convertMessage(const Qwen2VLMessage& message);
+  Qwen2VLForCausalLMOutputPast convertMessage(const Qwen2VLMessage& message);
 
  private:
   // For image only.

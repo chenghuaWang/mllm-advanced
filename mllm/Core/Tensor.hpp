@@ -58,6 +58,21 @@ class Tensor {
   Tensor() = default;
 
   /**
+   * @brief If this tensor is not initialized
+   *
+   * @return true
+   * @return false
+   */
+  [[nodiscard]] inline bool isNil() const { return impl_ == nullptr; }
+
+  /**
+   * @brief  Create a nil tensor
+   *
+   * @return Tensor
+   */
+  static inline Tensor nil() { return {}; }
+
+  /**
    * @brief Constructs a tensor from an existing TensorViewImpl.
    * @param impl Shared pointer to the underlying implementation object.
    */

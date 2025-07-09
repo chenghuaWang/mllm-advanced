@@ -21,9 +21,13 @@ MultimodalRoPE::MultimodalRoPE()
 MultimodalRoPE::MultimodalRoPE(const MultimodalRoPEOpCargo& cargo)
     : Layer(OpType::kMultimodalRoPE, cargo) {}
 
-MultimodalRoPE::MultimodalRoPE(MultimodalRoPEOpCargoType type,
+MultimodalRoPE::MultimodalRoPE(MultimodalRoPEOpCargoType type, float rope_theta,
+                               int32_t max_position_embeddings,
                                const std::vector<int32_t>& mrope_section)
     : Layer(OpType::kMultimodalRoPE,
-            MultimodalRoPEOpCargo{.type = type, .mrope_section = mrope_section}) {}
+            MultimodalRoPEOpCargo{.type = type,
+                                  .rope_theta = rope_theta,
+                                  .max_position_embeddings = max_position_embeddings,
+                                  .mrope_section = mrope_section}) {}
 
 }  // namespace mllm::nn

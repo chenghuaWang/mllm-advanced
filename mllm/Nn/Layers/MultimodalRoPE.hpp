@@ -21,7 +21,8 @@ class MultimodalRoPE : public Layer {
 
   explicit MultimodalRoPE(const MultimodalRoPEOpCargo& cargo);
 
-  MultimodalRoPE(MultimodalRoPEOpCargoType type, const std::vector<int32_t>& mrope_section);
+  MultimodalRoPE(MultimodalRoPEOpCargoType type, float rope_theta, int32_t max_position_embeddings,
+                 const std::vector<int32_t>& mrope_section);
 };
 
 }  // namespace mllm::nn

@@ -10,6 +10,7 @@
  */
 #include "mllm/Models/qwen2vl/tokenization_qwen2vl.hpp"
 #include "mllm/Core/Tensor.hpp"
+#include "mllm/Models/qwen2vl/configuration_qwen2vl.hpp"
 #include "mllm/Preprocessor/Tokenizers/Unicode.hpp"
 #include "mllm/Utils/Common.hpp"
 
@@ -239,7 +240,7 @@ Tensor Qwen2VLTokenizer::convert2Ids(const std::vector<std::wstring>& strs) {
   return ret;
 }
 
-Qwen2VLMultimodalTensor Qwen2VLTokenizer::convertMessage(const Qwen2VLMessage& message) {
+Qwen2VLForCausalLMOutputPast Qwen2VLTokenizer::convertMessage(const Qwen2VLMessage& message) {
   // process prompt
   auto applied_string = Qwen2VLMessage::message_template;
   size_t pos = applied_string.find("{{{prompt}}}");
@@ -264,7 +265,7 @@ Qwen2VLMultimodalTensor Qwen2VLTokenizer::convertMessage(const Qwen2VLMessage& m
   // Find img_pad_token_ids pos and insert img_token_nums-1 times after this token
   auto img_pad_token_ids = bpe_._lookup_vocab(L"<|vision_pad|>");
   {
-    auto it = std::find(ids.begin(), ids.end(), img_pad_token_ids);
+    auto it = std::find(ids.begin(), ids.end(), img_pad_token_ids); // NOLINT
     ids.insert(it + 1, img_token_nums - 1, img_pad_token_ids);
   }
 
@@ -277,11 +278,8 @@ Qwen2VLMultimodalTensor Qwen2VLTokenizer::convertMessage(const Qwen2VLMessage& m
   auto ptr = sequence.ptr<int64_t>();
   for (size_t i = 0; i < ids.size(); ++i) { ptr[i] = ids[i]; }
 
-  return Qwen2VLMultimodalTensor{
-      .image = img,
-      .grid_thw = grid_thw,
-      .sequence = sequence,
-  };
+  return Qwen2VLForCausalLMOutputPast{
+      .sequence = sequence, .img = img, .grid_thw = grid_thw, .has_visual = true};
 }
 
 }  // namespace mllm::models

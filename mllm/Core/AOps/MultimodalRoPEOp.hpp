@@ -23,6 +23,8 @@ enum class MultimodalRoPEOpCargoType : uint8_t {
 
 struct MultimodalRoPEOpCargo : public BaseOpCargo<MultimodalRoPEOpCargo> {
   MultimodalRoPEOpCargoType type;
+  float rope_theta;
+  int32_t max_position_embeddings;
   std::vector<int32_t> mrope_section;
 };
 

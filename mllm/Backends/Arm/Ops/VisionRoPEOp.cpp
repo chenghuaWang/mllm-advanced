@@ -376,8 +376,8 @@ void ArmVisionRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector<Ten
       // For Qwen2VL's ViT RoPE
       auto impl = Qwen2VLVisionRoPEOpImpl();
 
-      Tensor sin;
-      Tensor cos;
+      Tensor sin = Tensor::nil();
+      Tensor cos = Tensor::nil();
 
       // Gen/load sin and cos.
       if (ctx.mem()->hasGlobalTensor("__qwen2vl_vit_rope_sin")

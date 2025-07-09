@@ -10,8 +10,6 @@
  */
 #pragma once
 
-#include <arm_neon.h>
-
 #include "mllm/Nn/F/F.hpp"
 #include "mllm/Nn/Layers/Conv3D.hpp"
 #include "mllm/Nn/Layers/GELU.hpp"
@@ -272,15 +270,15 @@ class Qwen2VisionTransformerPretrainedModel final : public nn::Module {
   }
 };
 
-class QWen2VLMLP final : public nn::Module {
+class Qwen2VLMLP final : public nn::Module {
   nn::Linear gate_proj_;
   nn::Linear up_proj_;
   nn::Linear down_proj_;
   nn::SiLU silu_;
 
  public:
-  QWen2VLMLP() = default;
-  explicit QWen2VLMLP(const std::string& name, const Qwen2VLConfig& cfg) {
+  Qwen2VLMLP() = default;
+  explicit Qwen2VLMLP(const std::string& name, const Qwen2VLConfig& cfg) {
     selfAssignName(name);
     gate_proj_ = reg<nn::Linear>("gate_proj", cfg.hidden_size, cfg.intermediate_size, false, false,
                                  cfg.linear_impl_type);
@@ -301,7 +299,7 @@ class QWen2VLMLP final : public nn::Module {
   }
 };
 
-class QWen2VLAttention final : public nn::Module {
+class Qwen2VLAttention final : public nn::Module {
   nn::Linear q_proj_;
   nn::Linear k_proj_;
   nn::Linear v_proj_;
@@ -320,9 +318,9 @@ class QWen2VLAttention final : public nn::Module {
   int num_key_value_groups_;
 
  public:
-  QWen2VLAttention() = default;
+  Qwen2VLAttention() = default;
 
-  QWen2VLAttention(const std::string& name, const Qwen2VLConfig& cfg) {
+  Qwen2VLAttention(const std::string& name, const Qwen2VLConfig& cfg) {
     selfAssignName(name);
     hidden_size_ = cfg.hidden_size;
     num_attention_heads_ = cfg.num_attention_heads;
@@ -339,15 +337,16 @@ class QWen2VLAttention final : public nn::Module {
     o_proj_ = reg<nn::Linear>("o_proj", head_dim_ * num_attention_heads_, hidden_size_, false,
                               false, cfg.linear_impl_type);
 
-    q_rope_ =
-        reg<nn::MultimodalRoPE>("q_rope", MultimodalRoPEOpCargoType::kQwen2VL, cfg.mrope_section);
-    k_rope_ =
-        reg<nn::MultimodalRoPE>("k_rope", MultimodalRoPEOpCargoType::kQwen2VL, cfg.mrope_section);
+    q_rope_ = reg<nn::MultimodalRoPE>("q_rope", MultimodalRoPEOpCargoType::kQwen2VL, cfg.rope_theta,
+                                      cfg.max_position_embeddings, cfg.mrope_section);
+    k_rope_ = reg<nn::MultimodalRoPE>("k_rope", MultimodalRoPEOpCargoType::kQwen2VL, cfg.rope_theta,
+                                      cfg.max_position_embeddings, cfg.mrope_section);
 
     k_cache_ = reg<nn::KVCache>("k_cache", num_key_value_heads_, head_dim_, num_key_value_groups_,
                                 cfg.kv_cache_dtype, cfg.max_cache_length);
     v_cache_ = reg<nn::KVCache>("v_cache", num_key_value_heads_, head_dim_, num_key_value_groups_,
                                 cfg.kv_cache_dtype, cfg.max_cache_length);
+
     mask_ = reg<nn::CausalMask>("mask");
     softmax_ = reg<nn::Softmax>("softmax", -1);
   }
@@ -404,19 +403,19 @@ class QWen2VLAttention final : public nn::Module {
   }
 };
 
-class QWen2VLDecoder final : public nn::Module {
-  QWen2VLAttention self_attn_;
-  QWen2VLMLP mlp_;
+class Qwen2VLDecoder final : public nn::Module {
+  Qwen2VLAttention self_attn_;
+  Qwen2VLMLP mlp_;
   nn::RMSNorm input_layer_norm_;
   nn::RMSNorm post_attention_layer_norm_;
 
  public:
-  QWen2VLDecoder() = default;
+  Qwen2VLDecoder() = default;
 
-  QWen2VLDecoder(const std::string& name, const Qwen2VLConfig& cfg) {
+  Qwen2VLDecoder(const std::string& name, const Qwen2VLConfig& cfg) {
     selfAssignName(name);
-    self_attn_ = reg<QWen2VLAttention>("self_attn", cfg);
-    mlp_ = reg<QWen2VLMLP>("mlp", cfg);
+    self_attn_ = reg<Qwen2VLAttention>("self_attn", cfg);
+    mlp_ = reg<Qwen2VLMLP>("mlp", cfg);
     input_layer_norm_ = reg<nn::RMSNorm>("input_layernorm", cfg.rms_norm_eps);
     post_attention_layer_norm_ = reg<nn::RMSNorm>("post_attention_layernorm", cfg.rms_norm_eps);
   }
@@ -432,17 +431,16 @@ class QWen2VLDecoder final : public nn::Module {
   }
 };
 
-class QWen2VLForCausalLM final : public nn::Module {
-  nn::ModuleList<QWen2VLDecoder> decode_blocks_;
+class Qwen2VLText final : public nn::Module {
+  nn::ModuleList<Qwen2VLDecoder> decode_blocks_;
   nn::RMSNorm norm_;
-  nn::LLMEmbeddingToken embedding_;
 
  public:
-  QWen2VLForCausalLM() = default;
+  Qwen2VLText() = default;
 
-  explicit QWen2VLForCausalLM(const Qwen2VLConfig& cfg) {
-    selfAssignName("module");
-    decode_blocks_ = reg<nn::ModuleList<QWen2VLDecoder>>("layers", cfg.num_hidden_layers, cfg);
+  Qwen2VLText(const std::string& name, const Qwen2VLConfig& cfg) {
+    selfAssignName(name);
+    decode_blocks_ = reg<nn::ModuleList<Qwen2VLDecoder>>("layers", cfg.num_hidden_layers, cfg);
     norm_ = reg<nn::RMSNorm>("norm", cfg.rms_norm_eps);
     embedding_ = reg<nn::LLMEmbeddingToken>("embed_tokens", cfg.vocab_size, cfg.hidden_size);
   }
@@ -450,7 +448,6 @@ class QWen2VLForCausalLM final : public nn::Module {
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
     auto& blocks = decode_blocks_.getList();
     auto x = inputs[0];
-    x = embedding_(x);
     for (auto& block : blocks) { x = block(x)[0]; }
     x = norm_(x);
 
@@ -461,6 +458,71 @@ class QWen2VLForCausalLM final : public nn::Module {
 
     return {x};
   }
+
+  nn::LLMEmbeddingToken embedding_;
+};
+
+class Qwen2VLForCausalLM {
+ public:
+  explicit Qwen2VLForCausalLM(const Qwen2VLConfig& cfg)
+      : llm("model", cfg), visual("visual", cfg) {}
+
+  inline Qwen2VLForCausalLMOutputPast operator()(const Qwen2VLForCausalLMOutputPast& past) {
+    // Calculate the text embeddings
+    auto input_embeddings = llm.embedding_(past.sequence);
+
+    if (!past.img.isNil()) {
+      // process img
+      auto visual_embeddings = visual(past.img, past.grid_thw)[0];
+
+      // Insert visual embeddings into llm's embedding
+      // TODO
+    }
+
+    if (past.position_ids.isNil()) {
+      // TODO
+    }
+
+    auto out = llm(input_embeddings)[0];
+
+    return {
+        .sequence = out,
+        .img = Tensor::nil(),
+        .grid_thw = past.grid_thw,
+    };
+  }
+
+  inline void getPositionIds(const Qwen2VLForCausalLMOutputPast& past) {
+    // Input is [B, S, D]
+    if (!past.img.isNil()) {  // Prefill
+      // TODO
+    } else {  // Decode
+      // TODO
+    }
+  }
+
+  inline Tensor getPositionIdsPrefill(Tensor& input_ids, Tensor& image_grid_thw) {
+    // Input is [B, S, D]
+    MLLM_RT_ASSERT_EQ(input_ids.shape().size(), 3);
+    // image_grid_thw is [num_images, 3]
+    MLLM_RT_ASSERT_EQ(image_grid_thw.shape().size(), 2);
+
+    auto B = input_ids.shape()[0];
+    MLLM_RT_ASSERT_EQ(B, 1);
+    auto S = input_ids.shape()[1];
+    auto D = input_ids.shape()[2];
+
+    Tensor position_ids = Tensor::empty({3, B, S}, kFp32, kCPU).alloc();
+
+    // Process text and visual
+    // TODO
+    // https://github.com/UbiquitousLearning/mllm/blob/main/src/models/qwen2_vl/modeling_qwen2_vl.hpp
+
+    return position_ids;
+  }
+
+  Qwen2VLText llm;
+  Qwen2VisionTransformerPretrainedModel visual;
 };
 
 }  // namespace mllm::models
