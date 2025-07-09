@@ -1,9 +1,9 @@
 /**
- * @file LayerNormOp.hpp
+ * @file MultimodalRoPEOp.cpp
  * @author chenghua Wang (chenghua.wang.edu@gmail.com)
  * @brief
  * @version 0.1
- * @date 2025-07-07
+ * @date 2025-07-08
  *
  * @copyright Copyright (c) 2025
  *
@@ -13,16 +13,22 @@
 #include "mllm/Core/AOps/BaseOp.hpp"
 
 namespace mllm {
-struct LayerNormOpCargo : public BaseOpCargo<LayerNormOpCargo> {
-  std::vector<int32_t> normalized_shape;
-  bool elementwise_affine = true;
-  bool bias = true;
-  float eps = 1e-6;
+
+enum class MultimodalRoPEOpCargoType : uint8_t {
+  kStart = 0,
+  kDefault,
+  kQwen2VL,
+  kEnd,
 };
 
-class LayerNormOp : public BaseOp {
+struct MultimodalRoPEOpCargo : public BaseOpCargo<MultimodalRoPEOpCargo> {
+  MultimodalRoPEOpCargoType type;
+  std::vector<int32_t> mrope_section;
+};
+
+class MultimodalRoPEOp : public BaseOp {
  public:
-  explicit LayerNormOp(const LayerNormOpCargo& cargo);
+  explicit MultimodalRoPEOp(const MultimodalRoPEOpCargo& cargo);
 
   void load(const std::shared_ptr<ParameterLoader>& ploader) override;
 
@@ -35,12 +41,8 @@ class LayerNormOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
-  params_t params() override;
-
  protected:
-  Tensor weight_;
-  Tensor bias_;
-  LayerNormOpCargo cargo_;
+  MultimodalRoPEOpCargo cargo_;
 };
 
 }  // namespace mllm

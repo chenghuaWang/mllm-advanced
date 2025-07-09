@@ -15,9 +15,18 @@ namespace mllm::nn {
 
 LayerNorm::LayerNorm() : Layer(OpType::kLayerNorm, LayerNormOpCargo{}) {}
 
-LayerNorm::LayerNorm(int32_t dim, float eps)
-    : Layer(OpType::kLayerNorm, LayerNormOpCargo{.dim = dim, .eps = eps}) {}
+LayerNorm::LayerNorm(int32_t normalized_shape, bool elementwise_affine, bool bias, float eps)
+    : Layer(OpType::kLayerNorm, LayerNormOpCargo{.normalized_shape = {normalized_shape},
+                                                 .elementwise_affine = elementwise_affine,
+                                                 .bias = bias,
+                                                 .eps = eps}) {}
 
+LayerNorm::LayerNorm(const std::vector<int32_t>& normalized_shape, bool elementwise_affine,
+                     bool bias, float eps)
+    : Layer(OpType::kLayerNorm, LayerNormOpCargo{.normalized_shape = normalized_shape,
+                                                 .elementwise_affine = elementwise_affine,
+                                                 .bias = bias,
+                                                 .eps = eps}) {}
 LayerNorm::LayerNorm(const LayerNormOpCargo& cargo) : Layer(OpType::kLayerNorm, cargo) {}
 
 Tensor LayerNorm::weight() const {

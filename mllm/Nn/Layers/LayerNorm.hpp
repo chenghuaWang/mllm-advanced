@@ -19,7 +19,11 @@ class LayerNorm : public Layer {
  public:
   LayerNorm();
 
-  explicit LayerNorm(int32_t dim, float eps = 1e-6);
+  explicit LayerNorm(int32_t normalized_shape, bool elementwise_affine, bool bias,
+                     float eps = 1e-6);
+
+  explicit LayerNorm(const std::vector<int32_t>& normalized_shape, bool elementwise_affine,
+                     bool bias, float eps = 1e-6);
 
   explicit LayerNorm(const LayerNormOpCargo& cargo);
 

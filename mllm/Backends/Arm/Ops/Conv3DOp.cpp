@@ -248,6 +248,103 @@ void ArmConv3DOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>
         }
       }
     }
+  } else if (activation.dtype() == kFp16 && cargo_.impl_type == Conv3DOpImplType::kDefault) {
+    MLLM_RT_ASSERT_EQ(cargo_.bias, false);
+
+    auto batch_size = activation.shape()[0];
+    auto in_channels = activation.shape()[1];
+    auto out_channels = weight_.shape()[0];
+    auto in_times = activation.shape()[2];
+    auto in_height = activation.shape()[3];
+    auto in_width = activation.shape()[4];
+
+    auto out_times = outputs[0].shape()[2];
+    auto out_height = outputs[0].shape()[3];
+    auto out_width = outputs[0].shape()[4];
+
+    auto kernel_t_size = weight_.shape()[2];
+    auto kernel_h_size = weight_.shape()[3];
+    auto kernel_w_size = weight_.shape()[4];
+
+    auto a_ptr = activation.ptr<float16_t>();
+    auto w_ptr = weight_.ptr<float16_t>();
+    auto o_ptr = outputs[0].ptr<float16_t>();
+
+    const int a_plane_size = in_times * in_height * in_width;
+    const int w_plane_size = kernel_t_size * kernel_h_size * kernel_w_size;
+    const int o_plane_size = out_times * out_height * out_width;
+
+    for (int b = 0; b < batch_size; ++b) {
+      for (int ot = 0; ot < out_times; ++ot) {
+        for (int oh = 0; oh < out_height; ++oh) {
+          for (int ow = 0; ow < out_width; ++ow) {
+            for (int oc = 0; oc < out_channels; ++oc) {
+              float sum = 0.0f;
+              int ic = 0;
+              for (; ic + 7 < in_channels; ic += 8) {
+                float32x4_t sum_low = vdupq_n_f32(0.0f);
+                float32x4_t sum_high = vdupq_n_f32(0.0f);
+
+                for (int kt = 0; kt < kernel_t_size; ++kt) {
+                  for (int kh = 0; kh < kernel_h_size; ++kh) {
+                    for (int kw = 0; kw < kernel_w_size; ++kw) {
+                      int it = ot * kernel_t_size + kt;
+                      int ih = oh * kernel_h_size + kh;
+                      int iw = ow * kernel_w_size + kw;
+
+                      int a_idx_base = b * (in_channels * a_plane_size)
+                                       + it * (in_height * in_width) + ih * in_width + iw;
+
+                      int w_idx_base = oc * (in_channels * w_plane_size)
+                                       + kt * (kernel_h_size * kernel_w_size) + kh * kernel_w_size
+                                       + kw;
+
+                      float16x8_t a_val = vld1q_f16(a_ptr + a_idx_base + ic * a_plane_size);
+
+                      float16x8_t w_val = vld1q_f16(w_ptr + w_idx_base + ic * w_plane_size);
+
+                      float32x4_t a_low = vcvt_f32_f16(vget_low_f16(a_val));
+                      float32x4_t a_high = vcvt_f32_f16(vget_high_f16(a_val));
+                      float32x4_t w_low = vcvt_f32_f16(vget_low_f16(w_val));
+                      float32x4_t w_high = vcvt_f32_f16(vget_high_f16(w_val));
+
+                      sum_low = vmlaq_f32(sum_low, a_low, w_low);
+                      sum_high = vmlaq_f32(sum_high, a_high, w_high);
+                    }
+                  }
+                }
+
+                sum += vaddvq_f32(sum_low) + vaddvq_f32(sum_high);
+              }
+
+              for (; ic < in_channels; ++ic) {
+                for (int kt = 0; kt < kernel_t_size; ++kt) {
+                  for (int kh = 0; kh < kernel_h_size; ++kh) {
+                    for (int kw = 0; kw < kernel_w_size; ++kw) {
+                      int it = ot * kernel_t_size + kt;
+                      int ih = oh * kernel_h_size + kh;
+                      int iw = ow * kernel_w_size + kw;
+
+                      int a_idx = b * (in_channels * a_plane_size) + ic * a_plane_size
+                                  + it * (in_height * in_width) + ih * in_width + iw;
+
+                      int w_idx = oc * (in_channels * w_plane_size) + ic * w_plane_size
+                                  + kt * (kernel_h_size * kernel_w_size) + kh * kernel_w_size + kw;
+
+                      sum += static_cast<float>(a_ptr[a_idx]) * static_cast<float>(w_ptr[w_idx]);
+                    }
+                  }
+                }
+              }
+              int o_idx = b * (out_channels * o_plane_size) + oc * o_plane_size
+                          + ot * (out_height * out_width) + oh * out_width + ow;
+
+              o_ptr[o_idx] = sum;
+            }
+          }
+        }
+      }
+    }
   }
 }
 

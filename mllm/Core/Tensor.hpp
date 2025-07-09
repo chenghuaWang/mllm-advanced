@@ -393,6 +393,12 @@ class Tensor {
   }
 
   /**
+   * @brief print tensor shape
+   *
+   */
+  inline void printShape() const { fmt::println("shape: {}", fmt::join(shape(), "x")); }
+
+  /**
    * @brief return how many bytes this tensor alloced.
    *
    * @return size_t

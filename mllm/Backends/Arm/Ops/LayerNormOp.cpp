@@ -21,13 +21,14 @@ void ArmLayerNormOp::forward(const std::vector<Tensor>& inputs, std::vector<Tens
   const auto& X = inputs[0];
   auto& Y = outputs[0];
 
-  // FIXME
-  // Currently we can only layernorm the last dim of the input
-  MLLM_RT_ASSERT_EQ(cargo_.dim, X.shape().size() - 1);
+  int32_t loop_size = 1;
+  for (int i : cargo_.normalized_shape) { loop_size *= i; }
+
+  MLLM_RT_ASSERT(loop_size > 0);
+  MLLM_RT_ASSERT_EQ(X.numel() % loop_size, 0);
 
   // Calculate loop times
-  size_t loop_times = X.numel() / X.shape()[cargo_.dim];
-  size_t loop_size = X.shape()[cargo_.dim];
+  size_t loop_times = X.numel() / loop_size;
 
   switch (X.dtype()) {
     case kFp32: {
@@ -35,6 +36,14 @@ void ArmLayerNormOp::forward(const std::vector<Tensor>& inputs, std::vector<Tens
         layernorm_N_fp32(Y.ptr<float>() + l * loop_size, X.ptr<float>() + l * loop_size,
                          cargo_.elementwise_affine ? weight_.ptr<float>() : nullptr,
                          cargo_.bias ? bias_.ptr<float>() : nullptr, loop_size, cargo_.eps);
+      }
+      break;
+    }
+    case kFp16: {
+      for (int l = 0; l < loop_times; ++l) {
+        layernorm_N_fp16(Y.ptr<float16_t>() + l * loop_size, X.ptr<float16_t>() + l * loop_size,
+                         cargo_.elementwise_affine ? weight_.ptr<float16_t>() : nullptr,
+                         cargo_.bias ? bias_.ptr<float16_t>() : nullptr, loop_size, cargo_.eps);
       }
       break;
     }

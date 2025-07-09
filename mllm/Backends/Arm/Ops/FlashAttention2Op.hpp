@@ -20,6 +20,9 @@ class ArmFlashAttn2Op final : public FlashAttn2Op {
   using FA2_4x4_kernel_4_threads_lp_mask = mobi_attn::FlashAttn2<
       mobi_attn::NEON_FA_2_GQA_QKV_FP16_BSHD_O_FP16_BSHD_ACC_FP32_IMPL<4, 4, 4, false, true>>;
 
+  using FA2_4x4_kernel_4_threads_lp_nomask = mobi_attn::FlashAttn2<
+      mobi_attn::NEON_FA_2_GQA_QKV_FP16_BSHD_O_FP16_BSHD_ACC_FP32_IMPL<4, 4, 4, false, false>>;
+
  public:
   explicit ArmFlashAttn2Op(const FlashAttn2OpCargo& cargo);
 

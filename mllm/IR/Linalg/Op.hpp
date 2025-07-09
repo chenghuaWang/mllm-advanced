@@ -45,6 +45,8 @@ class Conv2DOp;
 class Conv3DOp;
 class GELUOp;
 class LayerNormOp;
+class MultimodalRoPEOp;
+class VisionRoPEOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
@@ -146,5 +148,8 @@ LINALG_AOPS_DEFINE(Conv3DOp, CONV3DOP);
 
 LINALG_AOPS_DEFINE(GELUOp, GELUOP);
 LINALG_AOPS_DEFINE(LayerNormOp, LAYERNORMOP);
+
+LINALG_AOPS_DEFINE(MultimodalRoPEOp, MULTIMODALROPEOP);
+LINALG_AOPS_DEFINE(VisionRoPEOp, VISIONROPEOP);
 
 }  // namespace mllm::ir::linalg

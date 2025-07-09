@@ -1,9 +1,9 @@
 /**
- * @file LayerNormOp.hpp
+ * @file VisionRoPEOp.hpp
  * @author chenghua Wang (chenghua.wang.edu@gmail.com)
  * @brief
  * @version 0.1
- * @date 2025-07-07
+ * @date 2025-07-08
  *
  * @copyright Copyright (c) 2025
  *
@@ -13,16 +13,29 @@
 #include "mllm/Core/AOps/BaseOp.hpp"
 
 namespace mllm {
-struct LayerNormOpCargo : public BaseOpCargo<LayerNormOpCargo> {
-  std::vector<int32_t> normalized_shape;
-  bool elementwise_affine = true;
-  bool bias = true;
-  float eps = 1e-6;
+
+enum class VisionRoPEOpCargoType : uint8_t {
+  kStart = 0,
+  kQwen2VL,
+  kEnd,
 };
 
-class LayerNormOp : public BaseOp {
+struct Qwen2VLRoPEOpCargo {
+  int32_t dims;
+  int32_t spatial_merge_size = 2;
+  float theta;
+};
+
+struct VisionRoPEOpCargo : public BaseOpCargo<VisionRoPEOpCargo> {
+  VisionRoPEOpCargoType type;
+  union {
+    Qwen2VLRoPEOpCargo qwen2vl_rope_op_cargo;
+  };
+};
+
+class VisionRoPEOp : public BaseOp {
  public:
-  explicit LayerNormOp(const LayerNormOpCargo& cargo);
+  explicit VisionRoPEOp(const VisionRoPEOpCargo& cargo);
 
   void load(const std::shared_ptr<ParameterLoader>& ploader) override;
 
@@ -35,12 +48,8 @@ class LayerNormOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
-  params_t params() override;
-
  protected:
-  Tensor weight_;
-  Tensor bias_;
-  LayerNormOpCargo cargo_;
+  VisionRoPEOpCargo cargo_;
 };
 
 }  // namespace mllm

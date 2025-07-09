@@ -18,6 +18,7 @@
 #include "mllm/Backends/Arm/Ops/GELUOp.hpp"
 #include "mllm/Backends/Arm/Ops/KVCacheOp.hpp"
 #include "mllm/Backends/Arm/Ops/LLMEmbeddingTokenOp.hpp"
+#include "mllm/Backends/Arm/Ops/LayerNormOp.hpp"
 #include "mllm/Backends/Arm/Ops/LinearOp.hpp"
 #include "mllm/Backends/Arm/Ops/MatMulOp.hpp"
 #include "mllm/Backends/Arm/Ops/PermuteOp.hpp"
@@ -29,6 +30,7 @@
 #include "mllm/Backends/Arm/Ops/SplitOp.hpp"
 #include "mllm/Backends/Arm/Ops/TransposeOp.hpp"
 #include "mllm/Backends/Arm/Ops/ViewOp.hpp"
+#include "mllm/Backends/Arm/Ops/VisionRoPEOp.hpp"
 
 namespace mllm::arm {
 
@@ -39,7 +41,8 @@ ArmBackend::ArmBackend() : BackendBase(kCPU) {
                ArmSoftmaxOpFactory, ArmMatMulOpFactory, ArmCausalMaskOpFactory, ArmLinearOpFactory,
                ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory, ArmCastTypeOpFactory,
                ArmViewOpFactory, ArmSplitOpFactory, ArmFlashAttn2OpFactory, ArmPermuteOpFactory,
-               ArmRepeatOpFactory, ArmConv3DOpFactory, ArmGELUOpFactory>();
+               ArmRepeatOpFactory, ArmConv3DOpFactory, ArmGELUOpFactory, ArmVisionRoPEOpFactory,
+               ArmLayerNormOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

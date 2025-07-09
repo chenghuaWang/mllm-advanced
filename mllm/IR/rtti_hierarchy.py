@@ -244,6 +244,8 @@ def define_lianlg_ir(ir: dict):
     op.derive(Cls("Conv3DOp"))
     op.derive(Cls("GELUOp"))
     op.derive(Cls("LayerNormOp"))
+    op.derive(Cls("MultimodalRoPEOp"))
+    op.derive(Cls("VisionRoPEOp"))
 
     # value
 

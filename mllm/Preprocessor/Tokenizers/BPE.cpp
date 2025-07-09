@@ -137,7 +137,7 @@ long BPE::_lookup_vocab(const std::wstring& token) {
   if (vocab_.find(token) != vocab_.end()) {
     return vocab_[token];
   } else {
-    MLLM_WARN("Cannot find token in BPE vocab");
+    MLLM_WARN("Cannot find token: {} in BPE vocab", wideString2Utf8String(token));
     return 0;
   }
 }

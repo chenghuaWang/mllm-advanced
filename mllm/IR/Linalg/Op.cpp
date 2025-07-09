@@ -8,6 +8,7 @@
  *
  */
 #include "mllm/IR/Linalg/Op.hpp"
+#include "mllm/Core/AOps/BaseOp.hpp"
 
 namespace mllm::ir::linalg {
 
@@ -51,5 +52,8 @@ LINALG_AOPS_DECL(OpType::kConv3D, Conv3DOp);
 
 LINALG_AOPS_DECL(OpType::kGELU, GELUOp);
 LINALG_AOPS_DECL(OpType::kLayerNorm, LayerNormOp);
+
+LINALG_AOPS_DECL(OpType::kMultimodalRoPE, MultimodalRoPEOp);
+LINALG_AOPS_DECL(OpType::kVisionRoPE, VisionRoPEOp);
 
 }  // namespace mllm::ir::linalg

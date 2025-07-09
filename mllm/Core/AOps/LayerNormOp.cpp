@@ -19,7 +19,7 @@ LayerNormOp::LayerNormOp(const LayerNormOpCargo& cargo)
 
 void LayerNormOp::load(const std::shared_ptr<ParameterLoader>& ploader) {
   if (cargo_.elementwise_affine) { weight_ = Tensor(ploader->operator[](name() + ".weight")); }
-  if (cargo_.bias) { weight_ = Tensor(ploader->operator[](name() + ".bias")); }
+  if (cargo_.bias) { bias_ = Tensor(ploader->operator[](name() + ".bias")); }
 }
 
 void LayerNormOp::trace(void* trace_context, const std::vector<Tensor>& inputs,

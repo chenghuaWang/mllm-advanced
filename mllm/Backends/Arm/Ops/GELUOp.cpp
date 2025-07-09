@@ -26,6 +26,10 @@ void ArmGELUOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
       gelu_fp32(Y.ptr<float>(), X.ptr<float>(), X.numel());
       break;
     }
+    case kFp16: {
+      gelu_fp16(Y.ptr<float16_t>(), X.ptr<float16_t>(), X.numel());
+      break;
+    }
     default: NYI("ArmGELUOp::forward not support dtype {}", dataTypes2Str(X.dtype())); break;
   }
 }

@@ -10,7 +10,6 @@
  */
 #pragma once
 
-#include <array>
 #include <cmath>
 #include <utility>
 #include <algorithm>
@@ -70,7 +69,7 @@ class Qwen2VLImagePreprocessor {
     return {h_bar, w_bar};
   }
 
-  inline std::pair<Tensor, std::array<int32_t, 3>> operator()(const std::string& image_path) {
+  inline std::pair<Tensor, Tensor> operator()(const std::string& image_path) {
     auto img = Image::open(image_path);
     auto old_w = img.w();
     auto old_h = img.h();
@@ -83,9 +82,6 @@ class Qwen2VLImagePreprocessor {
 
     // Rescale
     patches = patches * (1.f / 255.f);
-
-    patches.print<float>();
-    exit(0);
 
     // Normalize
     // FIXME: Using broadcast instead. Need to write broadcast op.
@@ -121,7 +117,12 @@ class Qwen2VLImagePreprocessor {
     auto flatten_patches = patches.view(
         {grid_t * grid_h * grid_w, channel * temporal_patch_size_ * patch_size_ * patch_size_});
 
-    return {flatten_patches, {grid_t, grid_h, grid_w}};
+    Tensor grid_thw = Tensor::empty({1, 3}, kInt32, kCPU).alloc();
+    grid_thw.ptr<int>()[0] = grid_t;
+    grid_thw.ptr<int>()[1] = grid_h;
+    grid_thw.ptr<int>()[2] = grid_w;
+
+    return {flatten_patches, grid_thw};
   }
 
  private:

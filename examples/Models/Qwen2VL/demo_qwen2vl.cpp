@@ -9,7 +9,6 @@
  *
  */
 #include "mllm/Engine/Context.hpp"
-#include "mllm/Models/AutoLLM.hpp"
 #if defined(__aarch64__)
 #define MLLM_ON_ARM
 #include "mllm/Backends/Arm/ArmBackend.hpp"
@@ -19,7 +18,8 @@
 #endif
 
 #include "mllm/Models/qwen2vl/modeling_qwen2vl.hpp"
-#include "mllm/Models/qwen2vl/image_preprocessor_qwen2vl.hpp"
+#include "mllm/Models/qwen2vl/configuration_qwen2vl.hpp"
+#include "mllm/Models/qwen2vl/tokenization_qwen2vl.hpp"
 
 #include "mllm/Utils/Argparse.hpp"
 
@@ -30,6 +30,14 @@ int main(int argc, char* argv[]) {
   auto& img_file_path = Argparse::add<std::string>("-i|--image")
                             .help("Input image ile path")
                             .meta("VISUAL_IMAGE_FILE");
+
+  auto& model_file_path =
+      Argparse::add<std::string>("-m|--model").help("Model files path").meta("MODEL_PATH");
+
+  auto& tokenizer_file_path = Argparse::add<std::string>("-t|--tokenizer")
+                                  .help("tokenizer files path")
+                                  .meta("TOKENIZER_PATH");
+
   Argparse::parse(argc, argv);
   if (help.isSet()) {
     Argparse::printHelp();
@@ -38,6 +46,18 @@ int main(int argc, char* argv[]) {
 
   if (!img_file_path.isSet()) {
     MLLM_ERROR_EXIT(kError, "No input visual image file provided");
+    Argparse::printHelp();
+    return -1;
+  }
+
+  if (!model_file_path.isSet()) {
+    MLLM_ERROR_EXIT(kError, "No model file provided");
+    Argparse::printHelp();
+    return -1;
+  }
+
+  if (!tokenizer_file_path.isSet()) {
+    MLLM_ERROR_EXIT(kError, "No tokenizer file provided");
     Argparse::printHelp();
     return -1;
   }
@@ -52,10 +72,23 @@ int main(int argc, char* argv[]) {
   ctx.mem()->initBuddyCtx(kCPU);
   ctx.mem()->initOC(kCPU);
 
+  auto params = mllm::load(model_file_path.get());
+
   {
-    models::Qwen2VLImagePreprocessor img_preprocessor;
-    auto [image_tensor, grid_thw] = img_preprocessor(img_file_path.get());
-    image_tensor.print<float>();
+    auto tokenizer = models::Qwen2VLTokenizer(tokenizer_file_path.get(), 56 * 56, 28 * 28 * 256);
+    auto inputs = tokenizer.convertMessage({
+        .prompt = "Describe this image.",
+        .img_file_path = img_file_path.get(),
+    });
+    auto qwen2vl_cfg = models::Qwen2VLConfig();
+    auto vit = models::Qwen2VisionTransformerPretrainedModel("visual", qwen2vl_cfg);
+    vit.load(params);
+
+    inputs.grid_thw.print<int>();
+
+    auto img_embedding = vit(inputs.image, inputs.grid_thw)[0];
+
+    img_embedding.print<float>();
   }
 
   ctx.shutdown();

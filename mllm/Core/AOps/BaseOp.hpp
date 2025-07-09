@@ -62,6 +62,9 @@ enum class OpType : int32_t {  // NOLINT
   kGELU,
   kLayerNorm,
 
+  kMultimodalRoPE,
+  kVisionRoPE,
+
   kOpType_End,
 };
 
