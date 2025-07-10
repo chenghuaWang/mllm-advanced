@@ -265,7 +265,7 @@ Qwen2VLForCausalLMOutputPast Qwen2VLTokenizer::convertMessage(const Qwen2VLMessa
   // Find img_pad_token_ids pos and insert img_token_nums-1 times after this token
   auto img_pad_token_ids = bpe_._lookup_vocab(L"<|vision_pad|>");
   {
-    auto it = std::find(ids.begin(), ids.end(), img_pad_token_ids); // NOLINT
+    auto it = std::find(ids.begin(), ids.end(), img_pad_token_ids);  // NOLINT
     ids.insert(it + 1, img_token_nums - 1, img_pad_token_ids);
   }
 

@@ -42,6 +42,8 @@ struct Qwen2VLConfig : protected MllmModelCfg {
   std::vector<int32_t> mrope_section = {16, 24, 24};
 
   int64_t vision_token_id = 151654;
+  int64_t eos_token_id = 151645;
+  int32_t end_of_text_token_id = 151643;
 
   float rope_theta = 1000000.0;
 };

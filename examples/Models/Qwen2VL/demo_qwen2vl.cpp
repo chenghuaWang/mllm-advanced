@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 
     inputs.grid_thw.print<int>();
 
-    auto output = qwen2vl(inputs);
+    qwen2vl.generate(tokenizer, inputs);
   }
 
   ctx.shutdown();

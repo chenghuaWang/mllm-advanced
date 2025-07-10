@@ -10,6 +10,8 @@
  */
 #pragma once
 
+#include <algorithm>
+#include <iostream>
 #include "mllm/Nn/F/F.hpp"
 #include "mllm/Nn/Layers/Conv3D.hpp"
 #include "mllm/Nn/Layers/GELU.hpp"
@@ -27,6 +29,7 @@
 #include "mllm/Core/Tensor.hpp"
 
 #include "mllm/Models/qwen2vl/configuration_qwen2vl.hpp"
+#include "mllm/Models/qwen2vl/tokenization_qwen2vl.hpp"
 
 namespace mllm::models {
 
@@ -352,10 +355,13 @@ class Qwen2VLAttention final : public nn::Module {
   }
 
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
+    auto x = inputs[0];
+    auto pos_ids = inputs[1];
+
     // [B, S, H * D]
-    auto query_states = q_proj_(inputs[0]);
-    auto key_states = k_proj_(inputs[1]);
-    auto value_states = v_proj_(inputs[2]);
+    auto query_states = q_proj_(x);
+    auto key_states = k_proj_(x);
+    auto value_states = v_proj_(x);
 
     int B = inputs[0].shape()[0];
     int S = inputs[0].shape()[1];
@@ -371,8 +377,8 @@ class Qwen2VLAttention final : public nn::Module {
     value_states = value_states.transpose(1, 2);
 
     // [B, H, S, D]
-    query_states = q_rope_(query_states);
-    key_states = k_rope_(key_states);
+    query_states = q_rope_(query_states, pos_ids);
+    key_states = k_rope_(key_states, pos_ids);
 
     // [B, H, S, D]
     key_states = k_cache_(key_states);
@@ -421,8 +427,9 @@ class Qwen2VLDecoder final : public nn::Module {
   }
 
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
+    auto pos_ids = inputs[1];
     auto x = input_layer_norm_(inputs[0]);
-    x = self_attn_(x, x, x)[0];
+    x = self_attn_(x, pos_ids)[0];
     auto tmp = x + inputs[0];
     x = post_attention_layer_norm_(tmp);
     x = mlp_(x)[0];
@@ -447,11 +454,21 @@ class Qwen2VLText final : public nn::Module {
 
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
     auto& blocks = decode_blocks_.getList();
+
+    // X is already embedded
     auto x = inputs[0];
-    for (auto& block : blocks) { x = block(x)[0]; }
+    auto pos_ids = inputs[1];
+
+    for (auto& block : blocks) { x = block(x, pos_ids)[0]; }
     x = norm_(x);
 
-    auto lm_head = params("embed_tokens.weight");
+    // clip x to one seq length
+    {
+      auto S = x.shape()[1];
+      x = x[{kAll, {S - 1}, kAll}];
+    }
+
+    auto lm_head = params("model.embed_tokens.weight");
 
     // x is [B, S, D], lm_head is [V, D]
     x = nn::F::matmul(x, lm_head, false, true);
@@ -465,9 +482,9 @@ class Qwen2VLText final : public nn::Module {
 class Qwen2VLForCausalLM {
  public:
   explicit Qwen2VLForCausalLM(const Qwen2VLConfig& cfg)
-      : llm("model", cfg), visual("visual", cfg) {}
+      : cfg(cfg), llm("model", cfg), visual("visual", cfg) {}
 
-  inline Qwen2VLForCausalLMOutputPast operator()(const Qwen2VLForCausalLMOutputPast& past) {
+  inline Qwen2VLForCausalLMOutputPast operator()(Qwen2VLForCausalLMOutputPast& past) {
     // Calculate the text embeddings
     auto input_embeddings = llm.embedding_(past.sequence);
 
@@ -476,51 +493,175 @@ class Qwen2VLForCausalLM {
       auto visual_embeddings = visual(past.img, past.grid_thw)[0];
 
       // Insert visual embeddings into llm's embedding
-      // TODO
+      int32_t vision_pad_token_start = -1;
+      {
+        auto input_ids = past.sequence;
+        auto S = input_ids.shape()[1];
+        auto input_ids_ptr = input_ids.ptr<int64_t>();
+        for (int s = 0; s < S; ++s) {
+          if (input_ids_ptr[s] == cfg.vision_token_id) {
+            vision_pad_token_start = s;
+            break;
+          }
+        }
+        MLLM_RT_ASSERT(vision_pad_token_start != -1);
+      }
+      // input_embedding is [B, S, D]
+      auto D = input_embeddings.shape()[2];
+      std::copy(visual_embeddings.ptr<float>(),
+                visual_embeddings.ptr<float>() + visual_embeddings.numel(),
+                input_embeddings.ptr<float>() + vision_pad_token_start * D);
     }
 
-    if (past.position_ids.isNil()) {
-      // TODO
-    }
+    if (past.position_ids.isNil()) { getPositionIds(past, cfg); }
 
-    auto out = llm(input_embeddings)[0];
+    auto sequence = llm(input_embeddings, past.position_ids)[0];
 
     return {
-        .sequence = out,
+        .sequence = sequence,
         .img = Tensor::nil(),
         .grid_thw = past.grid_thw,
+        .position_ids = past.position_ids,
     };
   }
 
-  inline void getPositionIds(const Qwen2VLForCausalLMOutputPast& past) {
+  inline void getPositionIds(Qwen2VLForCausalLMOutputPast& past, const Qwen2VLConfig& cfg) {
     // Input is [B, S, D]
     if (!past.img.isNil()) {  // Prefill
-      // TODO
+      past.position_ids = getPositionIdsPrefill(past.sequence, past.grid_thw, cfg);
     } else {  // Decode
       // TODO
     }
   }
 
-  inline Tensor getPositionIdsPrefill(Tensor& input_ids, Tensor& image_grid_thw) {
-    // Input is [B, S, D]
-    MLLM_RT_ASSERT_EQ(input_ids.shape().size(), 3);
+  inline Tensor getPositionIdsPrefill(Tensor& input_ids, Tensor& image_grid_thw,
+                                      const Qwen2VLConfig& cfg) {
+    // Input is [B, S]
+    MLLM_RT_ASSERT_EQ(input_ids.shape().size(), 2);
     // image_grid_thw is [num_images, 3]
     MLLM_RT_ASSERT_EQ(image_grid_thw.shape().size(), 2);
 
     auto B = input_ids.shape()[0];
     MLLM_RT_ASSERT_EQ(B, 1);
     auto S = input_ids.shape()[1];
-    auto D = input_ids.shape()[2];
 
     Tensor position_ids = Tensor::empty({3, B, S}, kFp32, kCPU).alloc();
 
     // Process text and visual
-    // TODO
-    // https://github.com/UbiquitousLearning/mllm/blob/main/src/models/qwen2_vl/modeling_qwen2_vl.hpp
+    // 1. Find the place of the first image token
+    // Only one image is supported.
+    int32_t vision_pad_token_start = -1;
+    {
+      auto input_ids_ptr = input_ids.ptr<int64_t>();
+      for (int s = 0; s < S; ++s) {
+        if (input_ids_ptr[s] == cfg.vision_token_id) {
+          vision_pad_token_start = s;
+          break;
+        }
+      }
+      MLLM_RT_ASSERT(vision_pad_token_start != -1);
+    }
+
+    // 2. Calculate grid dimensions
+    int img_t, img_h, img_w;
+    int inputs_t, inputs_h, inputs_w;
+    {
+      auto image_grid_thw_ptr = image_grid_thw.ptr<int64_t>();
+      img_t = image_grid_thw_ptr[0];
+      img_h = image_grid_thw_ptr[1];
+      img_w = image_grid_thw_ptr[2];
+
+      inputs_t = img_t;
+      inputs_h = img_h / cfg.visual_spatial_merge_size;
+      inputs_w = img_w / cfg.visual_spatial_merge_size;
+    }
+
+    // 3. We assume the inputs format is: T T T V V V T T T
+    int64_t current_max_position_id = 0;
+    // 3.1 Handle text (Sys token as usual).
+    {
+      int64_t start_idx = current_max_position_id;
+      for (int d = 0; d < 3; ++d) {
+        auto position_ids_ptr = position_ids.offsettedPtr<int64_t>({d, 0, 0});
+        for (int64_t k = 0; k < vision_pad_token_start; ++k) {
+          position_ids_ptr[k] = start_idx + k;
+        }
+      }
+      current_max_position_id = vision_pad_token_start - 1;
+    }
+    // 3.2 Handle image
+    {
+      int64_t vision_start_id = current_max_position_id + 1;
+      for (int64_t ti = 0; ti < inputs_t; ++ti) {
+        for (int64_t hi = 0; hi < inputs_h; ++hi) {
+          for (int64_t wi = 0; wi < inputs_w; ++wi) {
+            const int32_t seq_idx =
+                vision_pad_token_start + (ti * inputs_h * inputs_w + hi * inputs_w + wi);
+
+            *position_ids.offsettedPtr<int64_t>({0, 0, seq_idx}) = vision_start_id + ti;
+
+            *position_ids.offsettedPtr<int64_t>({1, 0, seq_idx}) = vision_start_id + hi;
+
+            *position_ids.offsettedPtr<int64_t>({2, 0, seq_idx}) = vision_start_id + wi;
+          }
+        }
+      }
+      auto dim_0_tail = *position_ids.offsettedPtr<int64_t>(
+          {0, 0, vision_pad_token_start + inputs_t * inputs_h * inputs_w - 1});
+      auto dim_1_tail = *position_ids.offsettedPtr<int64_t>(
+          {1, 0, vision_pad_token_start + inputs_t * inputs_h * inputs_w - 1});
+      auto dim_2_tail = *position_ids.offsettedPtr<int64_t>(
+          {2, 0, vision_pad_token_start + inputs_t * inputs_h * inputs_w - 1});
+      current_max_position_id =
+          vision_start_id + std::max({inputs_t - 1, inputs_h - 1, inputs_w - 1});
+    }
+    // 3.2 Handle Prompt
+    {
+      const int64_t vision_token_count = inputs_t * inputs_h * inputs_w;
+      const int64_t trailing_text_start_seq = vision_pad_token_start + vision_token_count;
+      const int64_t trailing_text_count = S - trailing_text_start_seq;
+
+      if (trailing_text_count > 0) {
+        int64_t start_id = current_max_position_id + 1;
+        for (int d = 0; d < 3; ++d) {
+          auto position_ids_ptr = position_ids.offsettedPtr<int64_t>({d, 0, 0});
+          for (int64_t k = 0; k < trailing_text_count; ++k) {
+            const int64_t seq_idx = trailing_text_start_seq + k;
+            position_ids_ptr[seq_idx] = start_id + k;
+          }
+        }
+      }
+    }
 
     return position_ids;
   }
 
+  inline void generate(Qwen2VLTokenizer& tokenizer, Qwen2VLForCausalLMOutputPast& input) {
+    auto o = operator()(input);
+
+    int64_t pos_idx = -1;
+
+    // Greedy decoding one token
+    do {
+      // [B, S, D]
+      auto sequence = o.sequence;
+      auto S = sequence.shape()[1];
+      auto D = sequence.shape()[2];
+      auto sequence_ptr = sequence.offsettedPtr<float>({0, S - 1, 0});
+      auto max_logits_idx_ptr = std::max_element(sequence_ptr, sequence_ptr + D);
+      pos_idx = std::distance(sequence_ptr, max_logits_idx_ptr);
+      auto str = tokenizer.detokenize(pos_idx);
+      std::wcout << str << std::flush;
+
+      // Generate new input
+      sequence = Tensor::empty({1, 1}, kInt64, kCPU).alloc();
+      sequence.ptr<int64_t>()[0] = pos_idx;
+      o.sequence = sequence;
+      o = operator()(o);
+    } while (pos_idx != cfg.eos_token_id && pos_idx != cfg.end_of_text_token_id);
+  }
+
+  const Qwen2VLConfig& cfg;
   Qwen2VLText llm;
   Qwen2VisionTransformerPretrainedModel visual;
 };
