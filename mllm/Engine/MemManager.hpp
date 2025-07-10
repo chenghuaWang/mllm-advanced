@@ -87,6 +87,8 @@ class MemManager {
 
   void regGlobalTensor(Tensor v);
 
+  void deRegGlobalTensor(const std::string& name);
+
   Tensor getGlobalTensor(const std::string& name);
 
   bool hasGlobalTensor(const std::string& name);

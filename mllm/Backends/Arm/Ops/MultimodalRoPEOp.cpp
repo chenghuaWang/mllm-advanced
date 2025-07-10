@@ -262,8 +262,10 @@ void ArmMultimodalRoPEOp::forward(const std::vector<Tensor>& inputs, std::vector
         ctx.mem()->regGlobalTensor(sin);
         ctx.mem()->regGlobalTensor(cos);
 
-        impl.forward(inputs, outputs, sin, cos);
+        sin.printShape();
       }
+
+      impl.forward(inputs, outputs, sin, cos);
 
       break;
     }

@@ -182,6 +182,8 @@ void MemManager::initOC(DeviceTypes device) { free_object_cache_st_.reg(device, 
 
 void MemManager::regGlobalTensor(Tensor v) { global_tensor_st_.reg(v.name(), v); }
 
+void MemManager::deRegGlobalTensor(const std::string& name) { global_tensor_st_.remove(name); }
+
 Tensor MemManager::getGlobalTensor(const std::string& name) { return global_tensor_st_[name]; }
 
 bool MemManager::hasGlobalTensor(const std::string& name) { return global_tensor_st_.has(name); }

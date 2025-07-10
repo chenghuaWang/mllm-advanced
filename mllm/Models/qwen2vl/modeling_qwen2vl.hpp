@@ -513,7 +513,7 @@ class Qwen2VLForCausalLM {
                 input_embeddings.ptr<float>() + vision_pad_token_start * D);
     }
 
-    if (past.position_ids.isNil()) { getPositionIds(past, cfg); }
+    getPositionIds(past, cfg);
 
     auto sequence = llm(input_embeddings, past.position_ids)[0];
 
@@ -530,7 +530,12 @@ class Qwen2VLForCausalLM {
     if (!past.img.isNil()) {  // Prefill
       past.position_ids = getPositionIdsPrefill(past.sequence, past.grid_thw, cfg);
     } else {  // Decode
-      // TODO
+      auto last_pos =
+          *past.position_ids.offsettedPtr<int64_t>({0, 0, past.position_ids.shape()[2] - 1});
+      past.position_ids = Tensor::empty({3, 1, 1}, kFp32, kCPU).alloc();
+      *past.position_ids.offsettedPtr<int64_t>({0, 0, 0}) = last_pos + 1;
+      *past.position_ids.offsettedPtr<int64_t>({1, 0, 0}) = last_pos + 1;
+      *past.position_ids.offsettedPtr<int64_t>({2, 0, 0}) = last_pos + 1;
     }
   }
 
@@ -640,6 +645,7 @@ class Qwen2VLForCausalLM {
     auto o = operator()(input);
 
     int64_t pos_idx = -1;
+    auto& ctx = MllmEngineCtx::instance();
 
     // Greedy decoding one token
     do {
@@ -658,6 +664,10 @@ class Qwen2VLForCausalLM {
       sequence.ptr<int64_t>()[0] = pos_idx;
       o.sequence = sequence;
       o = operator()(o);
+
+      // After de-reg, the next step will gen new rope and register to global context.
+      ctx.mem()->deRegGlobalTensor("__qwen2vl_model_rope_sin");
+      ctx.mem()->deRegGlobalTensor("__qwen2vl_model_rope_cos");
     } while (pos_idx != cfg.eos_token_id && pos_idx != cfg.end_of_text_token_id);
   }
 
