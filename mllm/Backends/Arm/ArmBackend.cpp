@@ -23,6 +23,7 @@
 #include "mllm/Backends/Arm/Ops/MatMulOp.hpp"
 #include "mllm/Backends/Arm/Ops/MultimodalRoPEOp.hpp"
 #include "mllm/Backends/Arm/Ops/PermuteOp.hpp"
+#include "mllm/Backends/Arm/Ops/QuickGELUOp.hpp"
 #include "mllm/Backends/Arm/Ops/RMSNormOp.hpp"
 #include "mllm/Backends/Arm/Ops/RepeatOp.hpp"
 #include "mllm/Backends/Arm/Ops/RoPEOp.hpp"
@@ -43,7 +44,7 @@ ArmBackend::ArmBackend() : BackendBase(kCPU) {
                ArmLLMEmbeddingTokenOpFactory, ArmSiLUOpFactory, ArmCastTypeOpFactory,
                ArmViewOpFactory, ArmSplitOpFactory, ArmFlashAttn2OpFactory, ArmPermuteOpFactory,
                ArmRepeatOpFactory, ArmConv3DOpFactory, ArmGELUOpFactory, ArmVisionRoPEOpFactory,
-               ArmLayerNormOpFactory, ArmMultimodalRoPEOpFactory>();
+               ArmLayerNormOpFactory, ArmMultimodalRoPEOpFactory, ArmQuickGELUOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

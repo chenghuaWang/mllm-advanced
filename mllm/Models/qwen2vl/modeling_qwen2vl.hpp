@@ -12,11 +12,13 @@
 
 #include <algorithm>
 #include <iostream>
+#include <chrono>
 #include "mllm/Nn/F/F.hpp"
 #include "mllm/Nn/Layers/Conv3D.hpp"
 #include "mllm/Nn/Layers/GELU.hpp"
 #include "mllm/Nn/Layers/LayerNorm.hpp"
 #include "mllm/Nn/Layers/Linear.hpp"
+#include "mllm/Nn/Layers/QuickGELU.hpp"
 #include "mllm/Nn/Layers/SiLU.hpp"
 #include "mllm/Nn/Layers/KVCache.hpp"
 #include "mllm/Nn/Layers/CausalMask.hpp"
@@ -111,7 +113,7 @@ class VisionMlp final : public nn::Module {
   int32_t dim_;
   int32_t hidden_dim_;
 
-  nn::SiLU silu_;
+  nn::QuickGELU act_;
   nn::Linear fc_1_;
   nn::Linear fc_2_;
 
@@ -124,13 +126,13 @@ class VisionMlp final : public nn::Module {
     dim_ = cfg.visual_embed_dim;
     hidden_dim_ = cfg.visual_embed_dim * cfg.visual_mlp_ratio;
 
-    fc_1_ = reg<nn::Linear>("fc1", dim_, hidden_dim_, true);
-    fc_2_ = reg<nn::Linear>("fc2", hidden_dim_, dim_, true);
-    silu_ = reg<nn::SiLU>("silu");
+    fc_1_ = reg<nn::Linear>("fc1", dim_, hidden_dim_, true, false, cfg.linear_impl_type);
+    fc_2_ = reg<nn::Linear>("fc2", hidden_dim_, dim_, true, false, cfg.linear_impl_type);
+    act_ = reg<nn::QuickGELU>("act");
   }
 
   std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
-    return {fc_2_(silu_(fc_1_(inputs[0])))};
+    return {fc_2_(act_(fc_1_(inputs[0])))};
   }
 };
 
@@ -158,20 +160,20 @@ class VisionAttention final : public nn::Module {
     head_dim_ = dim_ / num_heads_;
     scaling = std::sqrt(head_dim_);
 
-    qkv_ = reg<nn::Linear>("qkv", dim_, dim_ * 3, true);
-    proj_ = reg<nn::Linear>("proj", dim_, dim_, true);
+    qkv_ = reg<nn::Linear>("qkv", dim_, dim_ * 3, true, false, cfg.linear_impl_type);
+    proj_ = reg<nn::Linear>("proj", dim_, dim_, true, false, cfg.linear_impl_type);
     softmax_ = reg<nn::Softmax>("softmax", -1);
     vision_rope_q_ = reg<nn::VisionRoPE>("vision_rope_q", VisionRoPEOpCargoType::kQwen2VL,
                                          Qwen2VLRoPEOpCargo{
                                              .dims = head_dim_,
                                              .spatial_merge_size = cfg.visual_spatial_merge_size,
-                                             .theta = cfg.rope_theta,
+                                             .theta = 10000.0,
                                          });
     vision_rope_k_ = reg<nn::VisionRoPE>("vision_rope_k", VisionRoPEOpCargoType::kQwen2VL,
                                          Qwen2VLRoPEOpCargo{
                                              .dims = head_dim_,
                                              .spatial_merge_size = cfg.visual_spatial_merge_size,
-                                             .theta = cfg.rope_theta,
+                                             .theta = 10000.0,
                                          });
   }
 
@@ -490,7 +492,14 @@ class Qwen2VLForCausalLM {
 
     if (!past.img.isNil()) {
       // process img
+      MLLM_INFO("ViT Processing: ...");
+      MLLM_INFO("img shape is:");
+      past.img.printShape();
+      auto start_time = std::chrono::high_resolution_clock::now();
       auto visual_embeddings = visual(past.img, past.grid_thw)[0];
+      auto end_time = std::chrono::high_resolution_clock::now();
+      auto all_time = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+      MLLM_INFO("ViT Processing: done, time cost: {} seconds", all_time.count());
 
       // Insert visual embeddings into llm's embedding
       int32_t vision_pad_token_start = -1;
@@ -550,7 +559,7 @@ class Qwen2VLForCausalLM {
     MLLM_RT_ASSERT_EQ(B, 1);
     auto S = input_ids.shape()[1];
 
-    Tensor position_ids = Tensor::empty({3, B, S}, kFp32, kCPU).alloc();
+    Tensor position_ids = Tensor::empty({3, B, S}, kInt64, kCPU).alloc();
 
     // Process text and visual
     // 1. Find the place of the first image token
@@ -571,7 +580,7 @@ class Qwen2VLForCausalLM {
     int img_t, img_h, img_w;
     int inputs_t, inputs_h, inputs_w;
     {
-      auto image_grid_thw_ptr = image_grid_thw.ptr<int64_t>();
+      auto image_grid_thw_ptr = image_grid_thw.ptr<int32_t>();
       img_t = image_grid_thw_ptr[0];
       img_h = image_grid_thw_ptr[1];
       img_w = image_grid_thw_ptr[2];
@@ -596,18 +605,21 @@ class Qwen2VLForCausalLM {
     }
     // 3.2 Handle image
     {
+      int _cnt = 0;
       int64_t vision_start_id = current_max_position_id + 1;
       for (int64_t ti = 0; ti < inputs_t; ++ti) {
         for (int64_t hi = 0; hi < inputs_h; ++hi) {
           for (int64_t wi = 0; wi < inputs_w; ++wi) {
-            const int32_t seq_idx =
-                vision_pad_token_start + (ti * inputs_h * inputs_w + hi * inputs_w + wi);
+            *position_ids.offsettedPtr<int64_t>({0, 0, vision_pad_token_start + _cnt}) =
+                vision_start_id + ti;
 
-            *position_ids.offsettedPtr<int64_t>({0, 0, seq_idx}) = vision_start_id + ti;
+            *position_ids.offsettedPtr<int64_t>({1, 0, vision_pad_token_start + _cnt}) =
+                vision_start_id + hi;
 
-            *position_ids.offsettedPtr<int64_t>({1, 0, seq_idx}) = vision_start_id + hi;
+            *position_ids.offsettedPtr<int64_t>({2, 0, vision_pad_token_start + _cnt}) =
+                vision_start_id + wi;
 
-            *position_ids.offsettedPtr<int64_t>({2, 0, seq_idx}) = vision_start_id + wi;
+            _cnt++;
           }
         }
       }
@@ -617,10 +629,9 @@ class Qwen2VLForCausalLM {
           {1, 0, vision_pad_token_start + inputs_t * inputs_h * inputs_w - 1});
       auto dim_2_tail = *position_ids.offsettedPtr<int64_t>(
           {2, 0, vision_pad_token_start + inputs_t * inputs_h * inputs_w - 1});
-      current_max_position_id =
-          vision_start_id + std::max({inputs_t - 1, inputs_h - 1, inputs_w - 1});
+      current_max_position_id = std::max({dim_0_tail, dim_1_tail, dim_2_tail});
     }
-    // 3.2 Handle Prompt
+    // 3.3 Handle Prompt
     {
       const int64_t vision_token_count = inputs_t * inputs_h * inputs_w;
       const int64_t trailing_text_start_seq = vision_pad_token_start + vision_token_count;
@@ -647,8 +658,11 @@ class Qwen2VLForCausalLM {
     int64_t pos_idx = -1;
     auto& ctx = MllmEngineCtx::instance();
 
+    int32_t l = 0;
+
     // Greedy decoding one token
-    do {
+    while (true) {
+      l++;
       // [B, S, D]
       auto sequence = o.sequence;
       auto S = sequence.shape()[1];
@@ -657,18 +671,25 @@ class Qwen2VLForCausalLM {
       auto max_logits_idx_ptr = std::max_element(sequence_ptr, sequence_ptr + D);
       pos_idx = std::distance(sequence_ptr, max_logits_idx_ptr);
       auto str = tokenizer.detokenize(pos_idx);
+
+      if (!(pos_idx != cfg.eos_token_id && pos_idx != cfg.end_of_text_token_id
+            && l < cfg.max_cache_length)) {
+        break;
+      }
+
       std::wcout << str << std::flush;
+
+      // Erase all states
+      // After de-reg, the next step will gen new rope and register to global context.
+      ctx.mem()->deRegGlobalTensor("__qwen2vl_model_rope_sin");
+      ctx.mem()->deRegGlobalTensor("__qwen2vl_model_rope_cos");
 
       // Generate new input
       sequence = Tensor::empty({1, 1}, kInt64, kCPU).alloc();
       sequence.ptr<int64_t>()[0] = pos_idx;
       o.sequence = sequence;
       o = operator()(o);
-
-      // After de-reg, the next step will gen new rope and register to global context.
-      ctx.mem()->deRegGlobalTensor("__qwen2vl_model_rope_sin");
-      ctx.mem()->deRegGlobalTensor("__qwen2vl_model_rope_cos");
-    } while (pos_idx != cfg.eos_token_id && pos_idx != cfg.end_of_text_token_id);
+    }
   }
 
   const Qwen2VLConfig& cfg;

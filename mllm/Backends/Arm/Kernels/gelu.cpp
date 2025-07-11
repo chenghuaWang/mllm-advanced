@@ -94,4 +94,55 @@ void gelu_fp16(float16_t* __restrict__ Z, const float16_t* __restrict__ X, int32
   }
 }
 
+void quick_gelu_fp32(float* __restrict__ Z, const float* __restrict__ X, int32_t N) {
+  const float32x4_t scale = vdupq_n_f32(1.702f);
+  const float32x4_t one = vdupq_n_f32(1.0f);
+
+  int i = 0;
+  for (; i <= N - 4; i += 4) {
+    float32x4_t x = vld1q_f32(X + i);
+    float32x4_t scaled_x = vmulq_f32(x, scale);
+    float32x4_t sigmoid_val = vsigmoid_f32(scaled_x);
+    float32x4_t result = vmulq_f32(x, sigmoid_val);
+    vst1q_f32(Z + i, result);
+  }
+
+  for (; i < N; i++) {
+    float x = X[i];
+    float scaled_x = 1.702f * x;
+    float sigmoid_val = 1.0f / (1.0f + expf(-scaled_x));
+    Z[i] = x * sigmoid_val;
+  }
+}
+
+void quick_gelu_fp16(float16_t* __restrict__ Z, const float16_t* __restrict__ X, int32_t N) {
+  const float32x4_t scale = vdupq_n_f32(1.702f);
+  const float32x4_t one = vdupq_n_f32(1.0f);
+
+  int i = 0;
+  for (; i <= N - 8; i += 8) {
+    float16x8_t x_half = vld1q_f16(X + i);
+    float32x4_t x_low = vcvt_f32_f16(vget_low_f16(x_half));
+    float32x4_t x_high = vcvt_f32_f16(vget_high_f16(x_half));
+
+    float32x4_t scaled_x_low = vmulq_f32(x_low, scale);
+    float32x4_t scaled_x_high = vmulq_f32(x_high, scale);
+
+    float32x4_t sigmoid_low = vsigmoid_f32(scaled_x_low);
+    float32x4_t sigmoid_high = vsigmoid_f32(scaled_x_high);
+
+    float32x4_t result_low = vmulq_f32(x_low, sigmoid_low);
+    float32x4_t result_high = vmulq_f32(x_high, sigmoid_high);
+
+    vst1q_f16(Z + i, vcombine_f16(vcvt_f16_f32(result_low), vcvt_f16_f32(result_high)));
+  }
+
+  for (; i < N; i++) {
+    float x = static_cast<float>(X[i]);
+    float scaled_x = 1.702f * x;
+    float sigmoid_val = 1.0f / (1.0f + expf(-scaled_x));
+    Z[i] = static_cast<float16_t>(x * sigmoid_val);
+  }
+}
+
 }  // namespace mllm::arm

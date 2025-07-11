@@ -19,4 +19,8 @@ void gelu_fp32(float* __restrict__ Z, const float* __restrict__ X, int32_t N);
 
 void gelu_fp16(float16_t* __restrict__ Z, const float16_t* __restrict__ X, int32_t N);
 
+void quick_gelu_fp32(float* __restrict__ Z, const float* __restrict__ X, int32_t N);
+
+void quick_gelu_fp16(float16_t* __restrict__ Z, const float16_t* __restrict__ X, int32_t N);
+
 }  // namespace mllm::arm

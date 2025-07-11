@@ -34,7 +34,7 @@ struct Qwen2VLMessage {
   static inline std::string message_template =
       "<|im_start|>system\nYou are a helpful "
       "assistant.<|im_end|>\n<|im_start|>user\n<|vision_start|><|vision_pad|><|vision_end|>{{{"
-      "prompt}}}<|im_end|>\n<|im_start|>assistant";
+      "prompt}}}<|im_end|>\n<|im_start|>assistant\n";
 };
 
 class Qwen2VLTokenizer final : public mllm::preprocessor::AutoTokenizer {

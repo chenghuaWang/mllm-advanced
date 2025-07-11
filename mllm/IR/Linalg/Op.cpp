@@ -56,4 +56,6 @@ LINALG_AOPS_DECL(OpType::kLayerNorm, LayerNormOp);
 LINALG_AOPS_DECL(OpType::kMultimodalRoPE, MultimodalRoPEOp);
 LINALG_AOPS_DECL(OpType::kVisionRoPE, VisionRoPEOp);
 
+LINALG_AOPS_DECL(OpType::kQuickGELU, QuickGELUOp);
+
 }  // namespace mllm::ir::linalg

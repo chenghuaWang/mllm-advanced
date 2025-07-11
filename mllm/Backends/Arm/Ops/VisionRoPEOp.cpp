@@ -26,33 +26,7 @@ Tensor Qwen2VLVisionRoPEOpImpl::computeInvFreq(const Qwen2VLRoPEOpCargo& cargo) 
   const float theta = cargo.theta;
   const float dims_inv = 1.0f / static_cast<float>(cargo.dims / 2);
 
-  const float32x4_t v_two = vdupq_n_f32(2.0f);
-  const float32x4_t v_dims_inv = vdupq_n_f32(dims_inv);
-  const float32x4_t v_theta = vdupq_n_f32(theta);
-
-  const float32x4_t v_step = {0.0f, 1.0f, 2.0f, 3.0f};
-
-  int i = 0;
-  for (; i <= half_dim - 4; i += 4) {
-    const float32x4_t v_index = vaddq_f32(vdupq_n_f32(i), v_step);
-
-    // (2.0f * index) * dims_inv
-    const float32x4_t v_exponent = vmulq_f32(vmulq_f32(v_two, v_index), v_dims_inv);
-
-    float32x4_t v_result;
-    {
-      float exponents[4];
-      vst1q_f32(exponents, v_exponent);
-
-      float results[4];
-#pragma unroll
-      for (int k = 0; k < 4; ++k) { results[k] = 1.0f / std::pow(theta, exponents[k]); }
-      v_result = vld1q_f32(results);
-    }
-    vst1q_f32(inv_freq_ptr + i, v_result);
-  }
-
-  for (; i < half_dim; ++i) {
+  for (int i = 0; i < half_dim; ++i) {
     const float exponent = (2.0f * i) * dims_inv;
     inv_freq_ptr[i] = 1.0f / std::pow(theta, exponent);
   }
@@ -62,7 +36,6 @@ Tensor Qwen2VLVisionRoPEOpImpl::computeInvFreq(const Qwen2VLRoPEOpCargo& cargo) 
 
 Tensor Qwen2VLVisionRoPEOpImpl::getRotaryPosEmbIds(Tensor& grid_thw,
                                                    const Qwen2VLRoPEOpCargo& cargo) {
-  // auto out = Tensor::empty({shape}).alloc();
   MLLM_RT_ASSERT_EQ(grid_thw.shape().size(), 2);
 
   auto img_nums = grid_thw.shape()[0];

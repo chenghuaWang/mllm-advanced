@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   {
     auto tokenizer = models::Qwen2VLTokenizer(tokenizer_file_path.get(), 56 * 56, 28 * 28 * 256);
     auto inputs = tokenizer.convertMessage({
-        .prompt = "Describe this image.",
+        .prompt = "图中的梗是御坂美琴踢售货机，请使用小红书文案介绍这张图。",
         .img_file_path = img_file_path.get(),
     });
     auto qwen2vl_cfg = models::Qwen2VLConfig();
@@ -85,8 +85,6 @@ int main(int argc, char* argv[]) {
 
     qwen2vl.llm.load(params);
     qwen2vl.visual.load(params);
-
-    inputs.grid_thw.print<int>();
 
     qwen2vl.generate(tokenizer, inputs);
   }

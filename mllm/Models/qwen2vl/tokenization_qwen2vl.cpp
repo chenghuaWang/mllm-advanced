@@ -244,7 +244,9 @@ Qwen2VLForCausalLMOutputPast Qwen2VLTokenizer::convertMessage(const Qwen2VLMessa
   // process prompt
   auto applied_string = Qwen2VLMessage::message_template;
   size_t pos = applied_string.find("{{{prompt}}}");
-  applied_string.replace(pos, 11, message.prompt);
+  applied_string.replace(pos, 12, message.prompt);
+
+  MLLM_INFO("{}", applied_string);
 
   // process image
   auto [img, grid_thw] = image_preprocessor_(message.img_file_path);

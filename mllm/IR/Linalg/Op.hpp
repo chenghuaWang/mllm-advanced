@@ -47,6 +47,7 @@ class GELUOp;
 class LayerNormOp;
 class MultimodalRoPEOp;
 class VisionRoPEOp;
+class QuickGELUOp;
 }  // namespace mllm
 
 #define LINALG_AOPS_DEFINE(class_name, rtti_name)                                  \
@@ -152,4 +153,5 @@ LINALG_AOPS_DEFINE(LayerNormOp, LAYERNORMOP);
 LINALG_AOPS_DEFINE(MultimodalRoPEOp, MULTIMODALROPEOP);
 LINALG_AOPS_DEFINE(VisionRoPEOp, VISIONROPEOP);
 
+LINALG_AOPS_DEFINE(QuickGELUOp, QUICKGELUOP);
 }  // namespace mllm::ir::linalg

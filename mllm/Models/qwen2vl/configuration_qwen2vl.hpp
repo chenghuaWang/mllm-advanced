@@ -35,7 +35,8 @@ struct Qwen2VLConfig : protected MllmModelCfg {
   float rms_norm_eps = 1e-06;
   int32_t vocab_size = 151936;
 
-  LinearOpImplType linear_impl_type = LinearOpImplType::kDefault;
+  LinearOpImplType linear_impl_type =
+      LinearOpImplType::kKaiLinear_f32_qai8dxp_qsi4c32p_mxk_nxk_qai8dxp4x8_qsi4c32p4x8_8x4x32;
   DataTypes kv_cache_dtype = kFp32;
   int32_t max_cache_length = 2048;
 
