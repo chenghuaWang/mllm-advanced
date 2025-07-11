@@ -13,3 +13,4 @@ CMakeFormatTask:
     - "mllm/Backends/CUDA/Vendors/cccl"
     - "playground/ScheduleTimeBtCpuNpu"
     - "playground/QnnPagedAttn"
+    - "build-jit"

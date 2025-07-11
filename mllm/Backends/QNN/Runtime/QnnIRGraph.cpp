@@ -101,13 +101,22 @@ std::shared_ptr<QnnIRGraph> QnnIRGraph::build(const std::string& name,
 void QnnIRGraph::startRecord() {
   MLLM_RT_ASSERT_EQ(freezed_, false);
 
+  // Default Settings
   qnn_htp_graph_custom_cfg_default_.option = QNN_HTP_GRAPH_CONFIG_OPTION_VTCM_SIZE;
   qnn_htp_graph_custom_cfg_default_.vtcmSizeInMB = 8;
-
   qnn_graph_cfg_default_.option = QNN_GRAPH_CONFIG_OPTION_CUSTOM;
   qnn_graph_cfg_default_.customConfig = &qnn_htp_graph_custom_cfg_default_;
 
+  // SLC Enable.
+  qnn_htp_graph_use_slc_cfg_default_.option = QNN_HTP_GRAPH_CONFIG_OPTION_OPTIMIZATION;
+  qnn_htp_graph_use_slc_cfg_default_.optimizationOption.type =
+      QNN_HTP_GRAPH_OPTIMIZATION_TYPE_ENABLE_SLC_ALLOCATOR;
+  qnn_htp_graph_use_slc_cfg_default_.optimizationOption.floatValue = 1;
+  qnn_graph_use_slc_cfg_default_.option = QNN_GRAPH_CONFIG_OPTION_CUSTOM;
+  qnn_graph_use_slc_cfg_default_.customConfig = &qnn_htp_graph_use_slc_cfg_default_;
+
   qnn_graph_all_cfgs_[qnn_graph_cfg_cnt_++] = &qnn_graph_cfg_default_;
+  qnn_graph_all_cfgs_[qnn_graph_cfg_cnt_++] = &qnn_graph_use_slc_cfg_default_;
   qnn_graph_all_cfgs_[qnn_graph_cfg_cnt_++] = nullptr;
 
   MLLM_RT_ASSERT(qnn_graph_cfg_cnt_ <= 9);

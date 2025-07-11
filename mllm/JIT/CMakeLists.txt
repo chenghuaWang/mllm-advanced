@@ -1,1 +1,7 @@
-# Install code and find_package code
+# Find Halide. Make sure Halide is installed from pip channel first.
+find_package(Halide REQUIRED)
+
+file(GLOB_RECURSE MLLM_JIT_EXT_SCHEMA ${CMAKE_CURRENT_LIST_DIR}/Schema/*.cpp)
+
+add_library(MllmJITExt SHARED Core.cpp ${MLLM_JIT_EXT_SCHEMA})
+target_link_libraries(MllmJITExt PUBLIC Halide::Halide)

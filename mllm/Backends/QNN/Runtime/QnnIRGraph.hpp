@@ -100,6 +100,7 @@ class QnnIRGraph {
   // QNN meta info
   int32_t qnn_graph_cfg_cnt_ = 0;
   QnnGraph_Config_t qnn_graph_cfg_default_;
+  QnnGraph_Config_t qnn_graph_use_slc_cfg_default_;
   QnnGraph_Config_t* qnn_graph_all_cfgs_[9];  // Only 8(max) cfg can be used. The last is nullptr
   Qnn_GraphHandle_t qnn_graph_handle_ = nullptr;
   std::vector<Qnn_Tensor_t> qnn_input_tensors_;
@@ -107,6 +108,9 @@ class QnnIRGraph {
 
   // QNN HTP GRAPH Custom Config
   QnnHtpGraph_CustomConfig_t qnn_htp_graph_custom_cfg_default_;
+
+  // QNN HTP Use SLC
+  QnnHtpGraph_CustomConfig_t qnn_htp_graph_use_slc_cfg_default_;
 
   // map all input tensor and output tensor's name
   std::unordered_map<std::string, Qnn_Tensor_t> qnn_tensor_map_;

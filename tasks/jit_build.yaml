@@ -1,0 +1,13 @@
+CMakeConfigTask:
+  cmake_cfg_path: "build-jit"
+  cmake_build_type: "Release"
+  cmake_extra_args:
+    - "-DHWY_ENABLE_TESTS=OFF"
+    - "-DHWY_ENABLE_EXAMPLES=OFF"
+    - "-DHWY_ENABLE_CONTRIB=OFF"
+    # optional
+    - "-DMLLM_X86_BACKEND_COMPILE_OPTIONS=\"-march=native\""
+    - "-DMLLM_ENABLE_JIT=ON"
+
+CMakeBuildTask:
+  cmake_cfg_path: "build-jit"

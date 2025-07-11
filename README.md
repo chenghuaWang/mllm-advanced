@@ -22,6 +22,18 @@ Fast and lightweight LLM inference engine for mobile and edge devices
 
 # Features
 
+1. **Dynamic-static integrated computation graph** for easy implementation of your algorithms.  
+2. **Multi-backend support** for CPU/NPU. Designed for MOBILE devices.
+3. A complete graph-level IR with customizable Passes, and a Qnn Lowering Pipeline provided to compile your graph into QNN Graph.  
+4. **MobiLMCache!** An edge-side LMCache with cache pagination management.  
+
+# Supported Models
+
+| Model | Quantization Methods | Backends |
+| :---: | :---: | :---: |
+| DeepSeek-Distill-Qwen-1.5B | W32A32, W4A32 | Arm-CPU |
+| Qwen2VL-2B-Instruct | W32A32, W4A32 | Arm-CPU |
+
 # Run Examples
 
 We demonstrate the usage with an example using DeepSeek distill qwen2 1.5B as the model.
