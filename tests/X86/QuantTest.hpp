@@ -17,6 +17,7 @@
 #include "mllm/Backends/X86/Kernels/vec_dot_q4_k_q8_k_avx512f.hpp"
 #include "mllm/Backends/X86/Kernels/vec_dot_q4_k_q8_k_avx2.hpp"
 
+#if defined(__AVX512F__)
 class Q4KQ8KTest : public testing::Test {
  protected:
   Q4KQ8KTest() = default;
@@ -125,3 +126,4 @@ class Q4KQ8KTest : public testing::Test {
   size_t K = 2048;
   void *A = nullptr, *B = nullptr, *C = nullptr, *rC = nullptr, *rC_avx2 = nullptr;
 };
+#endif

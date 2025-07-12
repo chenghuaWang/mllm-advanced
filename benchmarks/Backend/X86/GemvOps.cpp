@@ -47,6 +47,7 @@ static void q4_k_q8_k_avx2_gemv(benchmark::State& state) {
   mllm::X86::X86_align_free(qB);
 }
 
+#if defined(__AVX512F__)
 static void q4_k_q8_k_avx512_gemv(benchmark::State& state) {
   size_t K = state.range(0);
 
@@ -87,7 +88,10 @@ static void q4_k_q8_k_avx512_gemv(benchmark::State& state) {
   mllm::X86::X86_align_free(qA);
   mllm::X86::X86_align_free(qB);
 }
+#endif
 
 BENCHMARK(q4_k_q8_k_avx2_gemv)->RangeMultiplier(2)->Range(512, 4096);
+#if defined(__AVX512F__)
 BENCHMARK(q4_k_q8_k_avx512_gemv)->RangeMultiplier(2)->Range(512, 4096);
+#endif
 BENCHMARK_MAIN();

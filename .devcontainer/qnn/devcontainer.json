@@ -1,7 +1,7 @@
 {
     "name": "mllm-a-qnn",
     "build": {
-        "dockerfile": "../../docker/Dockerfile.arm"
+        "dockerfile": "../../docker/Dockerfile.qnn"
     },
     "customizations": {
         "vscode": {

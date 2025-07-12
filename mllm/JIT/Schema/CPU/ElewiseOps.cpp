@@ -8,8 +8,8 @@
  * @copyright Copyright (c) 2025
  *
  */
-#pragma once
-
 #include <Halide.h>
 
-namespace mllm::jit::cpu {}
+#include "mllm/JIT/Schema/CPU/ElewiseOps.hpp"
+
+namespace mllm::jit::cpu {}  // namespace mllm::jit::cpu

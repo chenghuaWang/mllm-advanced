@@ -11,9 +11,7 @@
 
 #include "mllm/Core/DataTypes.hpp"
 
-#if !defined(__AVX512F__)
-#error The avx512 is required to compile this file.
-#else
+#if defined(__AVX512F__)
 
 namespace mllm::X86 {
 

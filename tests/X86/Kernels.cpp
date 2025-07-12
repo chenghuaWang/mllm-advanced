@@ -10,8 +10,10 @@
 #include "QuantTest.hpp"
 #include <gtest/gtest.h>
 
+#if defined(__AVX512F__)
 TEST_F(Q4KQ8KTest, AVX512) {
   CalculateRef();
   Calculate();
   EXPECT_EQ(Compare(), true);
 }
+#endif

@@ -176,7 +176,7 @@ class OpTypes:
     Linear: typing.ClassVar[OpTypes]  # value = <OpTypes.Linear: 8>
     MatMul: typing.ClassVar[OpTypes]  # value = <OpTypes.MatMul: 6>
     Mul: typing.ClassVar[OpTypes]  # value = <OpTypes.Mul: 4>
-    OpType_End: typing.ClassVar[OpTypes]  # value = <OpTypes.OpType_End: 22>
+    OpType_End: typing.ClassVar[OpTypes]  # value = <OpTypes.OpType_End: 32>
     OpType_Start: typing.ClassVar[OpTypes]  # value = <OpTypes.OpType_Start: 0>
     RMSNorm: typing.ClassVar[OpTypes]  # value = <OpTypes.RMSNorm: 12>
     RoPE: typing.ClassVar[OpTypes]  # value = <OpTypes.RoPE: 9>
@@ -186,7 +186,7 @@ class OpTypes:
     Sub: typing.ClassVar[OpTypes]  # value = <OpTypes.Sub: 3>
     Transpose: typing.ClassVar[OpTypes]  # value = <OpTypes.Transpose: 11>
     View: typing.ClassVar[OpTypes]  # value = <OpTypes.View: 20>
-    __members__: typing.ClassVar[dict[str, OpTypes]]  # value = {'OpType_Start': <OpTypes.OpType_Start: 0>, 'Fill': <OpTypes.Fill: 1>, 'Add': <OpTypes.Add: 2>, 'Sub': <OpTypes.Sub: 3>, 'Mul': <OpTypes.Mul: 4>, 'Div': <OpTypes.Div: 5>, 'MatMul': <OpTypes.MatMul: 6>, 'LLMEmbeddingToken': <OpTypes.LLMEmbeddingToken: 7>, 'Linear': <OpTypes.Linear: 8>, 'RoPE': <OpTypes.RoPE: 9>, 'Softmax': <OpTypes.Softmax: 10>, 'Transpose': <OpTypes.Transpose: 11>, 'RMSNorm': <OpTypes.RMSNorm: 12>, 'SiLU': <OpTypes.SiLU: 13>, 'KVCache': <OpTypes.KVCache: 14>, 'CausalMask': <OpTypes.CausalMask: 15>, 'CastType': <OpTypes.CastType: 16>, 'D2H': <OpTypes.D2H: 17>, 'H2D': <OpTypes.H2D: 18>, 'Split': <OpTypes.Split: 19>, 'View': <OpTypes.View: 20>, 'FlashAttention_2': <OpTypes.FlashAttention_2: 21>, 'OpType_End': <OpTypes.OpType_End: 22>}
+    __members__: typing.ClassVar[dict[str, OpTypes]]  # value = {'OpType_Start': <OpTypes.OpType_Start: 0>, 'Fill': <OpTypes.Fill: 1>, 'Add': <OpTypes.Add: 2>, 'Sub': <OpTypes.Sub: 3>, 'Mul': <OpTypes.Mul: 4>, 'Div': <OpTypes.Div: 5>, 'MatMul': <OpTypes.MatMul: 6>, 'LLMEmbeddingToken': <OpTypes.LLMEmbeddingToken: 7>, 'Linear': <OpTypes.Linear: 8>, 'RoPE': <OpTypes.RoPE: 9>, 'Softmax': <OpTypes.Softmax: 10>, 'Transpose': <OpTypes.Transpose: 11>, 'RMSNorm': <OpTypes.RMSNorm: 12>, 'SiLU': <OpTypes.SiLU: 13>, 'KVCache': <OpTypes.KVCache: 14>, 'CausalMask': <OpTypes.CausalMask: 15>, 'CastType': <OpTypes.CastType: 16>, 'D2H': <OpTypes.D2H: 17>, 'H2D': <OpTypes.H2D: 18>, 'Split': <OpTypes.Split: 19>, 'View': <OpTypes.View: 20>, 'FlashAttention_2': <OpTypes.FlashAttention_2: 21>, 'OpType_End': <OpTypes.OpType_End: 32>}
     def __eq__(self, other: typing.Any) -> bool:
         ...
     def __getstate__(self) -> int:
