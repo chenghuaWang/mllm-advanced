@@ -31,6 +31,9 @@ enum TensorMemTypes : int32_t {  // NOLINT
   kGlobal,
   kParams,
   kReference,
+
+  kQnnAppReadWrite,
+
   kTensorMemTypes_End,
 };
 
@@ -53,6 +56,9 @@ class TensorStorage final : public Storage {
 class TensorViewImpl : public std::enable_shared_from_this<TensorViewImpl> {
  public:
   using storage_t = std::shared_ptr<TensorStorage>;
+  using shape_t = std::vector<int32_t>;
+  using dtype_t = DataTypes;
+  using device_t = DeviceTypes;
 
   TensorViewImpl() = default;
 

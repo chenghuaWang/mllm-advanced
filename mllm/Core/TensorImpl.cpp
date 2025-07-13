@@ -21,6 +21,7 @@ TensorStorage::~TensorStorage() {
     case kExtraInput:
     case kExtraOutput:
     case kParams:
+    case kQnnAppReadWrite:
     case kManual: break;
     case kReference: MLLM_WARN("mem_type_ kReference is not used anymore."); break;
     default:

@@ -52,6 +52,10 @@ using SliceIndices = std::vector<SliceIndicesPair>;
  */
 class Tensor {
  public:
+  using shape_t = TensorViewImpl::shape_t;
+  using dtype_t = TensorViewImpl::dtype_t;
+  using device_t = TensorViewImpl::device_t;
+
   /**
    * @brief Default constructor. Creates an empty (null) tensor.
    */

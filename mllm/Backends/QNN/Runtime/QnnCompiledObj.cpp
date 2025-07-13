@@ -10,7 +10,6 @@
 #include <cstdint>
 #include "mllm/Backends/QNN/QnnTensorHelpMacros.hpp"
 #include "mllm/Backends/QNN/Runtime/QnnCompiledObj.hpp"
-#include "mllm/Utils/Dbg.hpp"
 
 namespace mllm::qnn {
 

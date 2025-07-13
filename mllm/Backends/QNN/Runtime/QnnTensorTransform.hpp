@@ -51,12 +51,18 @@ class QnnTensorTransform {
   Qnn_Tensor_t transform(const ir::tensor::TensorValue::self_ptr_t& tensor_ir,
                          Qnn_TensorVersion_t version);
 
+  Qnn_Tensor_t transform(Tensor& mllm_tensor, Qnn_TensorVersion_t version);
+
   Qnn_Tensor_t deepCopy(Qnn_Tensor_t* src_tensor);
 
  private:
   Qnn_Tensor_t transformV1(const ir::tensor::TensorValue::self_ptr_t& tensor_ir);
 
   Qnn_Tensor_t transformV2(const ir::tensor::TensorValue::self_ptr_t& tensor_ir);
+
+  Qnn_Tensor_t transformV1(Tensor& mllm_tensor);
+
+  Qnn_Tensor_t transformV2(Tensor& mllm_tensor);
 
   Qnn_TensorType_t autoQnnTensorType(const ir::tensor::TensorValue::self_ptr_t& tensor_ir);
 
@@ -69,6 +75,16 @@ class QnnTensorTransform {
       const ir::tensor::TensorValue::self_ptr_t& tensor_ir);
 
   Qnn_TensorMemType_t autoQnnTensorMemType(const ir::tensor::TensorValue::self_ptr_t& tensor_ir);
+
+  Qnn_TensorType_t autoQnnTensorType(Tensor& mllm_tensor);
+
+  Qnn_TensorDataFormat_t autoQnnTensorDataFormat(Tensor& mllm_tensor);
+
+  Qnn_DataType_t autoQnnTensorDataType(Tensor& mllm_tensor);
+
+  Qnn_QuantizeParams_t autoQnnTensorQuantParams(Tensor& mllm_tensor);
+
+  Qnn_TensorMemType_t autoQnnTensorMemType(Tensor& mllm_tensor);
 
   std::vector<QnnTensorTransformMetaInfo> qnn_tensors_;
   static const std::unordered_map<Qnn_DataType_t, size_t> dtype_to_size_;
