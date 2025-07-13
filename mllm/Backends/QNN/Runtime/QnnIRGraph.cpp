@@ -32,7 +32,7 @@ const std::unordered_map<Qnn_DataType_t, size_t> QnnIRGraph::dtype_to_size_ = {
 
 const std::string QnnIRGraph::QTI_AISW_OP_PACKAGE = "qti.aisw";
 
-const std::string QnnIRGraph::MLLM_QNN_OP_PACKAGE = "MllmQnnOpPackage";
+const std::string QnnIRGraph::MLLM_QNN_OP_PACKAGE = "MllmPackage";
 
 QnnIRGraph::QnnIRGraph(const std::string& name, const ir::graph::SubGraphOp::self_ptr_t& graph_ir,
                        const QnnFuncSymbols& qnn_func_symbols,

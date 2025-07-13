@@ -4,8 +4,9 @@ import sys
 import time
 import json
 import yaml
-import argparse
+import shutil
 import logging
+import argparse
 from pathlib import Path
 from typing import Dict, List
 
@@ -424,6 +425,57 @@ class BuildPythonCLibTask(Task):
         )
 
 
+class HexagonMakeTask(Task):
+    def __init__(self, config):
+        super().__init__(config)
+        self.mllm_qnn_package_place = config.get("mllm_qnn_package_place", None)
+        assert self.mllm_qnn_package_place is not None, (
+            "mllm_qnn_package_place must be set in config"
+        )
+        self.targets: List[str] = config.get("targets", None)
+        assert self.targets is not None, "targets must be set in config"
+
+    def run(self):
+        # Get current working directory
+        current_dir = os.getcwd()
+
+        # Change to the mllm_qnn_package_place directory
+        os.chdir(self.mllm_qnn_package_place)
+        for target in self.targets:
+            command = f"make {target}"
+            logging.info(f"Running command: {command}")
+            os.system(command)
+
+        # Check if has htp_aarch64 in targets
+        if "htp_aarch64" in self.targets:
+            htp_aarch64_path = os.path.join(
+                self.mllm_qnn_package_place, "build", "aarch64-android"
+            )
+            lib_obj = os.path.join(htp_aarch64_path, "libQnnMllmPackage.so")
+            # Copy to libQnnMllmPackageCPU.so
+            if os.path.exists(lib_obj):
+                new_lib_obj = os.path.join(htp_aarch64_path, "libQnnMllmPackageCPU.so")
+                logging.info(f"Copying {lib_obj} to {new_lib_obj}")
+                shutil.copy(lib_obj, new_lib_obj)
+
+        # Check if has htp_v75, htp_v68, htp_v69, htp_v73, htp_v79, htp_v81 in targets, and rename
+        hexagon_versions = ["v75", "v68", "v69", "v73", "v79", "v81"]
+        for version in hexagon_versions:
+            if f"htp_{version}" in self.targets:
+                htp_path = os.path.join(
+                    self.mllm_qnn_package_place, "build", f"hexagon-{version}"
+                )
+                lib_obj = os.path.join(htp_path, "libQnnMllmPackage.so")
+                # Copy to libQnnMllmPackageHTP.so
+                if os.path.exists(lib_obj):
+                    new_lib_obj = os.path.join(htp_path, "libQnnMllmPackageHTP.so")
+                    logging.info(f"Copying {lib_obj} to {new_lib_obj}")
+                    shutil.copy(lib_obj, new_lib_obj)
+
+        # Change back to the original directory
+        os.chdir(current_dir)
+
+
 class PymllmInstallTask(Task):
     def __init__(self, config):
         super().__init__(config)
@@ -465,6 +517,7 @@ TASKS = {
     "GenPybind11StubsTask": GenPybind11StubsTask,
     "BuildDocTask": BuildDocTask,
     "BuildPythonCLibTask": BuildPythonCLibTask,
+    "HexagonMakeTask": HexagonMakeTask,
     "PymllmInstallTask": PymllmInstallTask,
 }
 

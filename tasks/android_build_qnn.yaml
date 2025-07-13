@@ -1,3 +1,9 @@
+HexagonMakeTask:
+  mllm_qnn_package_place: "/root/mllm-advanced/mllm/Backends/QNN/Kernels/MllmPackage"
+  targets:
+    - "htp_aarch64"
+    - "htp_v75"
+
 CMakeConfigTask:
   cmake_cfg_path: "build-android-arm64-v8a-qnn"
   cmake_build_type: "Release"

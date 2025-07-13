@@ -38,6 +38,9 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
 }
 
 QnnBackend::~QnnBackend() {
+  // Free QnnPerf first
+  qnn_htp_perf_ = nullptr;
+
   // Free HTP Context
   auto status = qnn_htp_func_symbols_.qnn_interface_.contextFree(
       qnn_htp_backend_.qnn_ctx_handle_, qnn_htp_backend_.profile_bk_handle_);
@@ -129,6 +132,42 @@ bool QnnBackend::initHTPBackend() {
       (const QnnContext_Config_t**)&qnn_htp_backend_.qnn_context_config_,
       &qnn_htp_backend_.qnn_ctx_handle_);
   MLLM_RT_ASSERT_EQ(QNN_CONTEXT_NO_ERROR, status);
+
+  // Register MLLM's Qnn Opset
+  {
+    struct OpPackageInfo {
+      std::string path;
+      std::string interface_provider;
+      std::string target;
+    };
+
+    std::vector<OpPackageInfo> op_packages = {
+        {.path = "libQnnMllmPackageCPU.so",
+         .interface_provider = "MllmPackageInterfaceProvider",
+         .target = "CPU"},
+        {.path = "libQnnMllmPackageHTP.so",
+         .interface_provider = "MllmPackageInterfaceProvider",
+         .target = "HTP"},
+    };
+
+    for (const auto& pkg : op_packages) {
+      if (!qnn_htp_func_symbols_.qnn_interface_.backendRegisterOpPackage) {
+        MLLM_ERROR_EXIT(
+            kError, "qnn_htp_func_symbols_.qnn_interface_.backendRegisterOpPackage is nullptr.");
+      }
+      auto status = qnn_htp_func_symbols_.qnn_interface_.backendRegisterOpPackage(
+          qnn_htp_backend_.bk_handle_, pkg.path.c_str(), pkg.interface_provider.c_str(),
+          pkg.target.c_str());
+      MLLM_RT_ASSERT_EQ(status, QNN_BACKEND_NO_ERROR);
+      MLLM_INFO("QNN Registered op package: {}, interface provider: {}, target: {}", pkg.path,
+                pkg.interface_provider, pkg.target);
+    }
+  }
+
+  // Set Qnn HTP Perf, default to burst mode.
+  qnn_htp_perf_ = std::make_shared<QnnPerf>(&qnn_htp_func_symbols_.qnn_interface_);
+  qnn_htp_perf_->setPowerConfigBurst();
+  MLLM_RT_ASSERT(qnn_htp_perf_ != nullptr);
 
   return true;
 }

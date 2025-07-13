@@ -38,10 +38,9 @@ bool QnnSiLUOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
   // Get mllm's qnn op and transform it to qnn's op
   auto mllm_silu_op = (QnnSiLUOp*)(op->cast_<ir::linalg::SiLUOp>()->getAOp());
 
-  // Use HardSwish /beta=1.
-  // NOTE: Approximate impl.
-  graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_silu_op->name(), QnnIRGraph::QTI_AISW_OP_PACKAGE,
-              "HardSwish", {}, input_names, output_tensors);
+  // NOTE: Approximate impl with LUT.
+  graph.addOp(QNN_OPCONFIG_VERSION_1, mllm_silu_op->name(), QnnIRGraph::MLLM_QNN_OP_PACKAGE, "SiLU",
+              {}, input_names, output_tensors);
 
   return true;
 }

@@ -42,6 +42,7 @@ class QnnBackend final : public BackendBase {
   void loadHtpContextFromBinaryFile(const std::string& file_path);
 
  private:
+  std::shared_ptr<QnnPerf> qnn_htp_perf_ = nullptr;
   QnnBackendDevice qnn_htp_backend_;
   QnnFuncSymbols qnn_htp_func_symbols_;
   std::unordered_map<std::string, std::shared_ptr<QnnIRGraph>> qnn_graphs_;

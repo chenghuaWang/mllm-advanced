@@ -7,5 +7,7 @@ AdbPushTask:
     - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpV79CalculatorStub.so"
     - "$QNN_SDK_ROOT/lib/aarch64-android/libQnnHtpOptraceProfilingReader.so"
     - "$QNN_SDK_ROOT/lib/hexagon-v79/unsigned/libQnnHtpV79Skel.so"
+    - "mllm/Backends/QNN/Kernels/MllmPackage/build/aarch64-android/libQnnMllmPackageCPU.so"
+    - "mllm/Backends/QNN/Kernels/MllmPackage/build/hexagon-v75/libQnnMllmPackageHTP.so"
     
   to_path: "/data/local/tmp/mllm-advanced/lib64/"

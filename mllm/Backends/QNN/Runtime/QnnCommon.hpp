@@ -13,7 +13,9 @@
 // Include common headers that qnn need
 #include <QNN/QnnInterface.h>
 #include <QNN/System/QnnSystemInterface.h>
+#include <QNN/HTP/QnnHtpDevice.h>
 
+namespace mllm::qnn {
 // Collection of symbols that we need to load from qnn dyn lib.
 struct QnnFuncSymbols {
   using QnnInterfaceGetProvidersFuncType = Qnn_ErrorHandle_t(const QnnInterface_t*** providerList,
@@ -35,3 +37,29 @@ struct QnnBackendDevice {
   Qnn_ProfileHandle_t profile_bk_handle_ = nullptr;
   Qnn_ContextHandle_t qnn_ctx_handle_;
 };
+
+// The QnnPerf is ref from MNN's impl:
+// MNN/source/backend/qnn/backend/QNNPerf.hpp
+class QnnPerf {
+ public:
+  QnnPerf() = default;
+
+  explicit QnnPerf(const QNN_INTERFACE_VER_TYPE* qnn_interface);
+
+  ~QnnPerf();
+
+  void setRpcLatencyAndPolling();
+
+  void setPowerConfigBurst();
+
+  void setPowerConfigBalanced();
+
+ private:
+  uint32_t power_cfg_id_;
+  const QNN_INTERFACE_VER_TYPE* qnn_interface_ = nullptr;
+  QnnHtpDevice_PerfInfrastructure_t perf_infra_;
+  QnnHtpPerfInfrastructure_PowerConfig_t power_cfg_burst_;
+  QnnHtpPerfInfrastructure_PowerConfig_t power_cfg_balanced_;
+};
+
+}  // namespace mllm::qnn
