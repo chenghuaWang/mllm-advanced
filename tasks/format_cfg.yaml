@@ -14,3 +14,5 @@ CMakeFormatTask:
     - "playground/ScheduleTimeBtCpuNpu"
     - "playground/QnnPagedAttn"
     - "build-jit"
+    - "mllm/Backends/QNN/Kernels/MllmPackage/build"
+    - "algorithms/NcU/build"

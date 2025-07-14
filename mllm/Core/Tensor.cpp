@@ -9,6 +9,7 @@
  */
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Core/AOps/CastTypeOp.hpp"
+#include "mllm/Core/AOps/CloneOp.hpp"
 #include "mllm/Core/AOps/D2HOp.hpp"
 #include "mllm/Core/AOps/ElewiseOp.hpp"
 #include "mllm/Core/AOps/FillOp.hpp"
@@ -292,6 +293,10 @@ Tensor Tensor::unsqueeze(int32_t dim) {
   auto this_shape = shape();
   this_shape.insert(this_shape.begin() + dim, 1);
   return view(this_shape);
+}
+
+Tensor Tensor::clone() {
+  return MllmEngineCtx::instance().dispatch(OpType::kClone, CloneOpCargo{}, {*this})[0];
 }
 
 Tensor Tensor::permute(const std::vector<int32_t>& indices) {

@@ -49,7 +49,7 @@ void LLMEmbeddingTokenOp::reshape(const std::vector<Tensor>& inputs, std::vector
 }
 
 void LLMEmbeddingTokenOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 LLMEmbeddingTokenOp::params_t LLMEmbeddingTokenOp::params() {

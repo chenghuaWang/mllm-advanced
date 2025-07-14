@@ -58,4 +58,7 @@ LINALG_AOPS_DECL(OpType::kVisionRoPE, VisionRoPEOp);
 
 LINALG_AOPS_DECL(OpType::kQuickGELU, QuickGELUOp);
 
+LINALG_AOPS_DECL(OpType::kCopy, CopyOp);
+LINALG_AOPS_DECL(OpType::kClone, CloneOp);
+
 }  // namespace mllm::ir::linalg

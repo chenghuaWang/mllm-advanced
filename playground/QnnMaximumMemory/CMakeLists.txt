@@ -13,6 +13,5 @@ find_package(mllm)
 add_executable(mllm-qnn-maximum-memory main.cpp)
 target_link_libraries(
   mllm-qnn-maximum-memory PRIVATE mllm::MllmRT mllm::MllmArmBackend
-                                        mllm::MllmQnnBackend)
-target_include_directories(mllm-qnn-maximum-memory
-                           PRIVATE ${MLLM_INCLUDE_DIR})
+                                  mllm::MllmQnnBackend)
+target_include_directories(mllm-qnn-maximum-memory PRIVATE ${MLLM_INCLUDE_DIR})

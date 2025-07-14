@@ -41,7 +41,7 @@ void PermuteOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
 }
 
 void PermuteOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm

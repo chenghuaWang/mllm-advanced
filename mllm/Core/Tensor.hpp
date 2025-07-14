@@ -342,6 +342,13 @@ class Tensor {
   Tensor unsqueeze(int32_t dim);
 
   /**
+   * @brief clone a tensor
+   *
+   * @return Tensor
+   */
+  Tensor clone();
+
+  /**
    * @brief Permute tensor to a new shape
    *
    * @param indices

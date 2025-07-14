@@ -36,6 +36,6 @@ void CausalMaskOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor
 }
 
 void CausalMaskOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 }  // namespace mllm

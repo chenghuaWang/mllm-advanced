@@ -12,7 +12,7 @@
 #include "mllm/Engine/Context.hpp"
 #include <gtest/gtest.h>
 
-using namespace mllm;
+using namespace mllm; // NOLINT
 
 TEST(MllmNN, AddOpCall) {
   auto& ctx = MllmEngineCtx::instance();

@@ -39,7 +39,7 @@ void QuickGELUOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>
 }
 
 void QuickGELUOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm

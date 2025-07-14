@@ -95,7 +95,7 @@ void LinearOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
 }
 
 void LinearOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 LinearOp::params_t LinearOp::params() {

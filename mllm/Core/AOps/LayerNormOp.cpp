@@ -40,7 +40,7 @@ void LayerNormOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>
 }
 
 void LayerNormOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 LayerNormOp::params_t LayerNormOp::params() {

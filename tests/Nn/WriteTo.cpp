@@ -9,11 +9,14 @@
 
 #include "mllm/Core/Tensor.hpp"
 #include "mllm/Engine/Context.hpp"
+
+#include "mllm/Nn/Planning.hpp"
+
 #include <gtest/gtest.h>
 
 using namespace mllm;  // NOLINT
 
-TEST(MllmNN, AddOpCall) {
+TEST(MllmNN, WriteToTest) {
   auto& ctx = MllmEngineCtx::instance();
 #if defined(MLLM_ON_X86)
   ctx.registerBackend(mllm::X86::createX86Backend());
@@ -25,9 +28,12 @@ TEST(MllmNN, AddOpCall) {
   ctx.mem()->initOC(kCPU);
 #if defined(MLLM_ON_ARM)
   {
+    auto c = Tensor::empty({128, 128}, kFp16).alloc();  // Prealloc
     auto a = Tensor::ones({128, 128}, kFp16);
     auto b = Tensor::ones({128, 128}, kFp16);
-    auto c = a + b;
+
+    // Write to
+    nn::planning::write2(c).from(a + b);
 
     a.print<float16_t>();
     b.print<float16_t>();
@@ -35,9 +41,12 @@ TEST(MllmNN, AddOpCall) {
   }
 #endif
   {
+    auto c = Tensor::empty({128, 128}, kFp32).alloc();  // Prealloc
     auto a = Tensor::ones({128, 128}, kFp32);
     auto b = Tensor::ones({128, 128}, kFp32);
-    auto c = a + b;
+
+    // Write to
+    nn::planning::write2(c).from(a + b);
 
     a.print<float>();
     b.print<float>();

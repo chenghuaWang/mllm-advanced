@@ -38,7 +38,7 @@ void SoftmaxOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
 }
 
 void SoftmaxOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm

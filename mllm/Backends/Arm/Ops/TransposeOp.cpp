@@ -108,7 +108,7 @@ void ArmTransposeOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tens
 
 void ArmTransposeOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
   // Common cases
-  outputs[0].alloc();
+  TransposeOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm::arm

@@ -79,7 +79,7 @@ void Conv3DOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
 }
 
 void Conv3DOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 Conv3DOp::params_t Conv3DOp::params() {

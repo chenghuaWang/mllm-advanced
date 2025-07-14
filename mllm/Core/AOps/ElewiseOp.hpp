@@ -42,7 +42,7 @@
     outputs.emplace_back(output_0);                                                            \
   }                                                                                            \
   void name::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {          \
-    for (auto& t : outputs) t.alloc();                                                         \
+    BaseOp::setup(inputs, outputs);                                                            \
   }
 
 namespace mllm {

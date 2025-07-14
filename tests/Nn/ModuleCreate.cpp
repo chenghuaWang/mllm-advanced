@@ -12,7 +12,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace mllm;
+using namespace mllm;  // NOLINT
 
 class ExampleModule : public nn::Module {
  public:

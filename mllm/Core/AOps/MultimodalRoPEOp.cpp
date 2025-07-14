@@ -39,7 +39,7 @@ void MultimodalRoPEOp::reshape(const std::vector<Tensor>& inputs, std::vector<Te
 }
 
 void MultimodalRoPEOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm

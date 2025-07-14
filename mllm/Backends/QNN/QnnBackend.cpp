@@ -11,6 +11,7 @@
 #include <memory>
 #include <fstream>
 #include "mllm/Backends/QNN/QnnBackend.hpp"
+#include "mllm/Backends/QNN/Ops/CopyOp.hpp"
 #include "mllm/Backends/QNN/Ops/ElewiseOp.hpp"
 #include "mllm/Backends/QNN/Ops/MatMulOp.hpp"
 #include "mllm/Backends/QNN/Ops/LinearOp.hpp"
@@ -34,7 +35,7 @@ QnnBackend::QnnBackend() : BackendBase(kQNN) {
 
   regOpFactory<QnnMatMulOpFactory, QnnLinearOpFactory, QnnSiLUOpFactory, QnnAddOpFactory,
                QnnSubOpFactory, QnnMulOpFactory, QnnDivOpFactory, QnnViewOpFactory,
-               QnnRepeatOpFactory>();
+               QnnRepeatOpFactory, QnnCopyOpFactory>();
 }
 
 QnnBackend::~QnnBackend() {

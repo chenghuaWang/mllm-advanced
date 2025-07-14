@@ -17,7 +17,7 @@
 
 #include "mllm/Core/Tensor.hpp"
 
-namespace mllm::qnn {
+namespace mllm::mobi_lmcache {
 
 class QnnPagedCache {
  public:
@@ -38,4 +38,4 @@ class QnnPagedCache {
   std::unordered_map<page_idx_t, page_t> page_mapping_;
 };
 
-}  // namespace mllm::qnn
+}  // namespace mllm::mobi_lmcache

@@ -53,7 +53,7 @@ void FillOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outpu
     case 2:
     case 3:
     case 4: break;
-    case 5: outputs[0].alloc(); break;
+    case 5: BaseOp::setup(inputs, outputs); break;
   }
 }
 

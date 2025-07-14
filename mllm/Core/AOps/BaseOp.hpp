@@ -67,6 +67,9 @@ enum class OpType : int32_t {  // NOLINT
 
   kQuickGELU,
 
+  kCopy,
+  kClone,
+
   kOpType_End,
 };
 
@@ -95,6 +98,17 @@ inline const char* opType2Str(OpType type) {
     case OpType::kView: return "kView";
     case OpType::kFlashAttention_2: return "kFlashAttention_2";
     case OpType::kRepeat: return "kRepeat";
+    case OpType::kPermute: return "kPermute";
+    case OpType::kConv3D: return "kConv3D";
+    case OpType::kConv2D: return "kConv2D";
+    case OpType::kConv1D: return "kConv1D";
+    case OpType::kGELU: return "kGELU";
+    case OpType::kLayerNorm: return "kLayerNorm";
+    case OpType::kMultimodalRoPE: return "kMultimodalRoPE";
+    case OpType::kVisionRoPE: return "kVisionRoPE";
+    case OpType::kQuickGELU: return "kQuickGELU";
+    case OpType::kCopy: return "kCopy";
+    case OpType::kClone: return "kClone";
     case OpType::kOpType_End: return "kOpType_End";
     default: return "Unknown";
   }
@@ -178,7 +192,7 @@ class BaseOp : public std::enable_shared_from_this<BaseOp> {
 
   virtual void reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
 
-  virtual void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {}
+  virtual void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs);
 
   virtual params_t params() { return {}; }
 

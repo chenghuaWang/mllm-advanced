@@ -36,7 +36,7 @@ void D2HOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& outp
 }
 
 void D2HOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm

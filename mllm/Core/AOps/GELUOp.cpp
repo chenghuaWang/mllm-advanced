@@ -38,7 +38,7 @@ void GELUOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& out
 }
 
 void GELUOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 }  // namespace mllm

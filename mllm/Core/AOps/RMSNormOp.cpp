@@ -45,7 +45,7 @@ void RMSNormOp::reshape(const std::vector<Tensor>& inputs, std::vector<Tensor>& 
 }
 
 void RMSNormOp::setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
-  outputs[0].alloc();
+  BaseOp::setup(inputs, outputs);
 }
 
 RMSNormOp::params_t RMSNormOp::params() {

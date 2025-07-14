@@ -1,4 +1,4 @@
-// Auto generated: 2025-07-10 12:42:26
+// Auto generated: 2025-07-14 06:36:42
 // do not modify this file
 #pragma once
 namespace mllm::ir {
@@ -125,6 +125,12 @@ struct NodeRTTIClassOfImpl {
 #define RTTI_RK_OP_LINALGIROP_QUICKGELUOP_IMPL(v)       \
   return (v)->getKind() >= RK_Op_LinalgIROp_QuickGELUOp \
          && (v)->getKind() <= RK_Op_LinalgIROp_QuickGELUOp
+
+#define RTTI_RK_OP_LINALGIROP_COPYOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_CopyOp && (v)->getKind() <= RK_Op_LinalgIROp_CopyOp
+
+#define RTTI_RK_OP_LINALGIROP_CLONEOP_IMPL(v) \
+  return (v)->getKind() >= RK_Op_LinalgIROp_CloneOp && (v)->getKind() <= RK_Op_LinalgIROp_CloneOp
 
 #define RTTI_RK_OP_GRAPHIROP_IMPL(v) \
   return (v)->getKind() >= RK_Op_GraphIROp && (v)->getKind() <= RK_Op_GraphIROp_Last

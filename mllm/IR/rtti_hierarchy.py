@@ -247,6 +247,8 @@ def define_lianlg_ir(ir: dict):
     op.derive(Cls("MultimodalRoPEOp"))
     op.derive(Cls("VisionRoPEOp"))
     op.derive(Cls("QuickGELUOp"))
+    op.derive(Cls("CopyOp"))
+    op.derive(Cls("CloneOp"))
 
     # value
 

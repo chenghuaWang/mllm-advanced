@@ -17,7 +17,7 @@
 #include <memory>
 #include <string>
 
-namespace mllm::qnn {
+namespace mllm::mobi_lmcache {
 
 QnnPagedCache::page_idx_t QnnPagedCache::allocPage(const Tensor::shape_t& shape,
                                                    Tensor::dtype_t dtype,
@@ -28,10 +28,10 @@ QnnPagedCache::page_idx_t QnnPagedCache::allocPage(const Tensor::shape_t& shape,
                          .setMemType(kQnnAppReadWrite)
                          .alloc();
   auto page_tensor_qnn =
-      QnnTensorTransform::instance().transform(page_tensor, QNN_TENSOR_VERSION_2);
+      qnn::QnnTensorTransform::instance().transform(page_tensor, QNN_TENSOR_VERSION_2);
 
   // Register to backend
-  auto allocator = std::static_pointer_cast<QnnAllocator>(
+  auto allocator = std::static_pointer_cast<qnn::QnnAllocator>(
       MllmEngineCtx::instance().getBackend(kQNN)->getAllocator());
   allocator->registerQnnTensorToSharedBuffer(page_tensor.ptr<char>(), page_tensor_qnn);
 
@@ -56,4 +56,4 @@ QnnPagedCache::page_t QnnPagedCache::pullPage(const alias_name_t& name) {
                                     : QnnPagedCache::page_t(Tensor::nil(), Qnn_Tensor_t{});
 }
 
-}  // namespace mllm::qnn
+}  // namespace mllm::mobi_lmcache
