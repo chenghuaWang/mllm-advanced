@@ -13,6 +13,7 @@
 #include "mllm/IR/GeneratedRTTIKind.hpp"
 #include "mllm/Utils/IRPrinter.hpp"
 #include "mllm/Utils/RTTIHelper.hpp"
+#include "mllm/Utils/Common.hpp"
 
 namespace mllm::ir {
 
@@ -146,6 +147,31 @@ std::list<std::shared_ptr<Region>>& Op::regions() { return regions_; }
 
 std::shared_ptr<Region> Op::getTopRegion() { return regions_.back(); }
 
+void Op::replacePartialOutputs(const std::vector<val_weak_ptr_t>& old_vals,
+                               const std::vector<val_weak_ptr_t>& new_vals) {
+  MLLM_RT_ASSERT_EQ(old_vals.size(), new_vals.size());
+  int val_num = old_vals.size();
+  for (int i = 0; i < val_num; ++i) {
+    auto old_val = old_vals[i];
+    auto new_val = new_vals[i];
+    // cut edge bt old_val and this op
+    old_val->inputs().remove(shared_from_this());
+
+    // Insert new_val to this op's outputs old_val position
+    auto it = std::find(outputs().begin(), outputs().end(), old_val);
+    MLLM_RT_ASSERT(it != outputs().end());
+    *it = new_val;
+
+    // new edge
+    new_val->inputs().emplace_back(shared_from_this());
+  }
+}
+
+void Op::replacePartialOutputs(val_weak_ptr_t old_vals, val_weak_ptr_t new_vals) {
+  replacePartialOutputs(std::vector<val_weak_ptr_t>{old_vals},
+                        std::vector<val_weak_ptr_t>{new_vals});
+}
+
 Attr::~Attr() = default;
 
 Attr::Attr() : Node(RK_Attr) {};
@@ -163,6 +189,22 @@ Val::Val(const NodeKind& kind) : Node(kind) {}
 void Val::dump(IRPrinter& p) { p.print("%{}:", name()); }
 
 std::string& Val::name() { return name_; }
+
+op_weak_ptr_t Val::producerOp() {
+  MLLM_RT_ASSERT_EQ(inputs().size(), 1);
+  auto input = inputs().front();
+  MLLM_RT_ASSERT(input->isa_<Op>());
+  return input->cast_<Op>();
+}
+
+std::vector<op_weak_ptr_t> Val::consumerOps() {
+  std::vector<op_weak_ptr_t> consumer_ops;
+  for (auto& output : outputs()) {
+    MLLM_RT_ASSERT(output->isa_<Op>());
+    consumer_ops.emplace_back(output->cast_<Op>());
+  }
+  return consumer_ops;
+}
 
 IRContext::IRContext(const node_ptr_t& module, const region_ptr_t& region)
     : top_level_op_(module), cur_insert_region_(region) {}
@@ -222,8 +264,17 @@ IRWriterGuard::~IRWriterGuard() { ctx_->resetRegion(old_region_); }
 IRWriter::IRWriter(const std::shared_ptr<IRContext>& ctx, const std::shared_ptr<Region>& cur_region)
     : ctx_(ctx), cur_region_(cur_region) {}
 
+void IRWriter::removeValue(const val_ptr_t& val) {
+  for (auto& input : val->inputs()) { input->outputs().remove(val); }
+  for (auto& output : val->outputs()) { output->inputs().remove(val); }
+}
+
 void IRWriter::removeOp(const op_ptr_t& op) {
   auto& ops = cur_region_->ops();
+
+  // Cutoff the edge
+  for (auto& input : op->inputs()) { input->outputs().remove(op); }
+  for (auto& output : op->outputs()) { output->inputs().remove(op); }
 
   cur_op_iter_ = ops.erase(std::find(ops.begin(), ops.end(), op));
 

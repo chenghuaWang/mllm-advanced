@@ -26,7 +26,7 @@ bool QnnCopyOpPattern::addNode(QnnIRGraph& graph, const ir::op_ptr_t& op,
 }
 
 std::pair<OpType, std::shared_ptr<QnnBaseOpPattern>> QnnCopyOpPattern::create() {
-  return {OpType::kSiLU, std::make_shared<QnnCopyOpPattern>()};
+  return {OpType::kCopy, std::make_shared<QnnCopyOpPattern>()};
 }
 
 QnnCopyOp::QnnCopyOp(const CopyOpCargo& cargo) : CopyOp(cargo) {}

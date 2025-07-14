@@ -33,6 +33,8 @@ class CopyOp : public BaseOp {
 
   void setup(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 
+  inline bool hasSideEffect() const { return cargo_.side_effect_; }
+
  protected:
   CopyOpCargo cargo_;
 };

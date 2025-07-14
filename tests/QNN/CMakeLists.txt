@@ -6,3 +6,9 @@ add_executable(Mllm-Qnn-IRLoweringTest QnnIRLoweringTest.cpp)
 target_link_libraries(Mllm-Qnn-IRLoweringTest PRIVATE MllmRT MllmQnnBackend
                                                       MllmArmBackend)
 target_include_directories(Mllm-Qnn-IRLoweringTest PRIVATE ${MLLM_INCLUDE_DIR})
+
+add_executable(Mllm-Qnn-QnnCopyOpEliminateTest QnnCopyOpEliminateTest.cpp)
+target_link_libraries(Mllm-Qnn-QnnCopyOpEliminateTest PRIVATE MllmRT MllmQnnBackend
+                                                      MllmArmBackend)
+target_include_directories(Mllm-Qnn-QnnCopyOpEliminateTest PRIVATE ${MLLM_INCLUDE_DIR})
+

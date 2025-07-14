@@ -163,6 +163,11 @@ class Op : public Node, public DeviceInterface<Op> {
 
   std::shared_ptr<Region> getTopRegion();
 
+  void replacePartialOutputs(const std::vector<val_weak_ptr_t>& old_vals,
+                             const std::vector<val_weak_ptr_t>& new_vals);
+
+  void replacePartialOutputs(val_weak_ptr_t old_vals, val_weak_ptr_t new_vals);
+
  private:
   std::list<std::shared_ptr<Region>> regions_;
 };
@@ -189,6 +194,10 @@ class Val : public Node, public DeviceInterface<Val> {
   static inline bool classof(const Node* node) { RTTI_RK_VAL_IMPL(node); }
 
   std::string& name();
+
+  op_weak_ptr_t producerOp();
+
+  std::vector<op_weak_ptr_t> consumerOps();
 
  private:
   std::string name_;
@@ -447,6 +456,8 @@ class IRWriter {
 
     return created_node;
   }
+
+  void removeValue(const val_ptr_t& val);
 
   void removeOp(const op_ptr_t& op);
 

@@ -81,7 +81,7 @@ class WeakOwner {
 
   template<typename U>
   bool operator==(const std::shared_ptr<U>& other) const noexcept {
-    return ptr_ == other.get_weak();
+    return ptr_ == other.get();
   }
 
   bool operator==(std::nullptr_t) const noexcept { return expired(); }
