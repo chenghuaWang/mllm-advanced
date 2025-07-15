@@ -40,6 +40,8 @@ void ew_mul_constant_fp32(const float* __restrict__ A, const float B, float* __r
 void ew_div_constant_fp32(const float* __restrict__ A, const float B, float* __restrict__ C,
                           int32_t len, int threads = 0);
 
+void ew_neg_fp32(const float* __restrict__ A, float* __restrict__ B, int32_t len);
+
 #if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else
@@ -66,6 +68,9 @@ void ew_mul_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
 
 void ew_div_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
                           float16_t* __restrict__ C, int32_t len, int threads = 0);
+
+void ew_neg_fp16(const float16_t* __restrict__ A, float16_t* __restrict__ B, int32_t len);
+
 #endif  // fp16
 }  // namespace mllm::arm
 

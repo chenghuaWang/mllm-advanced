@@ -9,6 +9,7 @@
  */
 #include "mllm/Nn/F/F.hpp"
 #include "mllm/Core/AOps/BaseOp.hpp"
+#include "mllm/Core/AOps/ConcatOp.hpp"
 #include "mllm/Core/AOps/ViewOp.hpp"
 #include "mllm/Core/AOps/SplitOp.hpp"
 #include "mllm/Core/AOps/MatMulOp.hpp"
@@ -37,6 +38,10 @@ std::vector<Tensor> split(const Tensor& x, const std::vector<int32_t>& split_siz
   return MllmEngineCtx::instance().dispatch(
       OpType::kSplit, SplitOpCargo{.dim_ = dim, .split_size_or_sections_ = split_size_or_sections},
       {x});
+}
+
+Tensor concat(const std::vector<Tensor>& ins, int32_t dim) {
+  return MllmEngineCtx::instance().dispatch(OpType::kConcat, ConcatOpCargo{.dim = dim}, ins)[0];
 }
 
 }  // namespace mllm::nn::F

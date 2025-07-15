@@ -190,4 +190,18 @@ void ArmDivOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& o
   NYI("ArmDivOp::forward op not support current inputs");
 }
 
+void ArmNegOp::forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) {
+  const auto& in = inputs[0];
+  auto* out = outputs[0].ptr<void>();
+  const int n = static_cast<int>(in.numel());
+
+  switch (in.dtype()) {
+    case kFp16: ew_neg_fp16(in.ptr<float16_t>(), reinterpret_cast<float16_t*>(out), n); return;
+    case kFp32: ew_neg_fp32(in.ptr<float>(), reinterpret_cast<float*>(out), n); return;
+    default: break;
+  }
+
+  NYI("ArmNegOp::forward op not support dtype ", in.dtype());
+}
+
 }  // namespace mllm::arm

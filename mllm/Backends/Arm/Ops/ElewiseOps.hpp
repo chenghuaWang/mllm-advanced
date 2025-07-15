@@ -34,6 +34,11 @@ class ArmDivOp final : public DivOp {
   void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
 };
 
+class ArmNegOp final : public DivOp {
+ public:
+  void forward(const std::vector<Tensor>& inputs, std::vector<Tensor>& outputs) override;
+};
+
 class ArmAddOpFactory final : public TypedOpFactory<OpType::kAdd, AddOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const AddOpCargo& cargo) override {
@@ -59,6 +64,13 @@ class ArmDivOpFactory : public TypedOpFactory<OpType::kDiv, DivOpCargo> {
  public:
   std::shared_ptr<BaseOp> createOpImpl(const DivOpCargo& cargo) override {
     return std::make_shared<ArmDivOp>();
+  }
+};
+
+class ArmNegOpFactory : public TypedOpFactory<OpType::kNeg, NegOpCargo> {
+ public:
+  std::shared_ptr<BaseOp> createOpImpl(const NegOpCargo& cargo) override {
+    return std::make_shared<ArmNegOp>();
   }
 };
 

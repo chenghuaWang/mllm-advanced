@@ -208,4 +208,29 @@ class ModuleList final : public Module {
   std::vector<T>& getList() { return layers_; }
 };
 
+template<typename T>
+class ModuleListSuffixed final : public Module {
+  std::vector<T> layers_;
+
+ public:
+  ModuleListSuffixed() = default;
+
+  template<typename... Args>
+  ModuleListSuffixed(const std::string& name, int suffix_start, int nums, Args&&... args) {
+    selfAssignName(name);
+    for (int i = 0; i < nums; ++i) {
+      layers_.emplace_back(
+          reg<T>(/*name*/ std::to_string(suffix_start + i), /*args*/ std::forward<Args>(args)...));
+    }
+  };
+
+  std::vector<Tensor> forward(const std::vector<Tensor>& inputs) override {
+    std::vector<Tensor> o = inputs;
+    for (auto& layer : layers_) { o = layer.forward(o); }
+    return o;
+  }
+
+  std::vector<T>& getList() { return layers_; }
+};
+
 }  // namespace mllm::nn

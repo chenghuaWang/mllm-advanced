@@ -61,4 +61,7 @@ LINALG_AOPS_DECL(OpType::kQuickGELU, QuickGELUOp);
 LINALG_AOPS_DECL(OpType::kCopy, CopyOp);
 LINALG_AOPS_DECL(OpType::kClone, CloneOp);
 
+LINALG_AOPS_DECL(OpType::kNeg, NegOp);
+LINALG_AOPS_DECL(OpType::kConcat, ConcatOp);
+
 }  // namespace mllm::ir::linalg

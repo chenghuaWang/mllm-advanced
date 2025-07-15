@@ -60,4 +60,6 @@ std::array<Tensor, RET_NUM> split(const Tensor& x,
   return ret;
 }
 
+Tensor concat(const std::vector<Tensor>& ins, int32_t dim);
+
 }  // namespace mllm::nn::F

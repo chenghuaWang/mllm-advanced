@@ -208,6 +208,13 @@ class Tensor {
   /// @}
 
   /**
+   * @brief Negative
+   *
+   * @return Tensor
+   */
+  Tensor operator-();
+
+  /**
    * @brief Swaps two dimensions of the tensor.
    * @param dim0 First dimension index.
    * @param dim1 Second dimension index.

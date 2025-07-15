@@ -35,6 +35,7 @@
 #include "mllm/Backends/Arm/Ops/TransposeOp.hpp"
 #include "mllm/Backends/Arm/Ops/ViewOp.hpp"
 #include "mllm/Backends/Arm/Ops/VisionRoPEOp.hpp"
+#include "mllm/Backends/Arm/Ops/ConcatOp.hpp"
 
 namespace mllm::arm {
 
@@ -47,7 +48,7 @@ ArmBackend::ArmBackend() : BackendBase(kCPU) {
                ArmViewOpFactory, ArmSplitOpFactory, ArmFlashAttn2OpFactory, ArmPermuteOpFactory,
                ArmRepeatOpFactory, ArmConv3DOpFactory, ArmGELUOpFactory, ArmVisionRoPEOpFactory,
                ArmLayerNormOpFactory, ArmMultimodalRoPEOpFactory, ArmQuickGELUOpFactory,
-               ArmCopyOpFactory, ArmCloneOpFactory>();
+               ArmCopyOpFactory, ArmCloneOpFactory, ArmNegOpFactory, ArmConcatOpFactory>();
 }
 
 std::shared_ptr<ArmBackend> createArmBackend() { return std::make_shared<ArmBackend>(); }

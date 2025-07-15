@@ -249,6 +249,8 @@ def define_lianlg_ir(ir: dict):
     op.derive(Cls("QuickGELUOp"))
     op.derive(Cls("CopyOp"))
     op.derive(Cls("CloneOp"))
+    op.derive(Cls("NegOp"))
+    op.derive(Cls("ConcatOp"))
 
     # value
 

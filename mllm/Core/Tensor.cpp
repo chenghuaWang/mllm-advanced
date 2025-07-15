@@ -226,6 +226,10 @@ Tensor Tensor::operator/(float rhs) {
   return *this / st;
 }
 
+Tensor Tensor::operator-() {
+  return MllmEngineCtx::instance().dispatch(OpType::kNeg, NegOpCargo{}, {*this})[0];
+}
+
 Tensor Tensor::transpose(int dim0, int dim1) {
   auto shape_size = impl_->shape().size();
   MLLM_RT_ASSERT(dim0 < shape_size);

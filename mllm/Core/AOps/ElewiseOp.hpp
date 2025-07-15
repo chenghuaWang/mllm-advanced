@@ -55,9 +55,12 @@ struct MulOpCargo : public BaseOpCargo<MulOpCargo> {};
 
 struct DivOpCargo : public BaseOpCargo<DivOpCargo> {};
 
+struct NegOpCargo : public BaseOpCargo<NegOpCargo> {};
+
 __MLLM_ELEWISE_OP_DEFINE(AddOp);
 __MLLM_ELEWISE_OP_DEFINE(SubOp);
 __MLLM_ELEWISE_OP_DEFINE(MulOp);
 __MLLM_ELEWISE_OP_DEFINE(DivOp);
+__MLLM_ELEWISE_OP_DEFINE(NegOp);
 
 }  // namespace mllm

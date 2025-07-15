@@ -302,6 +302,17 @@ void ew_div_constant_fp32(const float* __restrict__ A, const float B, float* __r
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / B; }
 }
 
+void ew_neg_fp32(const float* __restrict__ A, float* __restrict__ B, int32_t len) {
+  int32_t i = 0;
+  int32_t simd_len = len & ~3;
+  for (; i < simd_len; i += 4) {
+    float32x4_t va = vld1q_f32(&A[i]);
+    float32x4_t vb = vnegq_f32(va);
+    vst1q_f32(&B[i], vb);
+  }
+  for (; i < len; ++i) { B[i] = -A[i]; }
+}
+
 #if !defined(__ARM_FEATURE_FP16_SCALAR_ARITHMETIC) || !defined(__ARM_FEATURE_FP16_VECTOR_ARITHMETIC)
 #error This file must be compiled for AArch64, FEAT_FP16. Set -DMLLM_ARM_BACKEND_COMPILE_OPTIONS=\"-march=armv8.2-a+fp16\" in tasks yaml.
 #else
@@ -583,6 +594,18 @@ void ew_div_constant_fp16(const float16_t* __restrict__ A, const float16_t B,
   float16_t* c_remain = C + blocks * TILE_SIZE;
   for (int32_t i = 0; i < lefts; ++i) { c_remain[i] = a_remain[i] / B; }
 }
+
+void ew_neg_fp16(const float16_t* __restrict__ A, float16_t* __restrict__ B, int32_t len) {
+  int32_t i = 0;
+  int32_t simd_len = len & ~7;
+  for (; i < simd_len; i += 8) {
+    float16x8_t va = vld1q_f16(&A[i]);
+    float16x8_t vb = vnegq_f16(va);
+    vst1q_f16(&B[i], vb);
+  }
+  for (; i < len; ++i) { B[i] = -A[i]; }
+}
+
 #endif  // fp16
 
 }  // namespace mllm::arm

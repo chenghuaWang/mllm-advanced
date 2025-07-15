@@ -70,6 +70,9 @@ enum class OpType : int32_t {  // NOLINT
   kCopy,
   kClone,
 
+  kNeg,
+  kConcat,
+
   kOpType_End,
 };
 
