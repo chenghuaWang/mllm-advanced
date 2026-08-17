@@ -1,3 +1,5 @@
+
+
 <h1 align="center">
 MLLM
 </h1>
@@ -51,7 +53,7 @@ The following commands have been tested on Linux systems.
 ```shell
 git clone --recursive https://github.com/chenghuaWang/mllm-advanced.git
 
-export ANDROID_NDK_PATH = /path/to/android-ndk
+export ANDROID_NDK_PATH=/path/to/android-ndk
 
 # build
 python task.py tasks/android_build.yaml
